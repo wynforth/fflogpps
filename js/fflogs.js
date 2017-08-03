@@ -156,7 +156,7 @@ function displayRankings(response){
 		var rank = ranks[key];
 		var tbl_row = "";
 		//git hub
-		tbl_row += `<td><a href="fflogpps/events.html?name=${rank.name}&report=${rank.reportID}&fight=${rank.fightID}&api_key=${api_key}">${rank.name}</a></td>`;
+		tbl_row += `<td><a href="events.html?name=${rank.name}&report=${rank.reportID}&fight=${rank.fightID}&api_key=${api_key}">${rank.name}</a></td>`;
 		//local
 		//tbl_row += `<td><a href="/events?name=${rank.name}&report=${rank.reportID}&fight=${rank.fightID}&api_key=${api_key}">${rank.name}</a></td>`;
 		tbl_row += `<td>${rank.total}</td>`;
