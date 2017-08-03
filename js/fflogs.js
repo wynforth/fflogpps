@@ -155,7 +155,7 @@ function displayRankings(response){
 	for(var key in ranks){
 		var rank = ranks[key];
 		var tbl_row = "";
-		tbl_row += `<td><a href="/events.html?name=${rank.name}&report=${rank.reportID}&fight=${rank.fightID}&api_key=${api_key}">${rank.name}</a></td>`;
+		tbl_row += `<td><a href="events.html?name=${rank.name}&report=${rank.reportID}&fight=${rank.fightID}&api_key=${api_key}">${rank.name}</a></td>`;
 		tbl_row += `<td>${rank.total}</td>`;
 		tbl_row += `<td>${(rank.duration/1000).toFixed(2)}s</td>`;
 		tbl_row += `<td>${rank.spec}</td>`;
