@@ -201,8 +201,7 @@ function processBlackmage(events) {
 
 	$(".ranking-table thead tr").append(`<td>Potency</td>`);
 	$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/enochian.png"/></td>`);
-	$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/astral_fire.png"/></td>`);
-	$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/umbral_ice.png"/></td>`);
+	$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/astral_umbral.png"/></td>`);
 	$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/thunder_iii.png"/></td>`);
 
 	var enoch = 0;
@@ -326,11 +325,10 @@ function processBlackmage(events) {
 
 		if (enoch > 0) {
 			enoch = enoch - ellapsed;
-			if (enoch <= 0)
-				if (astral > 0 || umbral > 0)
-					enoch += 30;
-				else
-					enoch = 0;
+			if (astral <= 0 && umbral <= 0)
+				enoch = 0
+			else if (enoch <= 0)
+				enoch += 30;
 		}
 
 		if (data.type == "applybuff" || data.type == "refreshbuff") {
@@ -422,8 +420,12 @@ function processBlackmage(events) {
 
 		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
 		extra.push(enoch > 0 ? `<div class="center status-block" style="background-color: #7F5FB0"></div>` : ``);
-		extra.push(astral > 0 ? `<div class="center status-block" style="background-color: #F05F2F"></div>` : ``);
-		extra.push(umbral > 0 ? `<div class="center status-block" style="background-color: #5FD0F0"></div>` : ``);
+		if(astral > 0)
+			extra.push(`<div class="center status-block" style="background-color: #F05F2F"></div>`);
+		else if(umbral > 0)
+			extra.push(`<div class="center status-block" style="background-color: #5FD0F0"></div>`);
+		else
+			extra.push(``);
 		extra.push(thunder > 0 ? `<div class="center status-block" style="background-color: #C0B02F"></div>` : ``);
 
 		prevTime = data.fightTime;
