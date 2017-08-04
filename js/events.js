@@ -25,7 +25,7 @@ function getBasicData(event) {
 			data.target += "." + event.targetInstance;
 	}
 
-	console.log(data);
+	//console.log(data);
 	return data;
 }
 
@@ -163,14 +163,15 @@ function updateEvent(data, extra) {
 	$(".ranking-table tbody").append(`<tr>${tbl_row}</tr>`);
 }
 
-function processEvents(events) {
-	console.log(events);
 
-	var tbl_body = '';
+
+function processEvents(events) {
+	
 	var totalDamage = 0;
 
+	parseEvents(events.events);
+	
 	for (var e in events.events) {
-		var tbl_row = "";
 		var event = events.events[e];
 		//var type = event.type;
 
@@ -243,11 +244,9 @@ function processBlackmage(events) {
 
 	for (var e in events.events) {
 		var event = events.events[e];
-		//var type = event.type;
 
 		if (event.sourceID != playerID) {
 			if (petIDs.indexOf(event.sourceID) == -1 && event.type != 'applybuff') {
-				//Logger.log(event);
 				continue;
 			}
 		}
@@ -262,7 +261,6 @@ function processBlackmage(events) {
 				if (event.ability.name == "Fire")
 					astral = 13;
 			}
-
 		}
 
 		if (data.type == "damage") {
@@ -284,11 +282,9 @@ function processBlackmage(events) {
 
 				if (data.name.startsWith("Fire") || data.name == "Flare") {
 					if (castState == "astral") {
-						//if(astral > 0)
 						potency *= 1.8
 					}
 					if (castState == "umbral") {
-						//if(umbral > 0)
 						potency *= .7
 					}
 				}

@@ -1,6 +1,8 @@
 var api_key;
 var zones;
 var classes;
+var allPages;
+var currentPage = 0;
 
 function fetchClasses(){
 	classes = cacheJS.get('classes');
@@ -103,52 +105,50 @@ function updateSelect(id, newOptions){
 	$(id).prop('disabled', false);
 }
 
-function getRankings(){
+function buildRankingsURL() {
 	var url = base_url + "/rankings/encounter/";
+
+	url += $("#encounter_select").val() + "?metric=dps";
+
+	var bracket = $("#bracket_select").val();
+	if (bracket != 0)
+		url += "&bracket=" + bracket;
+
+	var spec = $("#class_select").val();
+	if (spec != 0)
+		url += "&spec=" + spec;
+
+	var region = $("#region_select").val();
+	if (region != "")
+		url += "&region=" + region;
+
 	
-	var zone = $("#zone_select").val();
-	if(zone == "0"){
+	url += "&page=" + $("#page_number").val();
+	url += "&api_key=" + api_key
+
+	return url;
+}
+
+function getRankings(){
+		if($("#zone_select").val() == "0"){
 		$("#zone_select").toggleClass("missing", true);
 		return;
 	} else {
 		$("#zone_select").toggleClass("missing", false);
 	}
 
-	var encounter = $("#encounter_select").val();
-	if(encounter == "0"){
+	if($("#encounter_select").val() == "0"){
 		$("#encounter_select").toggleClass("missing", true);
 		return;
 	} else {
 		$("#encounter_select").toggleClass("missing", false);
 	}
-	url+=encounter + "?metric=dps";
+		
+	httpGetAsync(buildRankingsURL(), displayRankings);
 	
-	var bracket = $("#bracket_select").val();
-	if(bracket != 0)
-		url+="&bracket="+bracket;
-	
-	var spec = $("#class_select").val();
-	if(spec != 0)
-		url+="&spec="+spec;
-	
-	var region = $("#region_select").val();
-	if(region != "")
-		url+="&region="+region;
-	
-	var allPages = $("#all_pages").is(':checked');
-	if(allPages){
-		page=0;
-	} else {
-		url += "&page=" + $("#page_number").val();
-	}
-	
-	console.log(url);
-	httpGetAsync(url + "&api_key=" + api_key, displayRankings);
 }
 
 function displayRankings(response){
-	console.log(response);
-	
 	var ranks = response['rankings']
 	
 	var tbl_body = '';
@@ -198,6 +198,7 @@ $("#zone_select").change(function () {
 	}
 });
 
+/*
 $("#all_pages").change(function () {
 	var val = $(this).is(':checked');
 	$("#page_number_label").toggleClass("disabled", val);
@@ -205,6 +206,7 @@ $("#all_pages").change(function () {
 	$("#page_number").prop('disabled', val);
 
 });
+*/
 
 $("#api_key").change(function () {
 	var val = $(this).val();
