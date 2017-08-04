@@ -1,10 +1,27 @@
 var base_url = "https://www.fflogs.com:443/v1";
 
+var getUrlParameter = function getUrlParameter(sParam) {
+	var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+	sURLVariables = sPageURL.split('&'),
+	sParameterName,
+	i;
+
+	for (i = 0; i < sURLVariables.length; i++) {
+		sParameterName = sURLVariables[i].split('=');
+
+		if (sParameterName[0] === sParam) {
+			return sParameterName[1] === undefined ? true : sParameterName[1];
+		}
+	}
+};
+
+var api_key = getUrlParameter('api_key');
+
 class Timer {
 	constructor(name, duration){
 		this.name = name;
 		this.duration = duration;
-		var current = 0;
+		this.current = 0;
 	}
 	
 	restart(){
@@ -15,10 +32,14 @@ class Timer {
 		this.current += this.duration;
 	}
 	
-	tick(time){
+	update(time){
 		if(this.isActive()){
 			this.current -= time;
 		}
+	}
+	
+	set(time){
+		this.current = time;
 	}
 	
 	stop(){
@@ -26,7 +47,7 @@ class Timer {
 	}
 	
 	isActive(){
-		return this.count > 0;
+		return this.current > 0;
 	}
 }
 
@@ -34,13 +55,6 @@ class Timer {
 
 function httpGetAsync(theUrl, callback)
 {
-	/*
-	if(theUrl.indexOf("?") > -1)
-		theUrl += "&api_key=";
-	else
-		theUrl += "?api_key=";
-	*/
-	
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() { 
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
@@ -48,6 +62,47 @@ function httpGetAsync(theUrl, callback)
     }
     xmlHttp.open("GET", theUrl, true); // true for asynchronous 
     xmlHttp.send(null);
+}
+
+function getBasicData(event, fight) {
+	var data = {};
+	
+	data = {
+		'type': event.type,
+		'name': event.type == 'death' ? 'Death' : event.ability.name,
+		'timestamp': event.timestamp,
+		'fightTime': (event.timestamp - fight.start) / 1000,
+		'target': event.targetID == undefined ? '' : event.targetID,
+		'isTargetFriendly': event.targetIsFriendly,
+		'hitType': event.hitType == undefined ? '' : hitTypes[event.hitType],
+		'dmgType': event.amount == undefined ? 0 : event.ability.type,
+		'amount': event.amount == undefined ? 0 : event.amount,
+		'isDirect' : event.multistrike == undefined ? false: event.multistrike
+	}
+	//console.log(event);
+	//console.log(data);
+
+	/*
+	if (event.multistrike)
+		data.hitType = `*${data.hitType}*`;
+	*/
+
+	/*
+	if (data.target != undefined) {
+		/*
+		if (data.target == playerID)
+			data.target = "self";
+		else
+		
+		data.target = event.targetIsFriendly ? fight.team[data.target] : fight.enemies[data.target];
+		if (event.targetInstance > 1)
+			data.target += ` [${event.targetInstance}]`;
+	}
+	*/
+	
+
+	//console.log(data);
+	return data;
 }
 
 var hitTypes = {
