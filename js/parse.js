@@ -348,3 +348,162 @@ function parseBlackmage(response) {
 	//console.log(result);
 	return result;
 }
+
+function parseSamurai(response) {
+	console.log("Parsing SAM");
+
+
+	var prevTime = 0;
+	var totalPotency = 0;
+	var totalDamage = 0;
+
+	var jinpu = 0;
+	var yukikaze = {};
+	var lastWS = '';
+	var kaiten;
+	var higanCast = false;
+	var higanDot = 35;
+
+	var potencies = {
+		'Attack': 90,
+		"Hakaze": 150,
+		"Jinpu": 100,
+		'Gekko': 100,
+		'Yukikaze': 100,
+		'Shifu': 100,
+		'Kasha': 100,
+		'Fuga': 100,
+		'Mangetsu': 100,
+		'Oka': 100,
+		'Ageha': 200,
+		'Enpi': 100,
+		'Higanbana': 240,
+		'Midare Setsugekka': 720,
+		'Tenka Goken': 360,
+
+		'Hissatsu: Gyoten': 100,
+		'Hissatsu: Yaten': 100,
+		'Hissatsu: Shinten': 300,
+		'Hissatsu: Kyuten': 150,
+		'Hissatsu: Seigan': 200,
+		'Hissatsu: Guren': 800,
+
+	}
+
+	var combo_potencies = {
+		"Jinpu": 280,
+		'Gekko': 400,
+		'Yukikaze': 340,
+		'Shifu': 280,
+		'Kasha': 400,
+		'Mangetsu': 200,
+		'Oka': 200,
+
+	}
+
+	var combo = {
+		'Jinpu': 'Hakaze',
+		'Gekko': 'Jinpu',
+		'Shifu': 'Hakaze',
+		'Kasha': 'Shifu',
+		'Yukikaze': 'Hakaze',
+		'Mangetsu': 'Fuga',
+		'Oka': 'Fuga',
+	}
+	
+	var comboskills = ['Hakaze', 'Jinpu', 'Gekko',  'Shifu',  'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi']
+	var weaponskills = ['Hakaze', 'Jinpu', 'Gekko',  'Shifu',  'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi', 'Higanbana', 'Midare Setsugekka', 'Tenka Goken']
+
+	var first = true;
+	
+	for (var e in response.events) {
+		var event = response.events[e];
+
+		//only events of self, pets, or targetted on self
+		if (event.sourceID != result.player.ID) {
+			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != 'applybuff') {
+				continue;
+			}
+		}
+
+		result.events[e] = getBasicData(event, result.fight);
+		var potency = 0;
+
+		if (result.events[e].type == "damage") {
+			if (result.events[e].name == "Higanbana" && !higanCast) {
+				potency = higanDot;
+
+			} else {
+				if (combo[result.events[e].name] == lastWS)
+					potency = combo_potencies[result.events[e].name];
+				else
+					potency = potencies[result.events[e].name];
+
+				if (jinpu > 0)
+					potency *= 1.10;
+
+				if (yukikaze[result.events[e].target] > 0 && result.events[e].dmgType == 1)
+					potency *= 1.10;
+
+				if (result.events[e].name == 'Jinpu')
+					jinpu = 30;
+
+				if (result.events[e].name == 'Yukikaze')
+					yukikaze[result.events[e].target] = 30;
+
+				if(result.events[e].name == "Higanbana"){
+					higanDot = 35 * ( 1 + (kaiten > 0 ? .5:0) + (jinpu > 0 ? .1:0) + (yukikaze[result.events[e].target] > 0 ? .1:0));
+					higanCast = false;
+				}
+				
+				if (kaiten > 0 && weaponskills.indexOf(result.events[e].name) > -1) {
+					
+					potency *= 1.5;
+					kaiten = 0;
+				} 
+
+				//combo
+				if (comboskills.indexOf(result.events[e].name) > -1)
+					lastWS = result.events[e].name;
+			}
+			if(result.events[e].amount == 0)
+				potency = 0;
+			if (potency == undefined)
+				potency = 0;
+		}
+		
+		if(result.events[e].type == "applybuff"){
+			if(result.events[e].name == "Kaiten")
+				kaiten = 10;
+		}
+		
+		if(result.events[e].type == "cast"){
+			if(result.events[e].name == "Higanbana")
+				higanCast = true;
+		}
+		
+		var ellapsed = result.events[e].fightTime - prevTime;
+
+		if (jinpu > 0)
+			jinpu = Math.max(0, jinpu - ellapsed);
+		if (kaiten > 0)
+			kaiten = Math.max(0, kaiten - ellapsed);
+		for(var i in yukikaze){
+			yukikaze[i] = Math.max(0, yukikaze[i] - ellapsed);
+		}
+			
+		
+
+		var extra = [];
+
+		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
+		extra.push(jinpu > 0 ? `<div class="center status-block" style="background-color: #E0B000"></div>` : ``);
+		//extra.push(yukikaze > 0 ? `<div class="center status-block" style="background-color: #6FA0E0"></div>` : ``);
+
+		result.events[e].extra = extra;
+		result.events[e].potency = potency;
+		prevTime = result.events[e].fightTime;
+	}
+	
+	return result;
+}

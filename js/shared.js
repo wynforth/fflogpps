@@ -64,6 +64,18 @@ function httpGetAsync(theUrl, callback)
     xmlHttp.send(null);
 }
 
+function fetchUrl(theUrl, callback, args)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() { 
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(JSON.parse(xmlHttp.responseText), args);
+    }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+    xmlHttp.send(null);
+}
+
+
 function getBasicData(event, fight) {
 	var data = {};
 	
