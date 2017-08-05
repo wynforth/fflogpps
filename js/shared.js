@@ -33,7 +33,7 @@ class Timer {
 	}
 	
 	update(time){
-		if(this.isActive()){
+		if(this.current > 0){
 			this.current -= time;
 		}
 	}

@@ -1,6 +1,7 @@
 parseFunctions = {
 	'BlackMage': parseBlackmage,
 	'Samurai': parseSamurai,
+	'Monk': parseMonk
 }
 
 function processReport(report) {
@@ -33,7 +34,7 @@ function processReport(report) {
 	//console.log(result.fight.enemies);
 	
 	var callback = processGeneric;
-	if (result.player.type == "BlackMage" || result.player.type == "Samurai")
+	if (Object.keys(parseFunctions).indexOf(result.player.type) > -1)
 		callback = processClass;
 	
 	fetchUrl(url, callback, result.player.type);
@@ -85,21 +86,29 @@ function processGeneric(response) {
 
 function processClass(response, spec) {
 
+	console.log("Processing " + spec);
 	result = parseFunctions[spec](response);
 	console.log(result);
 
+	$(".ranking-table tbody").html("");
+	$(".ranking-table thead tr").append(`<td>Potency</td>`);
+	
 	if (spec == "BlackMage") {
-		$(".ranking-table tbody").html("");
-		$(".ranking-table thead tr").append(`<td>Potency</td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/enochian.png"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/astral_umbral.png"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/thunder_iii.png"/></td>`);
 	}
 
 	if (spec == "Samurai") {
-		$(".ranking-table tbody").html("");
-		$(".ranking-table thead tr").append(`<td>Potency</td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/jinpu.png"/></td>`);
+	}
+	
+	if (spec == "Monk") {
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/greased_lightning.png"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/twin_snakes.png"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/dragon_kick.png"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/internal_release.png"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/riddle_of_fire.png"/></td>`);
 	}
 
 	var totalPotency = 0;

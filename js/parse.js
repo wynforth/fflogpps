@@ -104,6 +104,7 @@ function parseReport(report) {
 
 function parseGeneric(response){
 	//console.log(response);
+	var prevTime = 0;
 	for (var e in response.events) {
 		var event = response.events[e];
 
@@ -115,11 +116,188 @@ function parseGeneric(response){
 		}
 
 		result.events[e] = getBasicData(event, result.fight);
+		var potency = 0;
+		
+		
 		
 	}	
 	//console.log(result);
 	return result;
 }
+
+function parseMonk(response){
+	console.log("Parsing Monk");
+	//console.log(response);
+		var brotherhood = new Timer("Brotherhood",15);
+	var dragonkick = new Timer("Dragon Kick", 15);
+	var twinsnakes = new Timer("Twin Snakes", 15);
+	var internalrelease = false;
+	var gl = new Timer("Greased Lightning", 15);
+	var glstacks = 0;
+	var effectiveStacks = 0;
+	var fire = true;
+	var riddle = false;
+	
+	var demDot = 50;
+	var demCast = false;
+	
+	var potencies = {
+		"Bootshine": (140 + 210*9)/10, //weighted average 90% hitting positional
+		"True Strike": (140 + 180*9)/10,
+		"Demolish": (30 + 70*9)/10,
+		"Dragon Kick": (100 + 140*9)/10,
+		"Twin Snakes": (100 + 130*9)/10,
+		"Snap Punch": (130 + 170*9)/10,
+		"Arm of the Destroyer": 50,
+		"One Ilm Punch": 120,
+		"Rockbreaker": 130,
+		"The Forbidden Chakra": 250,
+		"Elixir Field": 220,
+		"Steel Peak": 150,
+		"Shoulder Tackle": 100,
+		"Howling Fist": 210,
+		"Tornado Kick": 330,
+		"Riddle of Wind": 65,
+		"Earth Tackle": 100,
+		"Wind Tackle": 65,
+		"Fire Tackle": 130,
+		"Attack": 80,
+	}
+	console.log(potencies);
+	
+	var positional = {
+		"Bootshine": 140 * 1.5,
+		"True Strike": 180,
+		"Demolish": 70,
+		"Dragon Kick": 140,
+		"Twin Snakes": 130,
+		"Snap Punch": 170
+	}
+	
+	var lightnings = ["Demolish", "Snap Punch", "Arm of the Destroyer"]
+	
+	var prevTime = 0;
+	for (var e in response.events) {
+		var event = response.events[e];
+
+		//only events of self, pets, or targetted on self
+		if (event.sourceID != result.player.ID) {
+			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != 'applybuff') {
+				continue;
+			}
+		}
+
+		result.events[e] = getBasicData(event, result.fight);
+		var potency = 0;
+		var stackChange = false;
+		
+		if (result.events[e].type == "damage") {
+			var potency = potencies[event.ability.name];
+			
+			if (event.ability.name == "Demolish") {
+				if (!demCast)
+					potency = demDot;
+				demCast = false;
+			}
+
+			if(fire)
+				potency *= 1.05;
+			
+			if(riddle)
+				potency *= 1.3;
+			
+			if(internalrelease && event.ability.name != "Bootshine") //bootshine already has built in crit
+				potency *= 1.15;
+			
+			if(twinsnakes.isActive())
+				potency *= 1.1;
+			
+			if(dragonkick.isActive())
+				potency *= 1.1;
+				
+			potency *= 1 + (.1 * effectiveStacks);
+
+
+			if (potency == undefined)
+				potency = 0;
+			
+			if(event.ability.name == "Twin Snakes")
+				twinsnakes.restart();
+			if(event.ability.name == "Dragon Kick")
+				dragonkick.restart();
+		}
+		
+		var ellapsed = result.events[e].fightTime - prevTime;
+		
+		gl.update(ellapsed);
+		if(gl.current != gl.duration)
+			effectiveStacks = glstacks;
+		
+		if (result.events[e].type == "cast") {
+			if(event.ability.name == "Demolish")
+				demCast = true;
+			
+			if(lightnings.indexOf(event.ability.name) > -1){
+				gl.restart();
+				var old = glstacks;
+				glstacks = Math.min(3, glstacks + 1);
+				stackChange = glstacks != old
+			}
+		}
+
+		if (result.events[e].type == "applybuff") {
+			if(event.ability.name == "Internal Release")
+				internalrelease = true;
+			if(event.ability.name == "Riddle Of Fire"){
+				fire = true;
+				riddle = true;
+			}
+			
+			if(event.ability.name == "Fists Of Wind" || event.ability.name == "Fists Of Earth")
+				fire = false;
+			if(event.ability.name == "Fists Of Fire")
+				fire = true;
+		
+		}
+
+		if (result.events[e].type == "removebuff") {
+			if(event.ability.name == "Internal Release")
+				internalrelease = false;
+			
+			if(event.ability.name == "Riddle Of Fire"){	
+				riddle = false;
+			}
+		}
+		
+		var extra = [];
+		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
+		if (gl.isActive()) {
+			if (stackChange) {
+				if (glstacks == 1)
+					extra.push(`<img src="/img/greased_lightning.png" />`);
+				if (glstacks == 2)
+					extra.push(`<img src="/img/greased_lightning_ii.png" />`);
+				if (glstacks == 3)
+					extra.push(`<img src="/img/greased_lightning_iii.png" />`);
+			} else
+				extra.push(`<div class="center status-block" style="background-color: #4099CE"></div>`);
+		} else {
+			extra.push('');
+		}
+		extra.push(twinsnakes.isActive() ? `<div class="center status-block" style="background-color: #B7727D"></div>` : ``);
+		extra.push(dragonkick.isActive() ? `<div class="center status-block" style="background-color: #EFE0A4"></div>` : ``);
+		extra.push(internalrelease ? `<div class="center status-block" style="background-color: #8DD7AF"></div>` : ``);
+		extra.push(riddle ? `<div class="center status-block" style="background-color: #D8786F"></div>` : ``);
+		
+		result.events[e].extra = extra;
+		result.events[e].potency = potency;
+		
+		prevTime = result.events[e].fightTime;
+	}	
+	//console.log(result);
+	return result;
+}
+
 
 function parseBlackmage(response) {
 	//console.log(response);
@@ -132,7 +310,7 @@ function parseBlackmage(response) {
 	var thundercloud = new Timer("Thundercloud", 12);
 	var thunder = new Timer("Thunder III",24);
 	
-	var prevTime = 0;
+	
 	
 	var canThundercloud = true;
 	var castState = "";
@@ -160,7 +338,7 @@ function parseBlackmage(response) {
 	}
 
 	var first = true;
-	
+	var prevTime = 0;
 	for (var e in response.events) {
 		var event = response.events[e];
 
@@ -172,6 +350,8 @@ function parseBlackmage(response) {
 		}
 
 		result.events[e] = getBasicData(event, result.fight);
+		var potency = 0;
+		
 		if (first) {
 			first = false;
 			if (result.events[e].type == "damage") {

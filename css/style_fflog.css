@@ -203,9 +203,8 @@ table .status-block {
 }
 
 tbody img {
-	width: 20px;
-	height: 20px;
-	margin-right: 2px;
+	#width: 16px;
+	height: 20px;	
 }
 
 thead img {
