@@ -132,5 +132,8 @@ var damageTypes = {
 	16: "water",
 	32: "unaspected",
 	64: "ice",
-	512: "pet"
+	128: "earth",
+	512: "air"
 }
+
+console.log("Shared Loaded");

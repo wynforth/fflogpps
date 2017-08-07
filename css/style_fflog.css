@@ -49,24 +49,6 @@ body {
   filter: grayscale(20%) contrast(60%) brightness(60%);
 }
 
-table thead td {
-	font-weight: bold;
-}
-
-table tr td {
-	height: 100%;
-}
-
-table tr td .center {
-	margin: auto;
-}
-
-table .status-block {
-	width: 12px;
-	height: 100%;
-	display: block;
-}
-
 .grey {
   color: #848484;
 }
@@ -191,7 +173,7 @@ table tr td .center {
 }
 
 table .status-block {
-	width: 12px;
+	width: 11px;
 	height: 100%;
 	display: block;
 }
@@ -205,6 +187,7 @@ table .status-block {
 tbody img {
 	#width: 16px;
 	height: 20px;	
+	transform: translate(-2px, 2px);
 }
 
 thead img {
@@ -243,26 +226,33 @@ table .damage-block {
 }
 
 .physical {
-	background-color: #cdb773;
+	background-color: rgb(229, 204, 128);
 }
 .lightning {
-	background-color: #e7e782;
+	background-color: rgb(100%, 100%, 56%);
 }
 .fire {
-	background-color: #d53f59;
+	background-color: rgb(92%, 27%, 38%);
 }
 .sprint {
 	background-color: #cdb773;
 }
 .water {
-	background-color: #4475e7;
+	background-color: rgb(29%, 50%, 100%);
 }
 .unaspected {
-	background-color: #a798d9;
+	background-color: rgb(72%, 66%, 94%);
 }
 .ice {
-	background-color: #82dce7;
+	background-color: rgb(56%, 95%, 100%);
 }
+.earth {
+	background-color: rgb(80%, 44%, 9%);
+}
+.air {
+	background-color: rgb(75%, 75%, 75%);
+}
+
 .pet {
-	background-color: #64BDC8;
+	background-color: #64BDC8 !important;
 }
