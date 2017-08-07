@@ -9,7 +9,7 @@ var parseFunctions = {
 function processReport(report) {
 	result = parseReport(report);
 
-	//$(".summary").append(`<b>Player:</b> ${result.fight.team[result.player.ID]} [${result.player.type}]</br>`);
+	$(".summary").append(`<b>Player:</b> ${result.fight.team[result.player.ID]} [${result.player.type}]</br>`);
 	if (result.player.pets.length > 0) {
 		var pets = `<ul><li><b>Pets:</b></li>`;
 		for (var p in result.player.pets) {
