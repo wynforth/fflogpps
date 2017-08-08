@@ -344,7 +344,7 @@ function parseBlackmage(response) {
 			}
 
 			if (enoch > 0 && result.events[e].dmgType != 1)
-				potency *= 1.05
+				potency *= 1.1
 
 				if (result.events[e].name.startsWith("Fire") || result.events[e].name == "Flare") {
 					if (castState == "astral") {
@@ -590,7 +590,10 @@ function parseSamurai(response) {
 
 				if (yukikaze[result.events[e].target] > 0 && result.events[e].dmgType == 1)
 					potency *= 1.10;
-
+				if (result.events[e].name == "Yukikaze")
+					yukikaze[result.events[e].target] = 30;
+		
+				
 				if (result.events[e].name == "Jinpu")
 					jinpu = 30;
 
@@ -1014,7 +1017,7 @@ function parseBard(response) {
 		var extra = [];
 		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
 		extra.push(foe ? `<div class="center status-block" style="background-color: #90D0D0"></div>` : ``);
-		extra.push(ragingStrikes ? `<div class="center status-block" style="background-color: #D03F00">$</div>` : ``);
+		extra.push(ragingStrikes ? `<div class="center status-block" style="background-color: #D03F00"></div>` : ``);
 
 		if (minuet.isActive())
 			extra.push(`<div class="center status-block" style="background-color: #4F6F1F">${img}</div>`);
@@ -1026,6 +1029,194 @@ function parseBard(response) {
 			extra.push(``);
 		img = '';
 
+		result.events[e].extra = extra;
+		result.events[e].potency = potency;
+		prevTime = result.events[e].fightTime;
+	}
+
+	return result;
+}
+
+function parseDragoon(response) {
+	console.log("Parsing DRG");
+
+	var prevTime = 0;
+	var totalPotency = 0;
+	var totalDamage = 0;
+
+	//trackers
+	var heavyThrust = false;
+	var b4b = false;
+	var chaosDot = 35;
+	var battleLitany = false;
+	var rightEye = false;
+	var disembowel = {};
+	var botd = new Timer("Blood of the Dragon", 20);
+	
+	var potencies = {
+		'Attack': 90,
+		'True Thrust': 150,
+		'Vorpal Thrust': 100,
+		'Impulse Drive': 190,
+		'Heavy Thrust': (180*9 + 140)/10,
+		'Piercing Talon': 120,
+		'Full Thrust': 100,
+		'Jump': 250,
+		'Disembowel': 100,
+		'Doom Spike': 130,
+		'Spineshatter Dive': 200,
+		'Chaos Thrust': (140*9 + 100)/10,
+		'Dragonfire Dive': 300,
+		'Fang And Claw': (290*9 + 250)/10,
+		'Wheeling Thrust': (290*9 + 250)/10,
+		'Geirskogul': 220,
+		'Sonic Thrust': 100,
+		'Mirage Dive': 200,
+		'Nastrond': 320
+	}
+
+	var combo_potencies = {
+		'Vorpal Thrust': 240,
+		'Full Thrust': 440,
+		'Disembowel': 230,
+		'Chaos Thrust': (270*9 + 230)/10,
+		'Sonic Thrust': 170
+	}
+
+	var combo = {
+		'Vorpal Thrust': 'True Thrust',
+		'Full Thrust': 'Vorpal Thrust',
+		'Disembowel': 'Impulse Drive',
+		'Chaos Thrust': 'Disembowel',
+		'Sonic Thrust': 'Doom Spike'
+	}
+
+	//anything that makes/breaks a combo
+	var comboskills = ['True Thrust', 'Vorpal Thrust','Impulse Drive', 'Heavy Thrust', 'Full Thrust', 'Disembowel', 'Chaos Thrust', 'Fang And Claw', 'Wheeling Thrust', 'Doom Spike', 'Sonic Thrust', 'Piercing Talon'];
+	//all "WeaponSkills"
+	var weaponskills = ['True Thrust', 'Vorpal Thrust','Impulse Drive', 'Heavy Thrust', 'Full Thrust', 'Disembowel', 'Chaos Thrust', 'Fang And Claw', 'Wheeling Thrust', 'Doom Spike', 'Sonic Thrust', 'Piercing Talon']
+	var lastWS = '';
+	
+	var first = true;
+
+	//prescan first couple attacks to see what buffs fall off
+	for (var i = 0; i < 5; i++) {
+		var event = response.events[i];
+
+	}
+
+	for (var e in response.events) {
+		var event = response.events[e];
+
+		//only events of self	pets	or targetted on self
+		if (event.sourceID != result.player.ID) {
+			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
+				continue;
+			}
+		}
+
+		result.events[e] = getBasicData(event, result.fight);
+		var potency = 0;
+
+		if (result.events[e].type == "damage" && result.events[e].amount != 0) {
+			if (combo[result.events[e].name] == lastWS)
+				potency = combo_potencies[result.events[e].name];
+			else
+				potency = potencies[result.events[e].name];
+
+			if (comboskills.indexOf(result.events[e].name) > -1)
+				lastWS = result.events[e].name;
+
+			
+			potency *= heavyThrust ? 1.15:1;
+			potency *= b4b ? 1.15:1;
+			potency *= rightEye ? 1.1:1;
+			if(botd.isActive()){
+				if(result.events[e].name == "Jump" || result.events[e].name == "Spineshatter Dive")
+					potency *= 1.3;
+			}
+			
+			if (disembowel[result.events[e].target] > 0 && result.events[e].dmgType == 1)
+				potency *= 1.05;
+			if (result.events[e].name == "Disembowel")
+				disembowel[result.events[e].target] = 30;
+			
+			if (result.events[e].amount == 0)
+				potency = 0;
+			if (potency == undefined)
+				potency = 0;
+		}
+
+		if (result.events[e].type == "applybuff") {
+			switch(result.events[e].name){
+				case "Heavy Thrust":
+					heavyThrust = true;
+					break;
+				case "Blood For Blood":
+					b4b = true;
+					break;
+				case "Battle Litany":
+					battleLitany = true;
+					break;
+				case "Right Eye":
+					rightEye = true;
+					break;
+			}
+		}
+
+		if (result.events[e].type == "applybuffstack") {}
+
+		if (result.events[e].type == "removebuff") {
+			switch(result.events[e].name){
+				case "Heavy Thrust":
+					heavyThrust = false;
+					break;
+				case "Blood For Blood":
+					b4b = false;
+					break;
+				case "Battle Litany":
+					battleLitany = false;
+					break;
+				case "Right Eye":
+					rightEye = false;
+					break;
+			}
+		}
+
+		if (result.events[e].type == "removebuffstack") {}
+
+		if (result.events[e].type == "cast") {
+			if(result.events[e].name == "Blood Of The Dragon")
+				botd.restart();
+			if(botd.isActive()){
+			if(result.events[e].name == "Fang And Claw" ||
+				result.events[e].name == "Wheeling Thrust" ||
+				result.events[e].name == "Sonic Thrust")
+				
+				
+				botd.extend(10,30);
+			}
+		}
+
+		var ellapsed = result.events[e].fightTime - prevTime;
+
+		//update timers
+		for(var i in disembowel){
+			disembowel[i] = Math.max(0, disembowel[i]-ellapsed);
+		}
+		botd.update(ellapsed);
+
+		
+		var extra = [];
+		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
+		
+		extra.push(botd.isActive() ? `<div class="center status-block" style="background-color: #7DA3AD"></div>` : ``);
+		extra.push(heavyThrust ? `<div class="center status-block" style="background-color: #CDA34C"></div>` : ``);
+		extra.push(b4b ? `<div class="center status-block" style="background-color: #901F1D"></div>` : ``);
+		extra.push(rightEye ? `<div class="center status-block" style="background-color: #B41512"></div>` : ``);
+		extra.push(battleLitany ? `<div class="center status-block" style="background-color: #6F8C93"></div>` : ``);
+		
+		
 		result.events[e].extra = extra;
 		result.events[e].potency = potency;
 		prevTime = result.events[e].fightTime;
@@ -1067,6 +1258,7 @@ var combo = {
 var comboskills = [];
 //all "WeaponSkills"
 var weaponskills = []
+var lastWS = '';
 
 var first = true;
 
@@ -1088,11 +1280,11 @@ continue;
 }
 }
 
-result.events[e] = getBasicData(event	result.fight);
+result.events[e] = getBasicData(event, result.fight);
 var potency = 0;
 
 if (result.events[e].type == "damage" && result.events[e].amount != 0) {
-if (combo[result.events[e].name].indexOf(lastWS) > -1)
+if (combo[result.events[e].name] == lastWS)
 potency = combo_potencies[result.events[e].name];
 else
 potency = potencies[result.events[e].name];
@@ -1132,9 +1324,9 @@ var ellapsed = result.events[e].fightTime - prevTime;
 
 //update timers
 
+var extra = [];
 extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
 
-var extra = [];
 result.events[e].extra = extra;
 result.events[e].potency = potency;
 prevTime = result.events[e].fightTime;

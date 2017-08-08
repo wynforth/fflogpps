@@ -1,9 +1,11 @@
 var parseFunctions = {
+	'Bard': parseBard,
 	'BlackMage': parseBlackmage,
-	'Samurai': parseSamurai,
+	'Dragoon': parseDragoon,
 	'Monk': parseMonk,
 	'RedMage': parseRedmage,
-	'Bard': parseBard,
+	'Samurai': parseSamurai,
+
 }
 
 function processReport(report) {
@@ -127,6 +129,14 @@ function processClass(response, spec) {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/bard_song.png" title="Bard Song's"/></td>`);
 	}
 	
+	if (spec == "Dragoon") {
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/blood_of_the_dragon.png" title="Blood of the Dragon"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/heavy_thrust.png" title="Heavy Thrust"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/blood_for_blood.png" title="Blood For Blood"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/right_eye.png" title="Dragon Sight"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/battle_litany.png" title="Battle Litany"/></td>`);
+	}
+
 	var totalPotency = 0;
 	var totalDamage = 0;
 
@@ -173,6 +183,5 @@ function getReportData() {
 	var url = base_url + "/report/fights/" + result.report.reportID + "?translate=true&api_key=" + api_key;
 	httpGetAsync(url, processReport);
 }
-
 
 getReportData();

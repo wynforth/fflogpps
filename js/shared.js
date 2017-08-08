@@ -49,6 +49,10 @@ class Timer {
 	isActive(){
 		return this.current > 0;
 	}
+	
+	extend(add, max){
+		this.current = Math.min(max, this.current + add);
+	}
 }
 
 
