@@ -1047,7 +1047,7 @@ function parseNinja(response) {
 			if (trick[result.events[e].target] > 0)
 				potency *= 1.1;
 			//shadowfang resist
-			if (shadowfang[result.events[e].target] > 0)
+			if (shadowfang[result.events[e].target] > 0 && result.events[e].dmgType == 1)
 				potency *= 1.1;
 			
 			//Dripping Blades II
