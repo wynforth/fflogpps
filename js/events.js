@@ -6,26 +6,31 @@ var parseFunctions = {
 	'Ninja': parseNinja,
 	'RedMage': parseRedmage,
 	'Samurai': parseSamurai,
+	'Summoner': parseSummoner,
 
 }
 
 function processReport(report) {
 	result = parseReport(report);
-
-	$(".summary").append(`<b>Player:</b> ${result.fight.team[result.player.ID]} [${result.player.type}]</br>`);
+	
+	//https://www.fflogs.com/reports/RJnpraBxmLg6c48D#fight=30&type=damage-done
+	var link = `https://www.fflogs.com/reports/${result.report.reportID}#fight=${result.report.fightID}&type=damage-done`;
+	
+	$(".summary").append(`<b>Player:</b> ${result.fight.team[result.player.ID]} as ${result.player.type} (<a href="${link}">FFLogs</a>)</br>`);
+	
 	if (result.player.pets.length > 0) {
-		var pets = `<ul><li><b>Pets:</b></li>`;
+		var pets = '';
 		for (var p in result.player.pets) {
-			pets += `<li>${team[result.player.pets[p]]}</li>`;
+			pets += result.fight.team[result.player.pets[p]] + ', ';
 		}
-		$(".summary").append(pets + `</ul>`);
+		$(".summary").append(`<b>Pets:</b> ${pets.slice(0,-2)}<br/>`);
 	}
-	var nme = `<ul><li><b>Enemies:</b></li>`;
-	for (var e in result.fight.enemies) {
 
-		nme += `<li>${result.fight.enemies[e]}</li>`;
+	var nme = '';
+	for (var e in result.fight.enemies) {
+		nme += result.fight.enemies[e] + ', ';
 	}
-	$('.summary').append(nme + '</ul>');
+	$(".summary").append(`<b>Enemies:</b> ${nme.slice(0,-2)}<br/>`);
 	$('.summary').append(`<b>Duration:</b> ${result.fight.duration} seconds<br/>`)
 
 	var url = base_url + "/report/events/" + result.report.reportID + "?translate=true";

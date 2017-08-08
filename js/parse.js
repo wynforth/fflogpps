@@ -1465,6 +1465,73 @@ function parseSamurai(response) {
 }
 
 
+function parseSummoner(response) {
+	console.log("Parsing SMN");
+
+	var prevTime = 0;
+	var totalPotency = 0;
+	var totalDamage = 0;
+
+	//trackers
+
+
+	var potencies = {}
+
+	var first = true;
+
+	//prescan first couple attacks to see what buffs fall off
+	for (var i = 0; i < 5; i++) {
+		var event = response.events[i];
+
+	}
+
+	for (var e in response.events) {
+		var event = response.events[e];
+		console.log(event);
+
+		//only events of self	pets	or targetted on self
+		if (event.sourceID != result.player.ID) {
+			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
+				continue;
+			}
+		}
+
+		result.events[e] = getBasicData(event, result.fight);
+		var potency = 0;
+
+		if (result.events[e].type == "damage" && result.events[e].amount != 0) {
+			potency = potencies[result.events[e].name];
+
+			if (result.events[e].amount == 0)
+				potency = 0;
+			if (potency == undefined)
+				potency = 0;
+		}
+
+		if (result.events[e].type == "applybuff") {}
+
+		if (result.events[e].type == "applybuffstack") {}
+
+		if (result.events[e].type == "removebuff") {}
+
+		if (result.events[e].type == "removebuffstack") {}
+
+		if (result.events[e].type == "cast") {}
+
+		//update timers
+		var ellapsed = result.events[e].fightTime - prevTime;
+
+		var extra = [];
+		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
+
+		result.events[e].extra = extra;
+		result.events[e].potency = potency;
+		prevTime = result.events[e].fightTime;
+	}
+
+	return result;
+}
+
 /*
 
 CLASS PARSGIN TEMPLATE

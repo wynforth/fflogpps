@@ -137,7 +137,8 @@ var damageTypes = {
 	32: "unaspected",
 	64: "ice",
 	128: "earth",
-	512: "air"
+	512: "air",
+	1024: "ruin",
 }
 
 console.log("Shared Loaded");

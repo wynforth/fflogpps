@@ -154,6 +154,7 @@ function displayRankings(response){
 	var tbl_body = '';
 	for(var key in ranks){
 		var rank = ranks[key];
+		console.log(rank);
 		var tbl_row = "";
 		//git hub
 		tbl_row += `<td><a href="events.html?name=${rank.name}&report=${rank.reportID}&fight=${rank.fightID}&api_key=${api_key}">${rank.name}</a></td>`;

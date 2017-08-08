@@ -253,6 +253,10 @@ table .damage-block {
 	background-color: rgb(75%, 75%, 75%);
 }
 
+.ruin {
+	background-color: #2599be;
+}
+
 .pet {
 	background-color: #64BDC8 !important;
 }
