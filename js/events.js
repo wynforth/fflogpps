@@ -150,6 +150,13 @@ function processClass(response, spec) {
 	if (spec == "Samurai") {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/jinpu.png" title="Jinpu"/></td>`);
 	}
+	
+	if (spec == "Summoner") {
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/dreadwyrm_trance.png" title="Dreadwyrm Trance"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/ruination.png" title="Ruination"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/bio_iii.png" title="Bio III"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/miasma_iii.png" title="Miasma III"/></td>`);
+	}
 
 	var totalPotency = 0;
 	var totalDamage = 0;

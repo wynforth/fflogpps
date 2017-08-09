@@ -78,6 +78,7 @@ function parseGeneric(response) {
 	var prevTime = 0;
 	for (var e in response.events) {
 		var event = response.events[e];
+		console.log(event);
 
 		//only events of self	pets	or targetted on self
 		if (event.sourceID != result.player.ID) {
@@ -446,7 +447,6 @@ function parseBlackmage(response) {
 		var ellapsed = result.events[e].fightTime - prevTime;
 
 		//tick timers
-		console.log(thunder);
 		thunder.update(ellapsed);
 		thundercloud.update(ellapsed);
 
@@ -1471,11 +1471,74 @@ function parseSummoner(response) {
 	var prevTime = 0;
 	var totalPotency = 0;
 	var totalDamage = 0;
+	
+	var playerDamage = 0;
+	var petDamage = 0;
+	
+	var playerPotency = 0;
+	var petPotency = 0;
 
 	//trackers
+	var infernoDot = 20;
+	var bioDot = 0;
+	var bioCast = false;
+	var bio = {};
+	var miasmaDot = 0;
+	var miasmaCast = false;
+	var miasma = {};
+	var shadowDot = 0;
+	var ruination = {};
+	var trance = {};
+	var magicDebuff = {}; //shining emerald or contagion
+	
 
-
-	var potencies = {}
+	var potencies = {
+		'Attack': 40,
+		'Ruin': 100,
+		'Ruin II': 100,
+		'Ruin III': 150,
+		'Ruin IV': 200,
+		'Energy Drain': 150,
+		'Painflare': 200,
+		'Deathflare': 400,
+		'Miasma': 20,
+		'Miasma III': 50,
+		'Fester': 0,
+		'Tri-Bind': 20,
+		//special case
+		'Radiant Shield': 50,
+	}
+	
+	var petPotencies = {
+		'Attack': 80,
+		//Bahamut
+		'Wyrmwave': 160,
+		'Akh Morn': 680,
+		//emerald
+		'Gust': 90,
+		'Backdraft': 80,
+		'Downburst': 80,
+		//topaz
+		'Gouge': 70,
+		'Shining Topaz': 60,
+		'Storm': 60,
+		//garuda
+		'Wind Blade': 110,
+		'Shockwave': 90,
+		'Aerial Slash': 90,
+		'Aerial Blast': 250,
+		//titan
+		'Rock Buster': 85,
+		'Mountain Buster': 70,
+		'Landslide': 70,
+		'Earthen Fury': 200,
+		//ifrit
+		'Crimson Cyclone': 110,
+		'Burning Strike': 135,
+		'Radiant Shield': 50,
+		'Flaming Crush': 110,
+		'Inferno': 200,
+	}
 
 	var first = true;
 
@@ -1487,7 +1550,7 @@ function parseSummoner(response) {
 
 	for (var e in response.events) {
 		var event = response.events[e];
-		console.log(event);
+		//console.log(event);
 
 		//only events of self	pets	or targetted on self
 		if (event.sourceID != result.player.ID) {
@@ -1500,30 +1563,170 @@ function parseSummoner(response) {
 		var potency = 0;
 
 		if (result.events[e].type == "damage" && result.events[e].amount != 0) {
-			potency = potencies[result.events[e].name];
+			if(result.events[e].source == result.player.ID){
+				potency = potencies[result.events[e].name];
+				if(result.events[e].name == "Fester"){
+					potency = 0 + (bio[result.events[e].target] > 0 ? 150:0)+ (miasma[result.events[e].target] > 0 ? 150:0);
+				}
+			
+				if(ruination[result.events[e].target] > 0){
+					if(result.events[e].name.indexOf('Ruin') > -1)
+						potency += 20;
+				}
+				
+				
+			} else {
+				potency = petPotencies[result.events[e].name];
+				
+				if(result.events[e].name == 'Inferno' && result.events[e].dmgType != 1){
+					infernoDot = 20;
+				}
+			}
+			
+			//magic debuff from pet
+			if(result.events[e].dmgType != 1 && magicDebuff[result.events[e].target] > 0){
+				potency *= 1.1;
+			}
+			
+			//dreadwyrm trance
+			potency *=  trance[result.events[e].source] > 0 ? 1.1:1;
+			//magic and mend
+			potency *= 1.3;
+			
+			//pre calculated dots
+			if (result.events[e].name == 'Inferno' && result.events[e].dmgType == 1) {
+				potency = infernoDot;
+			}
 
-			if (result.events[e].amount == 0)
-				potency = 0;
+			switch(result.events[e].name){
+				case 'Bio III':
+					potency = bioDot;
+					break;
+				case 'Miasma III':
+					if(!miasmaCast) 
+						potency = miasmaDot;
+					else
+						miasmaCast = false;
+					break;
+				case 'Shadow Flare':
+					potency = shadowDot;
+					break;
+				case 'Deathflare':
+					trance[result.events[e].source] = 0;
+					break;
+			}
+
 			if (potency == undefined)
 				potency = 0;
 		}
-
-		if (result.events[e].type == "applybuff") {}
-
-		if (result.events[e].type == "applybuffstack") {}
-
-		if (result.events[e].type == "removebuff") {}
-
-		if (result.events[e].type == "removebuffstack") {}
-
-		if (result.events[e].type == "cast") {}
-
+		
 		//update timers
 		var ellapsed = result.events[e].fightTime - prevTime;
+		
+		var ruinationTD = '';
+		for(var i in ruination){
+			ruination[i] = Math.max(0, ruination[i] - ellapsed);
+			if(ruination[i] > 0)
+				ruinationTD = `<div class="center status-block" style="background-color: #4BA1EC"></div>`;
+		}
+		var tranceTD = '';
+		for(var i in trance){
+			trance[i] = Math.max(0, trance[i] - ellapsed);
+		}
+		if(trance[result.player.ID] > 0)
+				tranceTD = `<div class="center status-block" style="background-color: #C1294D"></div>`;
+		
+		var bioTD = '';
+		for(var i in bio){
+			bio[i] = Math.max(0, bio[i] - ellapsed);
+			if(bio[i] > 0)
+				bioTD = `<div class="center status-block" style="background-color: #88BE50"></div>`;
+		}
+		var miasmaTD = '';
+		for(var i in miasma){
+			miasma[i] = Math.max(0, miasma[i] - ellapsed);
+			if(miasma[i] > 0)
+				miasmaTD = `<div class="center status-block" style="background-color: #721DD7"></div>`;
+		}
+		var magicTD = '';
+		for(var i in magicDebuff){
+			magicDebuff[i] = Math.max(0, magicDebuff[i] - ellapsed);
+			if(magicDebuff[i] > 0)
+				magicTD = `<div class="center status-block" style="background-color: #721DD7"></div>`;
+		}
+		
+		
+
+		
+		if (result.events[e].type == "applybuff") {
+			
+		}
+
+		if (result.events[e].type == "removebuff") {
+			
+		}
+
+		
+		
+		if (result.events[e].type == "applydebuff") {
+			if(result.events[e].name == 'Ruination')
+				ruination[result.events[e].target] = 20;
+			
+			
+		}
+
+		if (result.events[e].type == "removedebuff") {
+			if(result.events[e].name == 'Ruination')
+				ruination[result.events[e].target] = 0;
+			
+			if(result.events[e].name == 'Shining Emerald' || result.events[e].name == 'Contagion')
+				magicDebuff[result.events[e].target] = 0;
+		}
+
+
+		if (result.events[e].type == "cast") {
+			var dotMod = 1 + (trance[result.events[e].source] > 0 ? .1:0)
+			if(result.events[e].dmgType != 1 && magicDebuff[result.events[e].target] > 0)
+				dotMod += .1;
+			
+			if(result.events[e].name == 'Shining Emerald' || result.events[e].name == 'Contagion')
+				magicDebuff[result.events[e].target] = 15;
+			
+			if(result.events[e].name == "Tri-disaster"){
+				bioDot = 50 * dotMod;
+				miasmaDot = 50 * dotMod;
+				bio[result.events[e].target] = 30;
+				miasma[result.events[e].target] = 30;
+			}
+			if(result.events[e].name == "Shadow Flare"){
+				shadowDot = 50 * dotMod;
+			}
+			if(result.events[e].name == "Miasma III"){
+				miasmaDot = 50 * dotMod;
+				miasma[result.events[e].target] = 30;
+			}
+			if(result.events[e].name == "Bio III"){
+				bioDot = 50 * dotMod;
+				bio[result.events[e].target] = 30;
+			}
+			if(result.events[e].name == 'Dreadwyrm Trance'){
+				//console.log(result.events[e]);
+				if(result.events[e].source == result.player.ID && result.events[e].source == result.events[e].target)
+					trance[result.events[e].target] = 20;
+			}
+		}
+
+		
 
 		var extra = [];
 		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
-
+		extra.push(tranceTD);
+		extra.push(ruinationTD);
+		//extra.push(magicTD);
+		extra.push(bioTD);
+		extra.push(miasmaTD);
+		
+		
 		result.events[e].extra = extra;
 		result.events[e].potency = potency;
 		prevTime = result.events[e].fightTime;

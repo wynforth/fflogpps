@@ -82,7 +82,6 @@ function fetchUrl(theUrl, callback, args)
 
 function getBasicData(event, fight) {
 	var data = {};
-	
 	data = {
 		'type': event.type,
 		'name': event.type == 'death' ? 'Death' : event.ability.name,
@@ -90,6 +89,8 @@ function getBasicData(event, fight) {
 		'fightTime': (event.timestamp - fight.start) / 1000,
 		'target': event.targetID == undefined ? '' : event.targetID,
 		'isTargetFriendly': event.targetIsFriendly,
+		'source': event.sourceID == undefined ? '' : event.sourceID,
+		'isSourceFriendly': event.sourceIsFriendly,
 		'hitType': event.hitType == undefined ? '' : hitTypes[event.hitType],
 		'dmgType': event.amount == undefined ? 0 : event.ability.type,
 		'amount': event.amount == undefined ? 0 : event.amount,
