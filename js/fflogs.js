@@ -155,18 +155,20 @@ function displayRankings(response){
 	for(var key in ranks){
 		var rank = ranks[key];
 		console.log(rank);
+		var link = `https://www.fflogs.com/reports/${rank.reportID}#fight=${rank.fightID}&type=damage-done`;
 		var tbl_row = "";
 		//git hub
-		tbl_row += `<td><a href="events.html?name=${rank.name}&report=${rank.reportID}&fight=${rank.fightID}&api_key=${api_key}">${rank.name}</a></td>`;
+		tbl_row += `<td><a href="events.html?name=${rank.name}&report=${rank.reportID}&fight=${rank.fightID}&api_key=${api_key}">${rank.name}</a><span class="damage-block ${classes[rank.spec].replace(' ','')}"></span></td>`;
 		//local
 		//tbl_row += `<td><a href="/events?name=${rank.name}&report=${rank.reportID}&fight=${rank.fightID}&api_key=${api_key}">${rank.name}</a></td>`;
 		tbl_row += `<td>${rank.total}</td>`;
 		tbl_row += `<td>${(rank.duration/1000).toFixed(2)}s</td>`;
-		tbl_row += `<td>${rank.spec}</td>`;
-		tbl_row += `<td>${rank.reportID}</td>`;
-		tbl_row += `<td>${rank.fightID}</td>`;
+		//tbl_row += `<td>${rank.spec}</td>`;
+		//tbl_row += `<td>${rank.reportID}</td>`;
+		//tbl_row += `<td>${rank.fightID}</td>`;
 		tbl_row += `<td>${rank.region}</td>`;
 		tbl_row += `<td>${rank.server}</td>`;
+		tbl_row += `<td><a href="${link}">${rank.reportID}</a></td>`;
 		
 		tbl_body += `<tr>${tbl_row}</tr>`;
 	}

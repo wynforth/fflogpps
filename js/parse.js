@@ -635,8 +635,17 @@ function parseDragoon(response) {
 	var first = true;
 
 	//prescan first couple attacks to see what buffs fall off
-	for (var i = 0; i < 5; i++) {
-		var event = response.events[i];
+	var start = response.events[0].timestamp;
+	for (var e in response.events) {
+		var event = response.events[e];
+		if (event.type == "cast") {
+			if (event.ability.name == "Fang And Claw" || event.ability.name == "Wheeling Thrust" || event.ability.name == "Sonic Thrust") {
+				botd.restart();
+				break;
+			}
+		}
+		if(event.timestamp > start + 20000)
+			break;
 
 	}
 
@@ -1640,13 +1649,13 @@ function parseSummoner(response) {
 		for(var i in bio){
 			bio[i] = Math.max(0, bio[i] - ellapsed);
 			if(bio[i] > 0)
-				bioTD = `<div class="center status-block" style="background-color: #88BE50"></div>`;
+				bioTD = `<div class="center status-block" style="background-color: #56631E"></div>`;
 		}
 		var miasmaTD = '';
 		for(var i in miasma){
 			miasma[i] = Math.max(0, miasma[i] - ellapsed);
 			if(miasma[i] > 0)
-				miasmaTD = `<div class="center status-block" style="background-color: #721DD7"></div>`;
+				miasmaTD = `<div class="center status-block" style="background-color: #4B494F"></div>`;
 		}
 		var magicTD = '';
 		for(var i in magicDebuff){

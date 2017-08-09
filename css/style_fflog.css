@@ -8,7 +8,7 @@ body {
 .container.rotation,
 .container.result,
 .container.summaries {
-	padding: 15px;
+	padding: 12px;
 	background-color: #939393;
 	box-shadow: inset 4px 4px 15px -2px black;
 	border-radius: 15px 25px 5px 5px;
@@ -16,10 +16,10 @@ body {
 }
 
 .jobs, .results, .summary {
-	#margin-top: 0.5em;
 	border: 1px solid #494b4c;
 	padding: 2px;
 	background-color: #737373;
+	box-shadow: 4px 4px 15px -2px black;
 }
 
 .header {
@@ -27,8 +27,9 @@ body {
 	padding-left: 0.3em;
 	padding-bottom: 1px;
 	border-radius: 7px 24px 0px 0px;
-	margin-top: 0.5em;
 	background-color: #494b4c;
+	text-align: center;
+	box-shadow: 4px 4px 15px -2px black;
 }
 
 .header img,
@@ -147,29 +148,42 @@ form {
 a,
 a:visited {
 	color: #ddd;
+	text-decoration: none;
 }
 
 A:hover,
 a:active {
+	text-decoration: none;
 
 }
 
-.ranking-table tbody td {
-	padding-top: 0px;
-	padding-bottom: 0px;
-	border: none;
+.ranking-table {
+	margin-bottom: 0px;
+	
 }
 
 table thead td {
 	font-weight: bold;
+	padding: 0px !important;
+	text-align: center;
 }
 
-table tr td {
+table {
+	table-layout: fixed;
+}
+
+table td {
+	border-top: 0px !important;
+}
+
+table tbody td {
 	height: 100%;
+	padding: 0px 5px !important;
 }
 
-table tr td .center {
+table .center {
 	margin: auto;
+	text-align: center;
 }
 
 table .status-block {
@@ -179,8 +193,8 @@ table .status-block {
 }
 
 .status-col {
-	width: 20px;
-	magin: 0px;
+	width: 24px !important;
+	margin: 0px;
 	padding: 0px;
 }
 
@@ -193,6 +207,7 @@ tbody img {
 thead img {
 	width: 18px;
 	height: 24px;
+	
 }
 
 .hori {
@@ -221,42 +236,103 @@ li {
 
 table .damage-block {
 	width: 100%;
-	height: 2px;
+	height: 1px;
 	display: inline-block;
 }
 
-.physical {
-	background-color: rgb(229, 204, 128);
+.physical { background-color: rgb(229, 204, 128);}
+.lightning { background-color: rgb(100%, 100%, 56%); }
+.fire { background-color: rgb(92%, 27%, 38%); }
+.sprint { background-color: #cdb773;}
+.water { background-color: rgb(29%, 50%, 100%); }
+.unaspected { background-color: rgb(72%, 66%, 94%); }
+.ice { background-color: rgb(56%, 95%, 100%); }
+.earth { background-color: rgb(80%, 44%, 9%); }
+.air { background-color: rgb(75%, 75%, 75%); }
+.ruin { background-color: #2599be; }
+
+.pet { background-color: #64BDC8; }
+
+.Bard { background-color: rgb(57%, 73%, 37%) !important;}
+.Blackmage {background-color: #A579D6  !important;}
+.Dragoon {background-color: #4164CD !important;}
+.Machinist {background-color: #6EE1D6 !important;}
+.Monk {background-color: #d69c00 !important;}
+.Ninja { background-color: #AF1964 !important;}
+.Redmage {background-color: #e87b7b !important;}
+.Samurai {background-color: #e46d04 !important;}
+.Summoner {background-color: #2D9B78 !important;}
+                                               
+.Whitemage {background-color: #FFF0DC !important;}
+.Scholar {background-color: #8657FF !important;}
+.Astrologian {background-color: #FFE74A !important;}
+                                              
+.Paladin {background-color: #A8D2E6 !important;}
+.Warrior {background-color: #cf2621 !important;}
+.Darkknight {background-color: rgb(209, 38, 204) !important;}
+
+
+.header.Bard { 
+	color: #91BA5E !important;
+	background-color: #405129 !important;
 }
-.lightning {
-	background-color: rgb(100%, 100%, 56%);
+.header.BlackMage {
+	color: #A579D6 !important;
+	background-color: #392b48 !important;
 }
-.fire {
-	background-color: rgb(92%, 27%, 38%);
+.header.Samurai {
+	color: #e46d04 !important;
+	background-color: #4a2402 !important;
 }
-.sprint {
-	background-color: #cdb773;
+.header.Monk {
+	color: #d69c00 !important;
+	background-color: #634700 !important;
 }
-.water {
-	background-color: rgb(29%, 50%, 100%);
+.header.Dragoon {
+	color: #4164CD !important;
+	background-color: #1D2C5B !important;
 }
-.unaspected {
-	background-color: rgb(72%, 66%, 94%);
+.header.Machinist {
+	color: #6EE1D6 !important;
+	background-color: #2A5652 !important;
 }
-.ice {
-	background-color: rgb(56%, 95%, 100%);
+.header.Ninja {
+	color: #AF1964 !important;
+	background-color: #440A27 !important;
 }
-.earth {
-	background-color: rgb(80%, 44%, 9%);
+.header.Redmage {
+	color: #e87b7b !important;
+	background-color: #562E2E !important;
 }
-.air {
-	background-color: rgb(75%, 75%, 75%);
+.header.Summoner {
+	color: #2D9B78 !important;
+	background-color: #144434 !important;
 }
 
-.ruin {
-	background-color: #2599be;
+.header.Whitemage {
+	color: #FFF0DC !important;
+	background-color: #544F49 !important;
+}
+.header.Scholar {
+	color: #8657FF !important;
+	background-color: #281A4C !important;
+}
+.header.Astrologian {
+	color: #FFE74A !important;
+	background-color: #685E1F !important;
 }
 
-.pet {
-	background-color: #64BDC8 !important;
+.header.Paladin {
+	color: #A8D2E6 !important;
+	background-color: #3E4D54 !important;
 }
+.header.Warrior {
+	color: #cf2621 !important;
+	background-color: #4C0D0C !important;
+}
+.header.Darkknight {
+	color: #D126CC !important;
+	background-color: #510F50 !important;
+}
+
+

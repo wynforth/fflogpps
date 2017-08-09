@@ -16,22 +16,27 @@ function processReport(report) {
 	//https://www.fflogs.com/reports/RJnpraBxmLg6c48D#fight=30&type=damage-done
 	var link = `https://www.fflogs.com/reports/${result.report.reportID}#fight=${result.report.fightID}&type=damage-done`;
 	
-	$(".summary").append(`<b>Player:</b> ${result.fight.team[result.player.ID]} as ${result.player.type} (<a href="${link}">FFLogs</a>)</br>`);
+	//$(".summary").append(`<b>${result.fight.team[result.player.ID]}</b> as a <span class="${result.player.type}">${result.player.type}</span> (<a href="${link}">FFLogs</a>)`);
+	$(".container.summaries .header").html(`<b>${result.fight.team[result.player.ID]}</b> the ${result.player.type}`);
+	$(".header").toggleClass(result.player.type, true);
+	$(".container").toggleClass(result.player.type, true);
 	
 	if (result.player.pets.length > 0) {
 		var pets = '';
 		for (var p in result.player.pets) {
 			pets += result.fight.team[result.player.pets[p]] + ', ';
 		}
-		$(".summary").append(`<b>Pets:</b> ${pets.slice(0,-2)}<br/>`);
+		$(".container.summaries .header").append(` with ${pets.slice(0,-2)}`);
 	}
 
 	var nme = '';
 	for (var e in result.fight.enemies) {
 		nme += result.fight.enemies[e] + ', ';
 	}
-	$(".summary").append(`<b>Enemies:</b> ${nme.slice(0,-2)}<br/>`);
-	$('.summary').append(`<b>Duration:</b> ${result.fight.duration} seconds<br/>`)
+	$(".container.summaries .header").append(` <b>VS.</b> ${nme.slice(0,-2)}`);
+	
+	$(".summary").append(`<span class="castType">Full report at <a href="${link}">FFLogs</a></span>`);
+	$('.summary').append(`<b>Duration:</b> ${result.fight.duration} seconds<br/><br/>`)
 
 	var url = base_url + "/report/events/" + result.report.reportID + "?translate=true";
 	url += "&start=" + result.fight.start;
@@ -52,16 +57,16 @@ function updateEvent(data, fight) {
 	tbl_row = '';
 
 	tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
-	tbl_row += `<td><span class="damage-block ${damageTypes[data.dmgType]}"></span>${data.amount == 0 ? '':data.amount} <span class="castType">${data.isDirect ? "Direct ":''}${data.hitType}</span></td>`;
+	tbl_row += `<td>${data.amount == 0 ? '':data.amount} <span class="castType">${data.isDirect ? "Direct ":''}${data.hitType}</span><span class="damage-block ${damageTypes[data.dmgType]}"></span></td>`;
 	if (data.isTargetFriendly)
 		tbl_row += `<td>${fight.team[data.target]}</td>`;
 	else
 		tbl_row += `<td>${fight.enemies[data.target]}</td>`;
-	tbl_row += `<td>${data.fightTime}</td>`;
+	tbl_row += `<td class="center">${data.fightTime.toFixed(2)}</td>`;
 
 	if (data.extra != undefined) {
 		for (var i = 0; i < data.extra.length; i++) {
-			tbl_row += `<td>${data.extra[i]}</td>`;
+			tbl_row += `<td class="center">${data.extra[i]}</td>`;
 		}
 	}
 	$(".ranking-table tbody").append(`<tr>${tbl_row}</tr>`);
@@ -105,7 +110,7 @@ function processClass(response, spec) {
 	result = parseFunctions[spec](response);
 
 	$(".ranking-table tbody").html("");
-	$(".ranking-table thead tr").append(`<td>Potency</td>`);
+	$(".ranking-table thead tr").append(`<td style="width: 90px">Potency</td>`);
 
 	
 
