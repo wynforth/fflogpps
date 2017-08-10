@@ -785,7 +785,7 @@ function parseDragoon(response) {
 }
 
 function parseMachinist(response) {
-	console.log("Parsing SMN");
+	console.log("Parsing MCH");
 
 	var prevTime = 0;
 	var totalPotency = 0;
@@ -800,9 +800,16 @@ function parseMachinist(response) {
 	//trackers
 	var hotShot = new Timer("Hot Shot", 60);
 	var hyperCharge = new Timer("Hypercharge", 20);
-	var guass = true;
+	var gauss = false;
+	var ammunition = 3;
 	var heat = 0;
+	var heatChange = 0;
+	var overheated = new Timer("Overheated", 10);
+	var removeBarrel = false;
 	var wildfirePot = 0;
+	
+	var cleanerShot = false;
+	var enhancedSlugShot = false;
 
 	var potencies = {
 		'Shot': 80,
@@ -822,12 +829,24 @@ function parseMachinist(response) {
 		'Wildfire': 0,
 	}
 	
+	var enhanced_potencies = {
+		'Slug Shot': 200,
+		'Clean Shot': 240,
+		'Cooldown': 230,
+		'Heated Slug Shot': 230,
+		'Heated Clean Shot': 270,
+	}
+	
 	var petPotencies = {
 		'Charged Volley Fire': 160,
 		'Volley Fire': 80,
+		'Aether Mortar': 60,
+		'Charged Aether Mortar': 90,
 		'Rook Overload': 800,
 		'Bishop Overload': 600,
 	}
+	
+	var weaponskills = ['Hot Shot', 'Split Shot', 'Slug Shot', 'Spread Shot', 'Clean Shot', 'Cooldown', 'Heated Split Shot', 'Heated Slug Shot', 'Heated Clean Shot'];
 
 	var first = true;
 
@@ -841,12 +860,19 @@ function parseMachinist(response) {
 		if (event.ability.name == "Hot Shot") {
 				hotShot.restart();
 		}
+		
+		if (event.ability.name == "Barrel Stabilizer") {
+				gauss = true;
+		}
 		if(event.timestamp > start + 20000)
 			break;
 
 	}
 
 	for (var e in response.events) {
+		//reseting triggers
+		var ammoUsed = false;
+		
 		var event = response.events[e];
 		//console.log(event);
 
@@ -864,9 +890,21 @@ function parseMachinist(response) {
 			if(result.events[e].source == result.player.ID){
 				potency = potencies[result.events[e].name];
 				
+				if(heat >= 50 && result.events[e].name == "Cooldown")
+					potency = enhanced_potencies[result.events[e].name];
+				if(cleanerShot && (result.events[e].name == "Clean Shot" || result.events[e].name == "Heated Clean Shot"))
+					potency = enhanced_potencies[result.events[e].name];
+				if(enhancedSlugShot && (result.events[e].name == "Slug Shot" || result.events[e].name == "Heated Slug Shot"))
+					potency = enhanced_potencies[result.events[e].name];
+				
+				if(weaponskills.indexOf(result.events[e].name) > -1 && ammunition > 0)
+					potency += 25;
+				
 				potency *= hotShot.isActive() ? 1.08:1;
-				potency *= guass ? 1.05:1;
-							
+				potency *= gauss ? 1.05:1;
+				potency *= overheated.isActive() ? 1.2:1;
+				if(result.events[e].name == "Flamethrower")
+					heatChange = 20;
 					
 			} else {
 				potency = petPotencies[result.events[e].name];
@@ -894,14 +932,37 @@ function parseMachinist(response) {
 		var ellapsed = result.events[e].fightTime - prevTime;
 		hotShot.update(ellapsed);
 		hyperCharge.update(ellapsed);
+		overheated.update(ellapsed);
+		heat += heatChange;
+		heatChange = 0;
+		if(heat >= 100){
+			overheated.restart();
+			removeBarrel = true; //mark barrel for removal
+		}
+		//remove barrel once overheat finished
+		if(removeBarrel && !overheated.isActive()){
+			gauss = false;
+			removeBarrel = false;
+		}
 
 		
-		if (result.events[e].type == "applybuff") {
+		if (result.events[e].type == "applybuffstack") {
 			
 		}
 
-		if (result.events[e].type == "removebuff") {
+		if (result.events[e].type == "applybuff") {
+			if(result.events[e].name == "Cleaner Shot")
+				cleanerShot = true;
+			if(result.events[e].name == "Enhanced Slug Shot")
+				enhancedSlugShot = true;
 			
+		}
+		
+		if (result.events[e].type == "removebuff") {
+			if(result.events[e].name == "Cleaner Shot")
+				cleanerShot = false;
+			if(result.events[e].name == "Enhanced Slug Shot")
+				enhancedSlugShot = false;
 		}
 
 		
@@ -917,11 +978,45 @@ function parseMachinist(response) {
 
 		if (result.events[e].type == "cast") {
 			switch(result.events[e].name){
-				case "Hot Shot":
-					hotShot.restart();
-					break;
+				
 				case "Hypercharge":
 					hyperCharge.restart();
+					break;
+				case "Barrel Stabilizer":
+					console.log("heat jump by " + result.events[e].name + " ("+ammoUsed+")");
+					heat = 50;
+					break;
+				case "Hot Shot":
+					hotShot.restart();
+				case "Split Shot":
+				case "Slug Shot":
+				case "Spread Shot":
+				case "Clean Shot":
+				case "Heated Split Shot":
+				case "Heated Slug Shot":
+				case "Heated Clean Shot":
+					if(ammunition > 0){
+						console.log("ammunition used on " + result.events[e].name);
+						ammunition--
+					} else if(gauss){
+						heatChange = 5;
+						console.log("heat boop by " + result.events[e].name);
+					}
+					break;
+				case "Cooldown":
+					heatChange = -25;
+					break;
+				case "Reload":
+					ammunition = 3;
+					break;
+				case "Quick Reload":
+					if(ammunition < 3) ammunition++;
+					break;
+				case "Gauss Barrel":
+					gauss = true;
+					break;
+				case "Remove Barrel":
+					gauss = false;
 					break;
 			}
 
@@ -932,8 +1027,11 @@ function parseMachinist(response) {
 		var extra = [];
 		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
 		//extra.push(result.fight.team[result.events[e].source]);
+		extra.push(gauss ? `<div class="center status-block" style="background-color: #A4786F"></div>` : ``);
 		extra.push(hotShot.isActive() ? `<div class="center status-block" style="background-color: #6D2600"></div>` : ``);
 		extra.push(hyperCharge.isActive() ? `<div class="center status-block" style="background-color: #9BA275"></div>` : ``);
+		extra.push(heat);
+		extra.push(ammunition);
 
 		result.events[e].extra = extra;
 		result.events[e].potency = potency;

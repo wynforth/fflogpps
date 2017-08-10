@@ -136,6 +136,7 @@ function processClass(response, spec) {
 	}
 
 	if (spec == "Machinist") {
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/gauss_barrel.png" title="Gauss Barrel"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/hot_shot.png" title="Hot Shot"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/hypercharge.png" title="Hypercharge"/></td>`);
 	}
