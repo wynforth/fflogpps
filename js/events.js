@@ -117,6 +117,7 @@ function processClass(response, spec) {
 
 	if (spec == "Bard") {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/foe_requiem.png" title="Foe Requiem"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/battle_voice.png" title="Battle Voice"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/raging_strikes.png" title="Raging Strikes"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/bard_song.png" title="Bard Song's"/></td>`);
 	}

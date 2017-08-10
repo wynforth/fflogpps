@@ -116,6 +116,7 @@ function parseBard(response) {
 	var storm = new Timer("Storm Bite", 30);
 	var causticLow = 99999;
 	var stormLow = 99999;
+	var battlevoice = false;
 	var img = '';
 
 	var charges = 0;
@@ -201,8 +202,15 @@ function parseBard(response) {
 					potency = 175;
 			}
 
+			//song crit
+			if(minuet.isActive() || army.isActive() || mages.isActive())
+				potency *= 1+(.02 * .45);
+			//batttle voice
+			if(battlevoice)
+				potency *= 1+(.15 * .25);
+			
 			if (foe)
-				potency *= 1.02;
+				potency *= 1.03;
 
 			if (ragingStrikes)
 				potency *= 1.1;
@@ -259,11 +267,15 @@ function parseBard(response) {
 		if (result.events[e].type == "applybuff") {
 			if (result.events[e].name == "Raging Strikes")
 				ragingStrikes = true;
+			if (result.events[e].name == "Battle Voice")
+				battlevoice = true;
 		}
 
 		if (result.events[e].type == "removebuff") {
 			if (result.events[e].name == "Raging Strikes")
 				ragingStrikes = false;
+			if (result.events[e].name == "Battle Voice")
+				battlevoice = false;
 		}
 
 		if (result.events[e].type == "applydebuff") {
@@ -320,6 +332,7 @@ function parseBard(response) {
 		var extra = [];
 		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
 		extra.push(foe ? `<div class="center status-block" style="background-color: #90D0D0"></div>` : ``);
+		extra.push(battlevoice ? `<div class="center status-block" style="background-color: #77A8B6"></div>` : ``);
 		extra.push(ragingStrikes ? `<div class="center status-block" style="background-color: #D03F00"></div>` : ``);
 
 		if (minuet.isActive())
@@ -806,10 +819,12 @@ function parseMachinist(response) {
 	var heatChange = 0;
 	var overheated = new Timer("Overheated", 10);
 	var removeBarrel = false;
+	var wildTarget = 0;
 	var wildfirePot = 0;
 	
 	var cleanerShot = false;
 	var enhancedSlugShot = false;
+	var reassemble = false;
 
 	var potencies = {
 		'Shot': 80,
@@ -848,9 +863,8 @@ function parseMachinist(response) {
 	
 	var weaponskills = ['Hot Shot', 'Split Shot', 'Slug Shot', 'Spread Shot', 'Clean Shot', 'Cooldown', 'Heated Split Shot', 'Heated Slug Shot', 'Heated Clean Shot'];
 
-	var first = true;
-
-	//prescan first couple attacks to see what buffs fall off
+	var notgauss = false;
+	//prescan first 20 seconds to see what buffs fall off or abilities are used to determine pre-fight buffs
 	var start = response.events[0].timestamp;
 	for (var e in response.events) {
 		var event = response.events[e];
@@ -861,7 +875,11 @@ function parseMachinist(response) {
 				hotShot.restart();
 		}
 		
-		if (event.ability.name == "Barrel Stabilizer") {
+		if (event.ability.name == "Gauss Barrel") {
+				notgauss = true;
+		}
+		
+		if (event.ability.name == "Barrel Stabilizer" || event.ability.name == "Flamethrower") {
 				gauss = true;
 		}
 		if(event.timestamp > start + 20000)
@@ -869,6 +887,8 @@ function parseMachinist(response) {
 
 	}
 
+	if(notgauss) gauss = false;
+	
 	for (var e in response.events) {
 		//reseting triggers
 		var ammoUsed = false;
@@ -890,6 +910,7 @@ function parseMachinist(response) {
 			if(result.events[e].source == result.player.ID){
 				potency = potencies[result.events[e].name];
 				
+				
 				if(heat >= 50 && result.events[e].name == "Cooldown")
 					potency = enhanced_potencies[result.events[e].name];
 				if(cleanerShot && (result.events[e].name == "Clean Shot" || result.events[e].name == "Heated Clean Shot"))
@@ -897,8 +918,12 @@ function parseMachinist(response) {
 				if(enhancedSlugShot && (result.events[e].name == "Slug Shot" || result.events[e].name == "Heated Slug Shot"))
 					potency = enhanced_potencies[result.events[e].name];
 				
-				if(weaponskills.indexOf(result.events[e].name) > -1 && ammunition > 0)
-					potency += 25;
+				if(weaponskills.indexOf(result.events[e].name) > -1){
+					if(ammunition > 0)
+						potency += 25;
+					if(reassemble)
+						potency *= 1.45;
+				}
 				
 				potency *= hotShot.isActive() ? 1.08:1;
 				potency *= gauss ? 1.05:1;
@@ -915,35 +940,49 @@ function parseMachinist(response) {
 			//Hypercharge
 			if(hyperCharge.isActive())
 				potency *= 1.05;
-			
+
 			//Increased Action Damage II
 			potency *= 1.2;
 			
 			//pre calculated dots
 			switch(result.events[e].name){
-
+				case "Wildfire":
+					potency = wildfirePot;
+					break;
 			}
 
 			if (potency == undefined)
 				potency = 0;
 		}
 		
+		if(result.events[e].target == wildTarget && result.events[e].source == result.player.ID)
+			wildfirePot += potency * .25;
+		
 		//update timers
 		var ellapsed = result.events[e].fightTime - prevTime;
 		hotShot.update(ellapsed);
 		hyperCharge.update(ellapsed);
 		overheated.update(ellapsed);
-		heat += heatChange;
-		heatChange = 0;
-		if(heat >= 100){
-			overheated.restart();
-			removeBarrel = true; //mark barrel for removal
+		
+		if (!overheated.isActive()) {
+			heat = Math.min(100, heat + heatChange);
+			heatChange = 0;
+
+			if (removeBarrel) {
+				heat = 0;
+				gauss = false;
+				removeBarrel = false;
+			}
+			
+			if (heat >= 100) {
+				overheated.restart();
+				removeBarrel = true; //mark barrel for removal
+			}
+			//remove barrel once overheat finished
+			
+
 		}
-		//remove barrel once overheat finished
-		if(removeBarrel && !overheated.isActive()){
-			gauss = false;
-			removeBarrel = false;
-		}
+		
 
 		
 		if (result.events[e].type == "applybuffstack") {
@@ -955,6 +994,8 @@ function parseMachinist(response) {
 				cleanerShot = true;
 			if(result.events[e].name == "Enhanced Slug Shot")
 				enhancedSlugShot = true;
+			if(result.events[e].name == "Reassembled")
+				reassemble = true;
 			
 		}
 		
@@ -963,6 +1004,8 @@ function parseMachinist(response) {
 				cleanerShot = false;
 			if(result.events[e].name == "Enhanced Slug Shot")
 				enhancedSlugShot = false;
+			if(result.events[e].name == "Reassembled")
+				reassemble = false;
 		}
 
 		
@@ -1017,6 +1060,10 @@ function parseMachinist(response) {
 					break;
 				case "Remove Barrel":
 					gauss = false;
+					break;
+				case 'Wildfire':
+					wildTarget = result.events[e].target;
+					wildfirePot = 0;
 					break;
 			}
 
