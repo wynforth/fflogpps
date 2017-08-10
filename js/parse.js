@@ -784,6 +784,166 @@ function parseDragoon(response) {
 	return result;
 }
 
+function parseMachinist(response) {
+	console.log("Parsing SMN");
+
+	var prevTime = 0;
+	var totalPotency = 0;
+	var totalDamage = 0;
+	
+	var playerDamage = 0;
+	var petDamage = 0;
+	
+	var playerPotency = 0;
+	var petPotency = 0;
+
+	//trackers
+	var hotShot = new Timer("Hot Shot", 60);
+	var hyperCharge = new Timer("Hypercharge", 20);
+	var guass = true;
+	var heat = 0;
+	var wildfirePot = 0;
+
+	var potencies = {
+		'Shot': 80,
+		'Hot Shot': 120,
+		'Split Shot': 160,
+		'Slug Shot': 100,
+		'Heartbreak': 240,
+		'Spread Shot': 80,
+		'Clean Shot': 100,
+		'Gauss Round': 200,
+		'Ricochet': 300,
+		'Cooldown': 150,
+		'Flamethrower': 60,
+		'Heated Split Shot': 190,
+		'Heated Slug Shot': 100,
+		'Heated Clean Shot': 100,
+		'Wildfire': 0,
+	}
+	
+	var petPotencies = {
+		'Charged Volley Fire': 160,
+		'Volley Fire': 80,
+		'Rook Overload': 800,
+		'Bishop Overload': 600,
+	}
+
+	var first = true;
+
+	//prescan first couple attacks to see what buffs fall off
+	var start = response.events[0].timestamp;
+	for (var e in response.events) {
+		var event = response.events[e];
+		if (event.ability.name == "Hypercharge") {
+				hyperCharge.restart();
+		}
+		if (event.ability.name == "Hot Shot") {
+				hotShot.restart();
+		}
+		if(event.timestamp > start + 20000)
+			break;
+
+	}
+
+	for (var e in response.events) {
+		var event = response.events[e];
+		//console.log(event);
+
+		//only events of self	pets	or targetted on self
+		if (event.sourceID != result.player.ID) {
+			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
+				continue;
+			}
+		}
+
+		result.events[e] = getBasicData(event, result.fight);
+		var potency = 0;
+
+		if (result.events[e].type == "damage" && result.events[e].amount != 0) {
+			if(result.events[e].source == result.player.ID){
+				potency = potencies[result.events[e].name];
+				
+				potency *= hotShot.isActive() ? 1.08:1;
+				potency *= guass ? 1.05:1;
+							
+					
+			} else {
+				potency = petPotencies[result.events[e].name];
+				
+			}
+			
+			
+			//Hypercharge
+			if(hyperCharge.isActive())
+				potency *= 1.05;
+			
+			//Increased Action Damage II
+			potency *= 1.2;
+			
+			//pre calculated dots
+			switch(result.events[e].name){
+
+			}
+
+			if (potency == undefined)
+				potency = 0;
+		}
+		
+		//update timers
+		var ellapsed = result.events[e].fightTime - prevTime;
+		hotShot.update(ellapsed);
+		hyperCharge.update(ellapsed);
+
+		
+		if (result.events[e].type == "applybuff") {
+			
+		}
+
+		if (result.events[e].type == "removebuff") {
+			
+		}
+
+		
+		
+		if (result.events[e].type == "applydebuff") {
+
+		}
+
+		if (result.events[e].type == "removedebuff") {
+
+		}
+
+
+		if (result.events[e].type == "cast") {
+			switch(result.events[e].name){
+				case "Hot Shot":
+					hotShot.restart();
+					break;
+				case "Hypercharge":
+					hyperCharge.restart();
+					break;
+			}
+
+		}
+
+		
+
+		var extra = [];
+		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
+		//extra.push(result.fight.team[result.events[e].source]);
+		extra.push(hotShot.isActive() ? `<div class="center status-block" style="background-color: #6D2600"></div>` : ``);
+		extra.push(hyperCharge.isActive() ? `<div class="center status-block" style="background-color: #9BA275"></div>` : ``);
+
+		result.events[e].extra = extra;
+		result.events[e].potency = potency;
+		prevTime = result.events[e].fightTime;
+	}
+
+	return result;
+}
+
+
 function parseMonk(response) {
 	console.log("Parsing Monk");
 

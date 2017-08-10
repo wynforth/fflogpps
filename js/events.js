@@ -2,6 +2,7 @@ var parseFunctions = {
 	'Bard': parseBard,
 	'BlackMage': parseBlackmage,
 	'Dragoon': parseDragoon,
+	'Machinist': parseMachinist,
 	'Monk': parseMonk,
 	'Ninja': parseNinja,
 	'RedMage': parseRedmage,
@@ -132,6 +133,11 @@ function processClass(response, spec) {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/blood_for_blood.png" title="Blood For Blood"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/right_eye.png" title="Dragon Sight"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/battle_litany.png" title="Battle Litany"/></td>`);
+	}
+
+	if (spec == "Machinist") {
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/hot_shot.png" title="Hot Shot"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/hypercharge.png" title="Hypercharge"/></td>`);
 	}
 
 	if (spec == "Monk") {

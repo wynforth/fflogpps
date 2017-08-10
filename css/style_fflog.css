@@ -169,7 +169,7 @@ table thead td {
 }
 
 table {
-	table-layout: fixed;
+	#table-layout: fixed;
 }
 
 table td {
@@ -177,13 +177,13 @@ table td {
 }
 
 table tbody td {
-	height: 100%;
+	height: 1;
 	padding: 0px 5px !important;
 }
 
-table .center {
+table tr td .center {
 	margin: auto;
-	text-align: center;
+	text-align: center !important;
 }
 
 table .status-block {
