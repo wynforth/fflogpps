@@ -95,17 +95,41 @@ function parseGeneric(response) {
 
 }
 
+function buildRow(data, fight) {
+	
+	tbl_row = '';
+
+	tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
+	tbl_row += `<td>${data.amount == 0 ? '':data.amount} <span class="castType">${data.isDirect ? "Direct ":''}${data.hitType}</span><span class="damage-block ${damageTypes[data.dmgType]}"></span></td>`;
+	if (data.isTargetFriendly)
+		tbl_row += `<td>${fight.team[data.target]}</td>`;
+	else
+		tbl_row += `<td>${fight.enemies[data.target]}</td>`;
+	tbl_row += `<td class="center">${data.fightTime.toFixed(2)}</td>`;
+
+	if (data.extra != undefined) {
+		for (var i = 0; i < data.extra.length; i++) {
+			tbl_row += `<td class="center">${data.extra[i]}</td>`;
+		}
+	}
+	//console.log(tbl_row);
+	return tbl_row;
+	//$(".ranking-table tbody").append(`<tr>${tbl_row}</tr>`);
+}
+
 function parseBard(response) {
 	console.log("Parsing BRD");
 
 	var prevTime = 0;
 	var totalPotency = 0;
 	var totalDamage = 0;
+	var rows = "";
 
 	//trackers
 	var foe = false;
 	var ragingStrikes = false;
 	var barrage = false;
+	var straitshot = false;
 	var minuet = new Timer("Minuet", 30);
 	var mages = new Timer("Mage's", 30);
 	var army = new Timer("Army's", 30);
@@ -150,6 +174,7 @@ function parseBard(response) {
 	//prescan first couple attacks to see what buffs fall off
 	var prefoe = true;
 	var start = response.events[0].timestamp;
+
 	for (var e in response.events) {
 		var event = response.events[e];
 		if (event.timestamp > start + 5000)
@@ -165,8 +190,9 @@ function parseBard(response) {
 				foe = true;
 		}
 	}
-
+	
 	for (var e in response.events) {
+		var tooltip = "";
 		var event = response.events[e];
 
 		//only events of self	pets	or targetted on self
@@ -201,28 +227,45 @@ function parseBard(response) {
 				else if (caustic.isActive() || storm.isActive())
 					potency = 175;
 			}
+			tooltip += "Base: " + potency + "<br/>";
 
-			//song crit
-			if(minuet.isActive() || army.isActive() || mages.isActive())
-				potency *= 1+(.02 * .45);
-			//batttle voice
-			if(battlevoice)
-				potency *= 1+(.15 * .25);
-			
-			if (foe)
-				potency *= 1.03;
-
-			if (ragingStrikes)
-				potency *= 1.1;
-			
 			//Increased Action Damage II
-			if(result.events[e].name != "Shot")
-				potency *= 1.2;
+			if(result.events[e].name != "Shot"){
+				potency = Math.trunc(potency * 1.2);
+				tooltip += "Trait Bonus: 20% ("+potency+")<br/>";
+			}
+			
+			//song crit
+			if(minuet.isActive() || army.isActive() || mages.isActive()){
+				potency *= 1+(.02 * .45);
+				tooltip += "Song Crit Bonus: " + ((.02 * .45)*100).toFixed(1) + "% ("+potency.toFixed(1)+")<br/>";
+			}
+			//batttle voice
+			if(battlevoice){
+				potency *= 1+(.15 * .25);
+				tooltip += "Battle Voice: " + ((.15 * .25)*100).toFixed(1) + "% ("+potency.toFixed(1)+")<br/>";
+			}
+			
+			if(straitshot){
+				potency *= 1+(.1 * .45);
+				tooltip += "Straight Shot: " + ((.1 * .45)*100).toFixed(1) + "% ("+potency.toFixed(1)+")<br/>";
+			}
+
+			if (ragingStrikes){
+				potency *= 1.1;
+				tooltip += "Raging Strikes: 10% ("+potency.toFixed(1)+")<br/>";
+			}
+			
+			if (foe){
+				potency *= 1.03;
+				tooltip += "Foe's Requiem: 3% ("+potency.toFixed(1)+")<br/>";
+			}
 			
 			//so the buffs arent applied twice to dots only when cast
 			if (result.events[e].name == "Storm Bite") {
 				potency = potencies[result.events[e].name];
 				stormLow = Math.min(result.events[e].amount, stormLow);
+				tooltip = "Precalculated: Stormbite";
 			}
 			if (result.events[e].name == "Caustic Bite") {
 				if (causticCast) {
@@ -231,6 +274,7 @@ function parseBard(response) {
 				} else {
 					potency = causticDot;
 					causticLow = Math.min(result.events[e].amount, causticLow);
+					tooltip = "Precalculated: Caustic Bite";
 				}
 			}
 
@@ -247,6 +291,9 @@ function parseBard(response) {
 
 			if (potency == undefined)
 				potency = 0;
+			
+			totalDamage += result.events[e].amount;
+			totalPotency += potency;
 		}
 		
 		var ellapsed = result.events[e].fightTime - prevTime;
@@ -265,17 +312,31 @@ function parseBard(response) {
 		
 
 		if (result.events[e].type == "applybuff") {
-			if (result.events[e].name == "Raging Strikes")
-				ragingStrikes = true;
-			if (result.events[e].name == "Battle Voice")
-				battlevoice = true;
+			switch(result.events[e].name){
+				case "Raging Strikes":
+					ragingStrikes = true;
+					break;
+				case "Battle Voice":
+					battlevoice = true;
+					break;
+				case "Straight Shot":
+					straitshot = true;
+					break;
+			}
 		}
 
 		if (result.events[e].type == "removebuff") {
-			if (result.events[e].name == "Raging Strikes")
-				ragingStrikes = false;
-			if (result.events[e].name == "Battle Voice")
-				battlevoice = false;
+			switch(result.events[e].name){
+				case "Raging Strikes":
+					ragingStrikes = false;
+					break;
+				case "Battle Voice":
+					battlevoice = false;
+					break;
+				case "Straight Shot":
+					straitshot = false;
+					break;
+			}
 		}
 
 		if (result.events[e].type == "applydebuff") {
@@ -290,39 +351,36 @@ function parseBard(response) {
 		}
 
 		if (result.events[e].type == "cast") {
-			if (result.events[e].name == "Caustic Bite") {
-				causticCast = true;
-				caustic.restart();
-			}
-			if (result.events[e].name == "Stormbite") {
-				causticCast = true;
-				storm.restart();
-			}
-
-			if (result.events[e].name == "Iron Jaws") {
-				if (caustic.isActive())
+			switch(result.events[e].name){
+				case "Caustic Bite":
+					causticCast = true;
 					caustic.restart();
-				if (storm.isActive())
+					break;
+				case "Stormbite":					
 					storm.restart();
-			}
-
-			if (result.events[e].name == "The Wanderer's Minuet") {
-				img = `<img src="/img/the_wanderers_minuet.png"/>`;
-				minuet.restart();
-				mages.stop();
-				army.stop();
-			}
-			if (result.events[e].name == "Mage's Ballad") {
-				img = `<img src="/img/mages_ballad.png"/>`;
-				mages.restart();
-				minuet.stop();
-				army.stop();
-			}
-			if (result.events[e].name == "Army's Paeon") {
-				img = `<img src="/img/armys_paeon.png"/>`;
-				army.restart();
-				minuet.stop();
-				mages.stop();
+					break;
+				case "Iron Jaws":
+					if (caustic.isActive()) caustic.restart();
+					if (storm.isActive()) storm.restart();
+					break;
+				case "The Wanderer's Minuet":
+					img = `<img src="/img/the_wanderers_minuet.png"/>`;
+					minuet.restart();
+					mages.stop();
+					army.stop();
+					break;
+				case "Mage's Ballad":
+					img = `<img src="/img/mages_ballad.png"/>`;
+					mages.restart();
+					minuet.stop();
+					army.stop();
+					break;
+				case "Army's Paeon":
+					img = `<img src="/img/armys_paeon.png"/>`;
+					army.restart();
+					minuet.stop();
+					mages.stop();
+					break;
 			}
 
 		}
@@ -330,7 +388,8 @@ function parseBard(response) {
 		
 
 		var extra = [];
-		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
+		extra.push(`<span data-toggle="tooltip" title="${tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		extra.push(straitshot ? `<div class="center status-block" style="background-color: #B01F00"></div>` : ``);
 		extra.push(foe ? `<div class="center status-block" style="background-color: #90D0D0"></div>` : ``);
 		extra.push(battlevoice ? `<div class="center status-block" style="background-color: #77A8B6"></div>` : ``);
 		extra.push(ragingStrikes ? `<div class="center status-block" style="background-color: #D03F00"></div>` : ``);
@@ -349,7 +408,6 @@ function parseBard(response) {
 		result.events[e].potency = potency;
 		prevTime = result.events[e].fightTime;
 	}
-
 	return result;
 }
 
@@ -796,6 +854,62 @@ function parseDragoon(response) {
 
 	return result;
 }
+externalbuffs = {
+	'Critical Up': {
+		stack_bonus: .02 * .45,
+		stacks: 0,
+		max_stacks: 1,
+		source: 'Bard',
+		total: 0,
+	},
+	'Battle Voice': {
+		stack_bonus: .15 * .25,
+		stacks: 0,
+		max_stacks: 1,
+		source: 'Bard',
+		total: 0,
+	},
+	'Hypercharge': {
+		stack_bonus: .10,
+		stacks: 0,
+		max_stacks: 1,
+		source: 'Ninja',
+		total: 0,
+	},
+	'Vulnerability Up': {
+		stack_bonus: .10,
+		stacks: 0,
+		max_stacks: 1,
+		source: 'Ninja',
+		total: 0,
+	},
+	'Embolden': {
+		stack_bonus: .02,
+		stacks: 0,
+		max_stacks: 5,
+		source: 'Red Mage',
+		total: 0,
+	},
+	'The Balance': {
+		stack_bonus: .1,
+		stacks: 0,
+		max_stacks: 1,
+		source: 'Astrologian',
+		total: 0,
+	},
+	'The Spear': {
+		stack_bonus: .1 * .45,
+		stacks: 0,
+		max_stacks: 1,
+		source: 'Astrologian',
+		total: 0,
+	},
+	
+
+}
+	
+	
+
 
 function parseMachinist(response) {
 	console.log("Parsing MCH");
@@ -1686,11 +1800,13 @@ function parseSamurai(response) {
 		var event = response.events[e];
 
 		//only events of self	pets	or targetted on self
+		
 		if (event.sourceID != result.player.ID) {
 			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
 				continue;
 			}
 		}
+		
 
 		result.events[e] = getBasicData(event, result.fight);
 		var potency = 0;

@@ -12,9 +12,10 @@ var parseFunctions = {
 }
 
 function processReport(report) {
+	console.log(report);
 	result = parseReport(report);
+	console.log(result);
 	
-	//https://www.fflogs.com/reports/RJnpraBxmLg6c48D#fight=30&type=damage-done
 	var link = `https://www.fflogs.com/reports/${result.report.reportID}#fight=${result.report.fightID}&type=damage-done`;
 	
 	//$(".summary").append(`<b>${result.fight.team[result.player.ID]}</b> as a <span class="${result.player.type}">${result.player.type}</span> (<a href="${link}">FFLogs</a>)`);
@@ -44,6 +45,7 @@ function processReport(report) {
 	url += "&end=" + result.fight.end;
 	url += "&actorid=" + result.player.ID;
 	url += "&api_key=" + api_key;
+	console.log(url);
 	//console.log(result.fight.team);
 	//console.log(result.fight.enemies);
 
@@ -55,6 +57,7 @@ function processReport(report) {
 }
 
 function updateEvent(data, fight) {
+	
 	tbl_row = '';
 
 	tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
@@ -70,6 +73,8 @@ function updateEvent(data, fight) {
 			tbl_row += `<td class="center">${data.extra[i]}</td>`;
 		}
 	}
+	//console.log(tbl_row);
+	return `<tr>${tbl_row}</tr>`;
 	$(".ranking-table tbody").append(`<tr>${tbl_row}</tr>`);
 }
 
@@ -108,14 +113,14 @@ function processGeneric(response) {
 function processClass(response, spec) {
 
 	console.log("Processing " + spec);
-	result = parseFunctions[spec](response);
-
+	
 	$(".ranking-table tbody").html("");
 	$(".ranking-table thead tr").append(`<td style="width: 90px">Potency</td>`);
 
 	
 
 	if (spec == "Bard") {
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/straight_shot.png" title="Straight Shot"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/foe_requiem.png" title="Foe Requiem"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/battle_voice.png" title="Battle Voice"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/raging_strikes.png" title="Raging Strikes"/></td>`);
@@ -171,6 +176,8 @@ function processClass(response, spec) {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/miasma_iii.png" title="Miasma III"/></td>`);
 	}
 
+	result = parseFunctions[spec](response);
+	
 	var totalPotency = 0;
 	var totalDamage = 0;
 
@@ -182,27 +189,44 @@ function processClass(response, spec) {
 		type: ''
 	};
 
+	var rows = [];
 	for (var e in result.events) {
 		var event = result.events[e];
 
 		if (isSameEvent(event, lastEvent))
 			continue;
 
-		updateEvent(event, result.fight);
-
+		rows.push(updateEvent(event, result.fight));
+		//$(".ranking-table tbody").append(updateEvent(event, result.fight));
+		
 		if (event.type != 'heal') {
 			totalPotency += event.potency == "" ? 0 : event.potency;
 			totalDamage += event.amount == undefined ? 0 : event.amount;
 		}
 		lastEvent = event;
 	}
+	document.getElementById('rank-body').innerHTML = rows.join('')
+	$('[data-toggle="tooltip"]').tooltip({html: true})
+	//$(".ranking-table tbody").html(rows.join(''));
 
 	//update summary
+	
+	
+	/*
 	$(".summary").append(`<b>Total Damage:</b> ${totalDamage.toFixed(3)}</br>`);
 	$(".summary").append(`<b>DPS:</b> ${(totalDamage / result.fight.duration).toFixed(2)}</br>`);
 	$(".summary").append(`<b>Total Potency:</b> ${totalPotency.toFixed(3)}</br>`);
 	$(".summary").append(`<b>PPS:</b> ${(totalPotency / result.fight.duration).toFixed(2)}<br/>`);
 	$(".summary").append(`<b>Potency Ratio:</b> 1:${(totalDamage/totalPotency).toFixed(2)}`);
+	*/
+	$(".summary-table tbody").append(`<tr>
+		<td>${result.player.name}</td>
+		<td>${totalDamage.toFixed(3)}</td>
+		<td>${(totalDamage / result.fight.duration).toFixed(2)}</td>
+		<td>${totalPotency.toFixed(3)}</td>
+		<td>${(totalPotency / result.fight.duration).toFixed(2)}</td>
+		<td>1:${(totalDamage/totalPotency).toFixed(2)}</td>
+		</tr>`);
 }
 
 function isSameEvent(current, previous) {
@@ -215,6 +239,7 @@ function isSameEvent(current, previous) {
 
 function getReportData() {
 	var url = base_url + "/report/fights/" + result.report.reportID + "?translate=true&api_key=" + api_key;
+	console.log(url);
 	httpGetAsync(url, processReport);
 }
 
