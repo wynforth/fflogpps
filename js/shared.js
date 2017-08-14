@@ -22,6 +22,7 @@ class Timer {
 		this.name = name;
 		this.duration = duration;
 		this.current = 0;
+		this.justFell = false;
 	}
 	
 	restart(){
@@ -33,8 +34,16 @@ class Timer {
 	}
 	
 	update(time){
-		if(this.current > 0){
-			this.current -= time;
+		if(time != 0){
+			var wasPos = this.current > 0;
+			if(wasPos){
+				this.current -= time;
+			}
+			if(this.current < 0)
+				if(wasPos)
+					this.justFell = true;
+				else
+					this.justFell = false;
 		}
 	}
 	
@@ -53,8 +62,44 @@ class Timer {
 	extend(add, max){
 		this.current = Math.min(max, this.current + add);
 	}
+	
+	canRefresh() {
+		return this.isActive() || this.justFell;
+	}
 }
 
+class Buff {
+	constructor(name, bonus, active, restricted){
+		this.name = name;
+		this.bonus = bonus;
+		this.active = active == undefined ? false:active;
+		this.restricted = restricted == undefined ? []:restricted;
+	}
+}
+
+class Debuff {
+	constructor(name, bonus, restricted){
+		this.name = name;
+		this.bonus = bonus;
+		this.restricted = restricted == undefined ? []:restricted;
+		this.targets = [];
+	}
+	
+	add(targetID){
+		if(this.targets.indexOf(targetID) == -1)
+			this.targets.push(targetID);
+	}
+	
+	remove(targetID){
+		var index = this.targets.indexOf(targetID);
+		if(index > -1)
+			this.targets.splice(index, 1);
+	}
+	
+	isTarget(targetID){
+		return this.targets.indexOf(targetID) > -1;
+	}
+}
 
 
 function httpGetAsync(theUrl, callback)
@@ -81,6 +126,15 @@ function fetchUrl(theUrl, callback, args)
 
 
 function getBasicData(event, fight) {
+	
+	event.name = event.type == 'death' ? 'Death' : event.ability.name;
+	event.fightTime = (event.timestamp - fight.start) / 1000,
+	event.hitType = event.hitType == undefined ? '' : hitTypes[event.hitType],
+	event.dmgType = event.amount == undefined ? 0 : event.ability.type,
+	event.amount = event.amount == undefined ? 0 : event.amount,
+	event.isDirect = event.multistrike == undefined ? false: event.multistrike
+	return event;
+	
 	var data = {};
 	data = {
 		'type': event.type,
@@ -127,7 +181,7 @@ var hitTypes = {
 	1: "Hit",
 	2: "Crit"
 }
-
+// OLD pre August 8 parses
 var damageTypes = {
 	0: "",
 	1: "physical",
@@ -140,6 +194,21 @@ var damageTypes = {
 	128: "earth",
 	512: "air",
 	1024: "ruin",
+}
+
+//post Aug 8 parses
+damageTypes = {
+	0: "",
+	1: "dot_phys",
+	//2: "lightning",
+	//4: "fire",
+	//8: "sprint",
+	//16: "water",
+	//32: "unaspected",
+	64: "dot_magic",
+	128: "phys",
+	//512: "air",
+	1024: "magic",
 }
 
 console.log("Shared Loaded");

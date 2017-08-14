@@ -240,6 +240,7 @@ table .damage-block {
 	display: inline-block;
 }
 
+
 .physical { background-color: rgb(229, 204, 128);}
 .lightning { background-color: rgb(100%, 100%, 56%); }
 .fire { background-color: rgb(92%, 27%, 38%); }
@@ -250,6 +251,12 @@ table .damage-block {
 .earth { background-color: rgb(80%, 44%, 9%); }
 .air { background-color: rgb(75%, 75%, 75%); }
 .ruin { background-color: #2599be; }
+
+
+.dot_phys { background-color: rgb(229, 204, 128);}
+.phys { background-color: rgb(80%, 44%, 9%); }
+.dot_magic { background-color: rgb(56%, 95%, 100%); }
+.magic { background-color: #2599be; }
 
 .pet { background-color: #64BDC8; }
 

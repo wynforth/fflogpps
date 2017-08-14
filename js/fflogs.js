@@ -124,6 +124,7 @@ function buildRankingsURL() {
 
 	
 	url += "&page=" + $("#page_number").val();
+	url += "&filter=date.1502168400000.9999999999999"; //only after the type format change
 	url += "&api_key=" + api_key
 
 	return url;

@@ -117,36 +117,64 @@ function buildRow(data, fight) {
 	//$(".ranking-table tbody").append(`<tr>${tbl_row}</tr>`);
 }
 
+
+function applyBuffs(value, event, buffs) {
+	for (var b in buffs) {
+		var buff = buffs[b];
+		if (buff.active && buff.restricted.indexOf(event.name) == -1) {
+			value = Math.trunc(value * (1 + (buff.bonus)));
+			event.tooltip += buff.name + ": " + (buff.bonus * 100).toFixed(0) + "% [" + value.toFixed(0) + "]<br/>";
+		}
+	}
+	return value;
+}
+
+function applyDebuffs(value, event, debuffs) {
+	for (var b in debuffs) {
+		var debuff = debuffs[b];
+		//console.log(buff);
+		if (debuff.isTarget(event.targetID) > -1 && debuff.restricted.indexOf(event.name) == -1) {
+			value = Math.trunc(value * (1 + (debuff.bonus)));
+			event.tooltip += debuff.name + ": " + (debuff.bonus * 100).toFixed(0) + "% [" + value.toFixed(0) + "]<br/>";
+		}
+	}
+	return value;
+}
+
 function parseBard(response) {
 	console.log("Parsing BRD");
 
 	var prevTime = 0;
 	var totalPotency = 0;
 	var totalDamage = 0;
-	var rows = "";
 
 	//trackers
-	var foe = false;
-	var ragingStrikes = false;
-	var barrage = false;
-	var straitshot = false;
 	var minuet = new Timer("Minuet", 30);
 	var mages = new Timer("Mage's", 30);
 	var army = new Timer("Army's", 30);
 	// casting vs dot damage;
 	var causticDot = 45;
-	var causticCast = false; //only needed for caustic as Stormbite is the spell and Storm Bite is the dot
+	var stormDot = 55;
 	var caustic = new Timer("Caustic Bite", 30);
 	var storm = new Timer("Storm Bite", 30);
 	var causticLow = 99999;
 	var stormLow = 99999;
-	var battlevoice = false;
 	var img = '';
 
 	var charges = 0;
 
+	var buffs = {
+		"Increased Action Damage II": new Buff("Trait II", .2, true, ["Shot"]),
+		"Raging Strikes": new Buff("Raging Strikes", .1),
+		"Straight Shot": new Buff("Straight Shot", (.1 * .45)),
+	};
+
+	var debuffs = {
+		"Foe Requiem": new Debuff("Foe Requiem", .03)
+	}
+
 	var potencies = {
-		"Shot": 80,
+		"Shot": 100,
 		"Heavy Shot": 150,
 		"Straight Shot": 140,
 		"Empyreal Arrow": 230,
@@ -166,10 +194,12 @@ function parseBard(response) {
 
 		"Caustic Bite": 120,
 		"Stormbite": 120,
-		"Storm Bite": 55,
 	}
-
-	var first = true;
+	
+	var dot_potencies = {
+		"Storm Bite": 55,
+		"Caustic Bite": 45,
+	};
 
 	//prescan first couple attacks to see what buffs fall off
 	var prefoe = true;
@@ -177,9 +207,10 @@ function parseBard(response) {
 
 	for (var e in response.events) {
 		var event = response.events[e];
-		if (event.timestamp > start + 5000)
+		if (event.timestamp > start + 5000) //just 5 seconds which is enough time to ensure a server tick to see if foe is applied
 			break;
 
+		//foe shows as an applybuff to self first in the log first, it wasn't precasted
 		if (event.type == "applybuff") {
 			if (event.ability.name == "Foe Requiem")
 				prefoe = false;
@@ -187,12 +218,13 @@ function parseBard(response) {
 
 		if (event.type == "applydebuff") {
 			if (event.ability.name == "Foe Requiem" && prefoe)
-				foe = true;
+				debuffs[event.ability.name].targets.push(event.targetID);
 		}
 	}
-	
+
 	for (var e in response.events) {
 		var tooltip = "";
+		var potency = 0;
 		var event = response.events[e];
 
 		//only events of self	pets	or targetted on self
@@ -202,197 +234,148 @@ function parseBard(response) {
 			}
 		}
 
-		result.events[e] = getBasicData(event, result.fight);
-		var potency = 0;
+		getBasicData(event, result.fight);
 
-		if (result.events[e].type == "damage" && result.events[e].amount != 0) {
-			potency = potencies[result.events[e].name];
-			if (result.events[e].name == "Stormbite") {
-				potencies['Storm Bite'] = 55 * (foe ? 1.02 : 1) * (ragingStrikes ? 1.1 : 1);
-			}
+		if (event.type == "damage" && event.amount != 0) {
 
-			if (result.events[e].name == "Pitch Perfect") {
-				if (charges >= 3)
-					potency = 420;
-				else if (charges == 2)
-					potency = 240;
-				else
-					potency = 100;
-				charges = 0;
-			}
-
-			if (result.events[e].name == "Sidewinder") {
-				if (caustic.isActive() && storm.isActive())
-					potency = 260;
-				else if (caustic.isActive() || storm.isActive())
-					potency = 175;
-			}
-			tooltip += "Base: " + potency + "<br/>";
-
-			//Increased Action Damage II
-			if(result.events[e].name != "Shot"){
-				potency = Math.trunc(potency * 1.2);
-				tooltip += "Trait Bonus: 20% ("+potency+")<br/>";
-			}
-			
-			//song crit
-			if(minuet.isActive() || army.isActive() || mages.isActive()){
-				potency *= 1+(.02 * .45);
-				tooltip += "Song Crit Bonus: " + ((.02 * .45)*100).toFixed(1) + "% ("+potency.toFixed(1)+")<br/>";
-			}
-			//batttle voice
-			if(battlevoice){
-				potency *= 1+(.15 * .25);
-				tooltip += "Battle Voice: " + ((.15 * .25)*100).toFixed(1) + "% ("+potency.toFixed(1)+")<br/>";
-			}
-			
-			if(straitshot){
-				potency *= 1+(.1 * .45);
-				tooltip += "Straight Shot: " + ((.1 * .45)*100).toFixed(1) + "% ("+potency.toFixed(1)+")<br/>";
-			}
-
-			if (ragingStrikes){
-				potency *= 1.1;
-				tooltip += "Raging Strikes: 10% ("+potency.toFixed(1)+")<br/>";
-			}
-			
-			if (foe){
-				potency *= 1.03;
-				tooltip += "Foe's Requiem: 3% ("+potency.toFixed(1)+")<br/>";
-			}
-			
-			//so the buffs arent applied twice to dots only when cast
-			if (result.events[e].name == "Storm Bite") {
-				potency = potencies[result.events[e].name];
-				stormLow = Math.min(result.events[e].amount, stormLow);
-				tooltip = "Precalculated: Stormbite";
-			}
-			if (result.events[e].name == "Caustic Bite") {
-				if (causticCast) {
-					causticDot = 45 * (foe ? 1.02 : 1) * (ragingStrikes ? 1.1 : 1);
-					causticCast = false;
-				} else {
-					potency = causticDot;
-					causticLow = Math.min(result.events[e].amount, causticLow);
-					tooltip = "Precalculated: Caustic Bite";
+			if (event.dmgType == 1 || event.dmgType == 64) {
+				potency = dot_potencies[event.name];
+				event.tooltip = "DoT: " + event.name;
+				//guessing at crits for charges
+				if (event.name == "Storm Bite") {
+					stormLow = Math.min(event.amount, stormLow);
+					if (minuet.isActive() && event.amount >= (stormLow * 1.35))
+						charges++;
+				} else if (event.name == "Caustic Bite") {
+					causticLow = Math.min(event.amount, causticLow);
+					if (minuet.isActive() && event.amount >= (causticLow * 1.35))
+						charges++;
 				}
-			}
+			} else {
+				potency = potencies[event.name];
 
-			//build up charges for pitch perfect
-			if (minuet.isActive()) {
-				if (result.events[e].name == "Empyreal Arrow")
+				//action specific tasks
+				if (event.name == "Pitch Perfect") {
+					if (charges >= 3)
+						potency = 420;
+					else if (charges == 2)
+						potency = 240;
+					else
+						potency = 100;
+					charges = 0;
+				} else if (event.name == "Sidewinder") {
+					if (caustic.isActive() && storm.isActive())
+						potency = 260;
+					else if (caustic.isActive() || storm.isActive())
+						potency = 175;
+				} else if (event.name == "Stormbite") {
+					dot_potencies["Storm Bite"] = applyBuffs(55, event, buffs);
+					dot_potencies["Storm Bite"] = applyDebuffs(dot_potencies["Storm Bite"], event, debuffs);
+				} else if (event.name == "Caustic Bite") {
+					dot_potencies["Caustic Bite"] = applyBuffs(45, event, buffs);
+					dot_potencies["Caustic Bite"] = applyDebuffs(dot_potencies["Caustic Bite"], event, debuffs);
+				} else if (event.name == "Iron Jaws") {
+					dot_potencies["Storm Bite"] = applyBuffs(55, event, buffs);
+					dot_potencies["Storm Bite"] = applyDebuffs(dot_potencies["Storm Bite"], event, debuffs);
+					dot_potencies["Caustic Bite"] = applyBuffs(45, event, buffs);
+					dot_potencies["Caustic Bite"] = applyDebuffs(dot_potencies["Caustic Bite"], event, debuffs);
+				} else if (event.name == "Empyreal Arrow" && minuet.isActive()) {
 					charges++;
-				//we have to guess at crits cause of fflogs
-				if (result.events[e].name == "Caustic Bite" && !causticCast && result.events[e].amount >= (causticLow * 1.3))
-					charges++;
-				if (result.events[e].name == "Storm Bite" && result.events[e].amount >= (stormLow * 1.3))
-					charges++;
+				}
+
+				event.tooltip = event.name + " Base: " + potency + "<br/>";
+
+				potency = applyBuffs(potency, event, buffs);
+				potency = applyDebuffs(potency, event, debuffs);
 			}
 
 			if (potency == undefined)
 				potency = 0;
-			
-			totalDamage += result.events[e].amount;
+
+			totalDamage += event.amount;
 			totalPotency += potency;
 		}
-		
-		var ellapsed = result.events[e].fightTime - prevTime;
 
 		//update timers
+		var ellapsed = event.fightTime - prevTime;
 		minuet.update(ellapsed);
 		mages.update(ellapsed);
 		army.update(ellapsed);
 		caustic.update(ellapsed);
 		storm.update(ellapsed);
+		//console.log("Fight Time: " + result.events[e].fightTime + "\tStorm Bite: " + storm.current + "\tCaustic Bite: " + caustic.current + "\tJust Fell? " + storm.justFell);
 
-		if (!minuet.isActive() && charges > 0) {
-			console.log("Minuet finished removing charges");
+		if (!minuet.isActive() && charges > 0)
 			charges = 0;
-		}
-		
 
-		if (result.events[e].type == "applybuff") {
-			switch(result.events[e].name){
-				case "Raging Strikes":
-					ragingStrikes = true;
-					break;
-				case "Battle Voice":
-					battlevoice = true;
-					break;
-				case "Straight Shot":
-					straitshot = true;
-					break;
+		if (event.type == "applybuff") {
+			if (buffs.hasOwnProperty(event.name)) {
+				buffs[event.name].active = true;
 			}
 		}
 
-		if (result.events[e].type == "removebuff") {
-			switch(result.events[e].name){
-				case "Raging Strikes":
-					ragingStrikes = false;
-					break;
-				case "Battle Voice":
-					battlevoice = false;
-					break;
-				case "Straight Shot":
-					straitshot = false;
-					break;
+		if (event.type == "removebuff") {
+			if (buffs.hasOwnProperty(event.name)) {
+				buffs[event.name].active = false;
 			}
 		}
 
-		if (result.events[e].type == "applydebuff") {
-			if (result.events[e].name == "Foe Requiem")
-				foe = true;
+		if (event.type == "applydebuff") {
+			if (debuffs.hasOwnProperty(event.name)) {
+				debuffs[event.name].add(event.targetID);
+			}
 
 		}
 
-		if (result.events[e].type == "removedebuff") {
-			if (result.events[e].name == "Foe Requiem")
-				foe = false;
+		if (event.type == "removedebuff") {
+			if (debuffs.hasOwnProperty(event.name)) {
+				debuffs[event.name].remove(event.targetID);
+			}
 		}
 
-		if (result.events[e].type == "cast") {
-			switch(result.events[e].name){
-				case "Caustic Bite":
-					causticCast = true;
+		if (event.type == "cast") {
+			switch (event.name) {
+			case "Caustic Bite":
+				causticCast = true;
+				caustic.restart();
+				break;
+			case "Stormbite":
+				storm.restart();
+				break;
+			case "Iron Jaws":
+				if (caustic.canRefresh())
 					caustic.restart();
-					break;
-				case "Stormbite":					
+				if (storm.canRefresh())
 					storm.restart();
-					break;
-				case "Iron Jaws":
-					if (caustic.isActive()) caustic.restart();
-					if (storm.isActive()) storm.restart();
-					break;
-				case "The Wanderer's Minuet":
-					img = `<img src="/img/the_wanderers_minuet.png"/>`;
-					minuet.restart();
-					mages.stop();
-					army.stop();
-					break;
-				case "Mage's Ballad":
-					img = `<img src="/img/mages_ballad.png"/>`;
-					mages.restart();
-					minuet.stop();
-					army.stop();
-					break;
-				case "Army's Paeon":
-					img = `<img src="/img/armys_paeon.png"/>`;
-					army.restart();
-					minuet.stop();
-					mages.stop();
-					break;
+				break;
+			case "The Wanderer's Minuet":
+				img = `<img src="/img/the_wanderers_minuet.png"/>`;
+				minuet.restart();
+				mages.stop();
+				army.stop();
+				break;
+			case "Mage's Ballad":
+				img = `<img src="/img/mages_ballad.png"/>`;
+				mages.restart();
+				minuet.stop();
+				army.stop();
+				break;
+			case "Army's Paeon":
+				img = `<img src="/img/armys_paeon.png"/>`;
+				army.restart();
+				minuet.stop();
+				mages.stop();
+				break;
 			}
 
 		}
-
-		
 
 		var extra = [];
-		extra.push(`<span data-toggle="tooltip" title="${tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
-		extra.push(straitshot ? `<div class="center status-block" style="background-color: #B01F00"></div>` : ``);
-		extra.push(foe ? `<div class="center status-block" style="background-color: #90D0D0"></div>` : ``);
-		extra.push(battlevoice ? `<div class="center status-block" style="background-color: #77A8B6"></div>` : ``);
-		extra.push(ragingStrikes ? `<div class="center status-block" style="background-color: #D03F00"></div>` : ``);
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		extra.push(buffs["Straight Shot"].active ? `<div class="center status-block" style="background-color: #B01F00"></div>` : ``);
+		extra.push(debuffs["Foe Requiem"].targets.length > 0 ? `<div class="center status-block" style="background-color: #90D0D0"></div>` : ``);
+		//extra.push(battlevoice ? `<div class="center status-block" style="background-color: #77A8B6"></div>` : ``);
+		extra.push(buffs["Raging Strikes"].active ? `<div class="center status-block" style="background-color: #D03F00"></div>` : ``);
 
 		if (minuet.isActive())
 			extra.push(`<div class="center status-block" style="background-color: #4F6F1F">${img}</div>`);
@@ -403,10 +386,16 @@ function parseBard(response) {
 		else
 			extra.push(``);
 		img = '';
+		extra.push(storm.isActive() ? `<div class="center status-block" style="background-color: #9DBBD2"></div>` : ``);
+		extra.push(caustic.isActive() ? `<div class="center status-block" style="background-color: #D75896"></div>` : ``);
 
-		result.events[e].extra = extra;
-		result.events[e].potency = potency;
-		prevTime = result.events[e].fightTime;
+		event.extra = extra;
+		event.potency = potency;
+
+		result.events[e] = event;
+		//result.events[e].extra = extra;
+		//result.events[e].potency = potency;
+		prevTime = event.fightTime;
 	}
 	return result;
 }
@@ -414,18 +403,28 @@ function parseBard(response) {
 function parseBlackmage(response) {
 	console.log("Parsing BLM");
 
-	var enoch = 0;
+	var enoch = new Timer("Enochian", 30);
 	var astral = 0;
 	var umbral = 0;
-
+	var astralStack = 0;
+	var umbralStack = 0;
+	var suffix = ['', '','_ii','_iii'];
+	
 	var sharpcast = 0;
 	var thundercloud = new Timer("Thundercloud", 12);
 	var thunder = new Timer("Thunder III", 24);
-
+	var thunderDot = 40;
+	
 	var canThundercloud = true;
 	var castState = "";
+	
+	var buffs = {
+		"Trait": new Buff("Magic & Mend II", .3, true, ["Attack"]),
+		"Enochian": new Buff("Enochian", .1, false, ["Attack"])
+	}
 
 	var potencies = {
+		"Attack": 110,
 		"Fire": 180,
 		"Fire II": 80,
 		"Fire III": 240,
@@ -446,10 +445,16 @@ function parseBlackmage(response) {
 		"Scathe": 100,
 		"Foul": 650,
 	}
+	
+	var dot_potencies = {
+		"Thunder IV": 30,
+		"Thunder III": 40,
+	};
 
 	var first = true;
 	var prevTime = 0;
 	for (var e in response.events) {
+		var potency = 0;
 		var event = response.events[e];
 
 		//only events of self	pets	or targetted on self
@@ -459,63 +464,93 @@ function parseBlackmage(response) {
 			}
 		}
 
-		result.events[e] = getBasicData(event, result.fight);
-		var potency = 0;
+		getBasicData(event, result.fight);
 
 		if (first) {
 			first = false;
-			if (result.events[e].type == "damage") {
-				if (event.ability.name == "Blizzard III")
+			if (event.type == "damage") {
+				if (event.name == "Blizzard III"){
+					umbralStack = 3;
 					umbral = 13;
-				if (event.ability.name == "Fire")
+				}
+				if (event.name == "Fire"){
+					astralStack = 1;
 					astral = 13;
+				}
+				if (event.name == "Thunder III")
+					thunderCast = true;
 			}
 		}
 
-		if (result.events[e].type == "damage" && result.events[e].amount != 0) {
-			var potency = potencies[event.ability.name];
-			if (potency == undefined)
-				potency = 0;
+		if (event.type == "damage" && event.amount != 0) {
+			//Dots
+			if (event.dmgType == 1 || event.dmgType == 64) {
+				potency = dot_potencies[event.name];
+				event.tooltip = "DoT: " + event.name;
+			} else {
+				potency = potencies[event.name];
+				if (potency == undefined)
+					potency = 0;
 
-			if (event.ability.name == "Thunder III") {
-				if (result.events[e].dmgType == 1)
-					potency = 40;
-				else if (thundercloud.isActive() && canThundercloud) {
-					potency += (40 * 8);
-					thundercloud.stop();
+				//spell specific actions
+				var tctip = '';
+				if (event.name == "Thunder III"){
+					if(thundercloud.isActive() && canThundercloud) {
+						tctip = event.name + " Base: " + potency + "<br/>";
+						potency += (40 * 8);
+						tctip += "Thundercloud: +" + (40 * 8) + " [" + potency.toFixed(0) + "]<br/>"
+						//thundercloud.stop();
+					}
+					dot_potencies[event.name] = applyBuffs(40, event, buffs);
+				} else if (event.name == "Thunder IV"){
+					if(thundercloud.isActive() && canThundercloud) {
+						tctip = event.name + " Base: " + potency + "<br/>";
+						potency += (30 * 6);
+						tctip += "Thundercloud: +" + (30 * 6) + " [" + potency.toFixed(0) + "]<br/>"
+					}
+					dot_potencies[event.name] = applyBuffs(30, event, buffs);
+				} else {
+					canThundercloud = true;
 				}
-			}
+				
+				event.tooltip = event.name + " Base: " + potency + "<br/>";
+				if(tctip != "")
+					event.tooltip = tctip;
 
-			if (enoch > 0 && result.events[e].dmgType != 1)
-				potency *= 1.1
+				potency = applyBuffs(potency, event, buffs);
 
-				if (result.events[e].name.startsWith("Fire") || result.events[e].name == "Flare") {
+				//Stupid BLMs and astral umbral mechanics :P
+				if (event.name.startsWith("Fire") || event.name == "Flare") {
 					if (castState == "astral") {
-						potency *= 1.8
+						potency = Math.trunc(potency * (1.2 + (astralStack * .2)));
+						event.tooltip += "Astral Fire: " + ((.2 + (astralStack * .2)) * 100).toFixed(0) + "% [" + potency.toFixed(0) + "]<br/>";
 					}
 					if (castState == "umbral") {
-						potency *= .7
+						potency = Math.trunc(potency * (1 - (umbralStack * .1)));
+						event.tooltip += "Umbral Ice: -" + ((umbralStack * .1) * 100).toFixed(0) + "% [" + potency.toFixed(0) + "]<br/>";
 					}
 				}
-			if (result.events[e].name.startsWith("Blizzard") || result.events[e].name == "Freeze") {
-				if (castState == "astral")
-					potency *= .7
+				if (event.name.startsWith("Blizzard") || event.name == "Freeze") {
+					if (castState == "astral") {
+						potency = Math.trunc(potency * (1 - (astralStack * .1)));
+						event.tooltip += "Astral Fire: -" + ((astralStack * .1) * 100).toFixed(0) + "% [" + potency.toFixed(0) + "]<br/>";
+					}
+				}
+
+				if (umbral > 0) {
+					astralStack = 0;
+					castState = "umbral";
+				}
+				if (astral > 0) {
+					umbralStack = 0;
+					castState = "astral";
+				}
 			}
-
-			if (umbral > 0)
-				castState = "umbral";
-			if (astral > 0)
-				castState = "astral";
-
-			//magic and mend II
-			if (result.events[e].type != 1 && result.events[e].type != 8)
-				potency *= 1.30;
-
 		} else {
 			potency = 0;
 		}
 
-		var ellapsed = result.events[e].fightTime - prevTime;
+		var ellapsed = event.fightTime - prevTime;
 
 		//tick timers
 		thunder.update(ellapsed);
@@ -525,16 +560,18 @@ function parseBlackmage(response) {
 		umbral = Math.max(0, umbral - ellapsed);
 		astral = Math.max(0, astral - ellapsed);
 
-		if (enoch > 0) {
-			enoch = enoch - ellapsed;
-			if (astral <= 0 && umbral <= 0)
-				enoch = 0;
-			else if (enoch <= 0)
-				enoch += 30;
+		if (enoch.isActive()) {
+			enoch.update(ellapsed);
+			if (astral <= 0 && umbral <= 0){
+				enoch.stop();
+			}else if (enoch.current <= 0){
+				enoch.restartOffset();
+			}
 		}
+		buffs["Enochian"].active = enoch.isActive();
 
-		if (result.events[e].type == "applybuff" || result.events[e].type == "refreshbuff") {
-			switch (result.events[e].name) {
+		if (event.type == "applybuff" || event.type == "refreshbuff") {
+			switch (event.name) {
 			case "Thundercloud":
 				thundercloud.restart();
 				break;
@@ -546,8 +583,8 @@ function parseBlackmage(response) {
 			}
 		}
 
-		if (result.events[e].type == "removebuff") {
-			switch (result.events[e].name) {
+		if (event.type == "removebuff") {
+			switch (event.name) {
 			case "Thundercloud":
 				thundercloud.set(0.001);
 				break;
@@ -556,9 +593,11 @@ function parseBlackmage(response) {
 			}
 		}
 
-		if (result.events[e].type == "begincast") {
+		if (event.type == "begincast") {
 			switch (event.ability.name) {
 			case "Thunder III":
+			case "Thunder IV":
+			console.log(event.fightTime + " begin thunder");
 				canThundercloud = false;
 				break;
 			default:
@@ -572,66 +611,97 @@ function parseBlackmage(response) {
 				castState = "astral";
 		}
 
-		if (result.events[e].type == "cast") {
+		var img = '';
+		if (event.type == "cast") {
 			switch (event.ability.name) {
 			case "Fire":
-				if (umbral > 0)
+			case "Fire II":
+				if (umbral > 0){
 					umbral = 0;
-				else
+					//umbralStack = 0;
+				} else {
 					astral = 13;
+					astralStack = Math.min(3,astralStack + 1);
+					img = "astral_fire" + suffix[astralStack]+".png";
+				}
 				break;
 			case "Blizzard":
-				if (astral > 0)
+			case "Blizzard II":
+			case "Freeze":
+				if (astral > 0){
 					astral = 0;
-				else
+					//astralStack = 0;
+				} else {
 					umbral = 13;
+					umbralStack = Math.min(3,umbralStack + 1);
+					img = "umbral_ice" + suffix[umbralStack]+".png";
+				}
 				break;
 			case "Fire III":
+			case "Flare":
+				img = "astral_fire_iii.png";
+				astralStack = 3;
+				//umbralStack = 0;
 				astral = 13;
 				umbral = 0;
 				break;
 			case "Blizzard III":
+				img = "umbral_ice_iii.png";
+				//astralStack = 0;
+				umbralStack = 3;
 				astral = 0;
 				umbral = 13;
 				break;
 			case "Thunder III":
+			case "Thunder IV":
 				if (sharpcast > 0)
 					thundercloud.restart();
 				thunder.restart();
 				break;
 
 			case "Enochian":
-				enoch = 30;
+				enoch.restart();
+				buffs["Enochian"].active = true;
 				break;
 			case "Transpose":
 				if (umbral > 0) {
+					astralStack = 1;
+					//astralStack = 0;
 					astral = 13;
 					umbral = 0;
-				} else {
+					img = "astral_fire" + suffix[umbralStack]+".png";
+				} else if(astral > 0) {
+					//astralStack = 0;
+					astralStack = 1;
 					astral = 0;
 					umbral = 13;
+					img = "umbral_ice" + suffix[umbralStack]+".png";
 				}
-				break;
-			default:
 				break;
 			}
 		}
 
 		var extra = [];
 
-		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
-		extra.push(enoch > 0 ? `<div class="center status-block" style="background-color: #7F5FB0"></div>` : ``);
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		extra.push(enoch.isActive() > 0 ? `<div class="center status-block" style="background-color: #7F5FB0"></div>` : ``);
+		if(img != '')
+			img = `<img src="img/${img}"/>`;
+		
 		if (astral > 0)
-			extra.push(`<div class="center status-block" style="background-color: #F05F2F"></div>`);
+			extra.push(`<div class="center status-block" style="background-color: #F05F2F">${img}</div>`);
 		else if (umbral > 0)
-			extra.push(`<div class="center status-block" style="background-color: #5FD0F0"></div>`);
+			extra.push(`<div class="center status-block" style="background-color: #5FD0F0">${img}</div>`);
 		else
 			extra.push(``);
 		extra.push(thunder.isActive() ? `<div class="center status-block" style="background-color: #C0B02F"></div>` : ``);
-
-		result.events[e].extra = extra;
-		result.events[e].potency = potency;
-		prevTime = result.events[e].fightTime;
+		extra.push(thundercloud.isActive() ? `<div class="center status-block" style="background-color: #C0B0F0"></div>` : ``);
+		img = ''
+		
+		event.extra = extra;
+		event.potency = potency;
+		prevTime = event.fightTime;
+		result.events[e] = event;
 
 	}
 	//console.log(result);

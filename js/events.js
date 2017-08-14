@@ -61,11 +61,13 @@ function updateEvent(data, fight) {
 	tbl_row = '';
 
 	tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
+	if(damageTypes[data.dmgType] == undefined)
+		console.log("Damage Type: " + data.dmgType + " is undefined");
 	tbl_row += `<td>${data.amount == 0 ? '':data.amount} <span class="castType">${data.isDirect ? "Direct ":''}${data.hitType}</span><span class="damage-block ${damageTypes[data.dmgType]}"></span></td>`;
-	if (data.isTargetFriendly)
-		tbl_row += `<td>${fight.team[data.target]}</td>`;
+	if (data.targetIsFriendly)
+		tbl_row += `<td>${fight.team[data.targetID]}</td>`;
 	else
-		tbl_row += `<td>${fight.enemies[data.target]}</td>`;
+		tbl_row += `<td>${fight.enemies[data.targetID]}</td>`;
 	tbl_row += `<td class="center">${data.fightTime.toFixed(2)}</td>`;
 
 	if (data.extra != undefined) {
@@ -75,7 +77,7 @@ function updateEvent(data, fight) {
 	}
 	//console.log(tbl_row);
 	return `<tr>${tbl_row}</tr>`;
-	$(".ranking-table tbody").append(`<tr>${tbl_row}</tr>`);
+	//$(".ranking-table tbody").append(`<tr>${tbl_row}</tr>`);
 }
 
 function processGeneric(response) {
@@ -122,15 +124,18 @@ function processClass(response, spec) {
 	if (spec == "Bard") {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/straight_shot.png" title="Straight Shot"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/foe_requiem.png" title="Foe Requiem"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/battle_voice.png" title="Battle Voice"/></td>`);
+		//$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/battle_voice.png" title="Battle Voice"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/raging_strikes.png" title="Raging Strikes"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/bard_song.png" title="Bard Song's"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/storm_bite.png" title="Storm Bite"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/caustic_bite.png" title="Caustic Bite"/></td>`);
 	}
 	
 	if (spec == "BlackMage") {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/enochian.png" title="Enochian"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/astral_umbral.png" title="A Song of Ice & Fire"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/thunder_iii.png" title="Thunder Dot"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/thundercloud.png" title="Thundercloud"/></td>`);
 	}
 	
 	if (spec == "Dragoon") {
