@@ -465,6 +465,7 @@ function parseBlackmage(response) {
 		}
 
 		getBasicData(event, result.fight);
+		//console.log(event);
 
 		if (first) {
 			first = false;

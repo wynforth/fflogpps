@@ -60,14 +60,20 @@ function updateEvent(data, fight) {
 	
 	tbl_row = '';
 
+	//console.log(data);
 	tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
 	if(damageTypes[data.dmgType] == undefined)
 		console.log("Damage Type: " + data.dmgType + " is undefined");
 	tbl_row += `<td>${data.amount == 0 ? '':data.amount} <span class="castType">${data.isDirect ? "Direct ":''}${data.hitType}</span><span class="damage-block ${damageTypes[data.dmgType]}"></span></td>`;
 	if (data.targetIsFriendly)
 		tbl_row += `<td>${fight.team[data.targetID]}</td>`;
-	else
-		tbl_row += `<td>${fight.enemies[data.targetID]}</td>`;
+	else{
+		if(data.hasOwnProperty("targetResources")){
+			tbl_row += `<td>${fight.enemies[data.targetID]} <span class="castType">${((data.targetResources.hitPoints/data.targetResources.maxHitPoints)*100).toFixed(2)}%</span></td>`;
+		} else {
+			tbl_row += `<td>${fight.enemies[data.targetID]}</td>`;
+		}
+	}
 	tbl_row += `<td class="center">${data.fightTime.toFixed(2)}</td>`;
 
 	if (data.extra != undefined) {
@@ -85,7 +91,6 @@ function processGeneric(response) {
 	var totalDamage = 0;
 
 	result = parseGeneric(response);
-	console.log(result);
 
 	var lastEvent = {
 		name: '',
@@ -115,6 +120,9 @@ function processGeneric(response) {
 function processClass(response, spec) {
 
 	console.log("Processing " + spec);
+	if(response.hasOwnProperty("nextPageTimestamp"))
+		console.log("WARNING     more time stamps exist     WARNING");
+	//console.log(response);
 	
 	$(".ranking-table tbody").html("");
 	$(".ranking-table thead tr").append(`<td style="width: 90px">Potency</td>`);
