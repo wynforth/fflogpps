@@ -62,8 +62,10 @@ function updateEvent(data, fight) {
 
 	//console.log(data);
 	tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
-	if(damageTypes[data.dmgType] == undefined)
+	if(damageTypes[data.dmgType] == undefined){
 		console.log("Damage Type: " + data.dmgType + " is undefined");
+		console.log(data);
+	}
 	tbl_row += `<td>${data.amount == 0 ? '':data.amount} <span class="castType">${data.isDirect ? "Direct ":''}${data.hitType}</span><span class="damage-block ${damageTypes[data.dmgType]}"></span></td>`;
 	if (data.targetIsFriendly)
 		tbl_row += `<td>${fight.team[data.targetID]}</td>`;
@@ -152,12 +154,15 @@ function processClass(response, spec) {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/blood_for_blood.png" title="Blood For Blood"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/right_eye.png" title="Dragon Sight"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/battle_litany.png" title="Battle Litany"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/piercing_resistance_down.png" title="Disembowel"/></td>`);
 	}
 
 	if (spec == "Machinist") {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/gauss_barrel.png" title="Gauss Barrel"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/hot_shot.png" title="Hot Shot"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/hypercharge.png" title="Hypercharge"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/overheated.png" title="Heat"/></td>`); //heat
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/ammunition_loaded.png" title="Ammo"/></td>`); //ammo
 	}
 
 	if (spec == "Monk") {

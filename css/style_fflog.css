@@ -257,6 +257,7 @@ table .damage-block {
 .phys { background-color: rgb(80%, 44%, 9%); }
 .dot_magic { background-color: rgb(56%, 95%, 100%); }
 .magic { background-color: #2599be; }
+.heal { background-color: rgb(75%, 75%, 75%); }
 
 .pet { background-color: #64BDC8; }
 

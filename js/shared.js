@@ -69,35 +69,80 @@ class Timer {
 }
 
 class Buff {
-	constructor(name, bonus, active, restricted){
+	constructor(name, bonus, active, restricted, exclusive){
 		this.name = name;
 		this.bonus = bonus;
 		this.active = active == undefined ? false:active;
 		this.restricted = restricted == undefined ? []:restricted;
+		this.exclusive = exclusive == undefined ? []:exclusive;
+	}
+	
+	isAllowed(event){
+		if(!this.active) 
+			return false;
+		if(this.restricted.length == 0 && this.exclusive.length == 0)
+			return true;
+		
+		var valid = true;
+		if(this.exclusive.length > 0)
+			//we want to be on the list
+			valid = this.exclusive.indexOf(event.name) > -1;
+		if(this.restricted.length > 0)
+			//we want to be off the list
+			valid = this.restricted.indexOf(event.name) == -1;
+		
+		return valid;
+	}
+	
+	apply(potency, event){
+		if(this.isAllowed(event)){
+			return Math.trunc(potency * (1+this.bonus));
+		}
+		return potency;
+	}
+	
+	getDisplayPercent(){
+		return (this.bonus * 100).toFixed(0);
 	}
 }
 
-class Debuff {
-	constructor(name, bonus, restricted){
-		this.name = name;
-		this.bonus = bonus;
-		this.restricted = restricted == undefined ? []:restricted;
+class Debuff extends Buff{
+	constructor(name, bonus, restricted, exclusive){
+		super(name, bonus, false, restricted, exclusive);
 		this.targets = [];
 	}
 	
 	add(targetID){
 		if(this.targets.indexOf(targetID) == -1)
 			this.targets.push(targetID);
+		this.active = this.targets.length > 0;
 	}
 	
 	remove(targetID){
 		var index = this.targets.indexOf(targetID);
 		if(index > -1)
 			this.targets.splice(index, 1);
+		this.active = this.targets.length > 0;
+	}
+	
+	clear(){
+		this.targets = [];
 	}
 	
 	isTarget(targetID){
 		return this.targets.indexOf(targetID) > -1;
+	}
+	
+	isAllowed(event){
+		if(this.isTarget(event.targetID))
+			return super.isAllowed(event);
+		return false;
+	}
+	
+	apply(potency, event){
+		if(this.isTarget(event.targetID))
+			return super.apply(potency, event);
+		return potency;
 	}
 }
 
@@ -150,29 +195,6 @@ function getBasicData(event, fight) {
 		'amount': event.amount == undefined ? 0 : event.amount,
 		'isDirect' : event.multistrike == undefined ? false: event.multistrike
 	}
-	//console.log(event);
-	//console.log(data);
-
-	/*
-	if (event.multistrike)
-		data.hitType = `*${data.hitType}*`;
-	*/
-
-	/*
-	if (data.target != undefined) {
-		/*
-		if (data.target == playerID)
-			data.target = "self";
-		else
-		
-		data.target = event.targetIsFriendly ? fight.team[data.target] : fight.enemies[data.target];
-		if (event.targetInstance > 1)
-			data.target += ` [${event.targetInstance}]`;
-	}
-	*/
-	
-
-	//console.log(data);
 	return data;
 }
 
@@ -202,7 +224,7 @@ damageTypes = {
 	1: "dot_phys",
 	//2: "lightning",
 	//4: "fire",
-	//8: "sprint",
+	8: "heal",
 	//16: "water",
 	//32: "unaspected",
 	64: "dot_magic",
