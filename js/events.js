@@ -38,7 +38,7 @@ function processReport(report) {
 	$(".container.summaries .header").append(` <b>VS.</b> ${nme.slice(0,-2)}`);
 	
 	$(".summary").append(`<span class="castType">Full report at <a href="${link}">FFLogs</a></span>`);
-	$('.summary').append(`<b>Duration:</b> ${result.fight.duration} seconds<br/><br/>`)
+	$('.summary').append(`<b>Duration:</b> ${result.fight.duration} seconds.`)
 
 	var url = base_url + "/report/events/" + result.report.reportID + "?translate=true";
 	url += "&start=" + result.fight.start;
@@ -125,11 +125,11 @@ function processClass(response, spec) {
 	if(response.hasOwnProperty("nextPageTimestamp"))
 		console.log("WARNING     more time stamps exist     WARNING");
 	//console.log(response);
+	if(['Dragoon','Ninja','Monk'].indexOf(spec) > -1)
+		$('.summary').append(`<br/><b>Positionals:</b> Unless under True North positional potency is a weighted average assuming 9 in 10 hits are from the correct position.`)
 	
 	$(".ranking-table tbody").html("");
 	$(".ranking-table thead tr").append(`<td style="width: 90px">Potency</td>`);
-
-	
 
 	if (spec == "Bard") {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/straight_shot.png" title="Straight Shot"/></td>`);
@@ -155,6 +155,7 @@ function processClass(response, spec) {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/right_eye.png" title="Dragon Sight"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/battle_litany.png" title="Battle Litany"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/piercing_resistance_down.png" title="Disembowel"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`);
 	}
 
 	if (spec == "Machinist") {
@@ -171,12 +172,16 @@ function processClass(response, spec) {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/dragon_kick.png" title="Dragon Kick"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/internal_release.png" title="Internal Release"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/riddle_of_fire.png" title="Riddle of Fire"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/perfect_balance.png" title="Perfect Balance"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`);
 	}
 	
 	if (spec == "Ninja") {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/vulnerability_up.png" title="Trick Attack"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/shadow_fang.png" title="Shadow Fang"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/ten_chi_jin.png" title="Ten Chi Jin"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/huton.png" title="Huton"/></td>`);
 	}
 
 	if (spec == "RedMage") {
@@ -185,6 +190,7 @@ function processClass(response, spec) {
 
 	if (spec == "Samurai") {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/jinpu.png" title="Jinpu"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`);
 	}
 	
 	if (spec == "Summoner") {

@@ -75,6 +75,8 @@ class Buff {
 		this.active = active == undefined ? false:active;
 		this.restricted = restricted == undefined ? []:restricted;
 		this.exclusive = exclusive == undefined ? []:exclusive;
+		console.log(this.name);
+		console.log(this.restricted);
 	}
 	
 	isAllowed(event){
@@ -85,11 +87,9 @@ class Buff {
 		
 		var valid = true;
 		if(this.exclusive.length > 0)
-			//we want to be on the list
-			valid = this.exclusive.indexOf(event.name) > -1;
+			valid = this.exclusive.indexOf(event.name) > -1; //have to be ON the list
 		if(this.restricted.length > 0)
-			//we want to be off the list
-			valid = this.restricted.indexOf(event.name) == -1;
+			valid = this.restricted.indexOf(event.name) == -1; //have to be OFF the list
 		
 		return valid;
 	}

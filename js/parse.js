@@ -121,34 +121,10 @@ function buildRow(data, fight) {
 function applyBuffs(value, event, buffs) {
 	for (var b in buffs) {
 		var buff = buffs[b];
-		if(buff.isAllowed(event)){
+		if(buff.isAllowed(event) && buff.bonus != 0){
 			value = buff.apply(value, event);
 			event.tooltip += buff.name + ": " + buff.getDisplayPercent() + "% [" + value.toFixed(0) + "]<br/>";
 		}
-		
-		/*
-		if (buff.active && buff.restricted.indexOf(event.name) == -1) {
-			value = Math.trunc(value * (1 + (buff.bonus)));
-			event.tooltip += buff.name + ": " + (buff.bonus * 100).toFixed(0) + "% [" + value.toFixed(0) + "]<br/>";
-		}
-		*/
-	}
-	return value;
-}
-
-function applyDebuffs(value, event, debuffs) {
-	for (var d in debuffs) {
-		var debuff = debuffs[d];
-		if(debuff.isAllowed(event)){
-			value = debuff.apply(value, event);
-			event.tooltip += debuff.name + ": " + debuff.getDisplayPercent() + "% [" + value.toFixed(0) + "]<br/>";
-		}
-		//console.log(buff);
-		
-		if (debuff.isTarget(event.targetID) && debuff.restricted.indexOf(event.name) == -1) {
-			//value = Math.trunc(value * (1 + (debuff.bonus)));
-			//event.tooltip += debuff.name + ": " + (debuff.bonus * 100).toFixed(0) + "% [" + value.toFixed(0) + "]<br/>";
-		}		
 	}
 	return value;
 }
@@ -289,7 +265,7 @@ function parseBard(response) {
 				} else if (event.name == "Empyreal Arrow" && minuet.isActive()) {
 					charges++;
 				}
-				event.tooltip = event.name + " Base: " + potency + "<br/>";
+				event.tooltip = event.name + ": " + potency + "<br/>";
 
 				potency = applyBuffs(potency, event, buffs);
 				//potency = applyDebuffs(potency, event, debuffs);
@@ -498,7 +474,7 @@ function parseBlackmage(response) {
 				var tctip = '';
 				if (event.name == "Thunder III"){
 					if(thundercloud.isActive() && canThundercloud) {
-						tctip = event.name + " Base: " + potency + "<br/>";
+						tctip = event.name + ": " + potency + "<br/>";
 						potency += (40 * 8);
 						tctip += "Thundercloud: +" + (40 * 8) + " [" + potency.toFixed(0) + "]<br/>"
 						//thundercloud.stop();
@@ -506,7 +482,7 @@ function parseBlackmage(response) {
 					dot_potencies[event.name] = applyBuffs(40, event, buffs);
 				} else if (event.name == "Thunder IV"){
 					if(thundercloud.isActive() && canThundercloud) {
-						tctip = event.name + " Base: " + potency + "<br/>";
+						tctip = event.name + ": " + potency + "<br/>";
 						potency += (30 * 6);
 						tctip += "Thundercloud: +" + (30 * 6) + " [" + potency.toFixed(0) + "]<br/>"
 					}
@@ -515,7 +491,7 @@ function parseBlackmage(response) {
 					canThundercloud = true;
 				}
 				
-				event.tooltip = event.name + " Base: " + potency + "<br/>";
+				event.tooltip = event.name + ": " + potency + "<br/>";
 				if(tctip != "")
 					event.tooltip = tctip;
 
@@ -739,6 +715,13 @@ function parseDragoon(response) {
 		'Mirage Dive': 200,
 		'Nastrond': 320
 	}
+	
+	var pos_potencies = {
+		'Heavy Thrust': 180,
+		'Chaos Thrust': 140,
+		'Fang And Claw': 290,
+		'Wheeling Thrust': 290,
+	}
 
 	var dot_potencies = {
 		'Chaos Thrust': 35,
@@ -752,6 +735,12 @@ function parseDragoon(response) {
 		'Sonic Thrust': 170,
 		'Fang And Claw': 100 + ((290 * 9 + 250) / 10),
 		'Wheeling Thrust': 100 + ((290 * 9 + 250) / 10),
+	}
+	
+	var pos_combo_potencies = {
+		'Chaos Thrust': 270,
+		'Fang And Claw': 100 + 290,
+		'Wheeling Thrust': 100 + 290,
 	}
 
 	var combo = {
@@ -777,6 +766,7 @@ function parseDragoon(response) {
 		"Blood For Blood": new Buff("Blood For Blood", .15),
 		"Right Eye": new Buff("Right Eye", .10),
 		"Battle Litany": new Buff("Battle Litany", (.15 * .45)),
+		"True North": new Buff("True North", 0),
 		"Piercing Resistance Down": new Debuff("Disemboweled", .05),
 	};
 	var colors = {
@@ -786,6 +776,7 @@ function parseDragoon(response) {
 		"Right Eye": "#B41512",
 		"Battle Litany": "#6F8C93",
 		"Piercing Resistance Down": "#932F2F",
+		"True North":  "#C07F4F",
 	}
 	//prescan first couple attacks to see what buffs are up prelogging
 	var start = response.events[0].timestamp;
@@ -821,17 +812,21 @@ function parseDragoon(response) {
 				potency = dot_potencies[event.name];
 				event.tooltip = "DoT: " + event.name;
 			} else {
-				if (combo[event.name] == lastWS)
-					potency = combo_potencies[event.name];
-				else if (combo.hasOwnProperty(event.name) && event.name == lastWS) //hack for aoe combos
-					potency = combo_potencies[event.name];
+				if (combo[event.name] == lastWS || (combo.hasOwnProperty(event.name) && event.name == lastWS)) //hack for aoe combos
+					if(buffs["True North"].active && pos_combo_potencies.hasOwnProperty(event.name))
+						potency = pos_combo_potencies[event.name];
+					else
+						potency = combo_potencies[event.name];
 				else
-					potency = potencies[event.name];
+					if(buffs["True North"].active && pos_potencies.hasOwnProperty(event.name))
+						potency = pos_potencies[event.name];
+					else
+						potency = potencies[event.name];
 
 				if (comboskills.indexOf(event.name) > -1)
 					lastWS = event.name;
 
-				event.tooltip = event.name + " Base: " + potency + "<br/>";
+				event.tooltip = event.name + ": " + potency + "<br/>";
 
 				potency = applyBuffs(potency, event, buffs)
 
@@ -1030,7 +1025,7 @@ function parseMachinist(response) {
 					else if (enhancedSlugShot && (event.name == "Slug Shot" || event.name == "Heated Slug Shot"))
 						potency = enhanced_potencies[event.name];
 
-					event.tooltip = event.name + " Base: " + potency + "<br/>";
+					event.tooltip = event.name + ": " + potency + "<br/>";
 					
 					if (weaponskills.indexOf(event.name) > -1) {
 						if (ammunition > 0){
@@ -1046,7 +1041,7 @@ function parseMachinist(response) {
 				}
 			} else {
 				potency = petPotencies[event.name];
-				event.tooltip = event.name + " Base: " + potency + "<br/>";
+				event.tooltip = event.name + ": " + potency + "<br/>";
 				potency = applyBuffs(potency, event, buffs);
 			}
 			
@@ -1176,20 +1171,11 @@ function parseMonk(response) {
 	console.log("Parsing Monk");
 
 	var brotherhood = new Timer("Brotherhood", 15);
-	var dragonkick = new Timer("Dragon Kick", 15);
-	var twinsnakes = new Timer("Twin Snakes", 15);
-	var internalrelease = false;
 	var gl = new Timer("Greased Lightning", 15);
 	var glstacks = 0;
-	var effectiveStacks = 0;
-	var fire = true;
-	var riddle = false;
-
-	var demDot = 50;
-	var demCast = false;
 
 	var potencies = {
-		"Bootshine": (140 + 210 * 9) / 10, //weighted average 90% hitting positional
+		"Bootshine": (140 + (140 * 1.45) * 9) / 10, //weighted average 90% hitting positional
 		"True Strike": (140 + 180 * 9) / 10,
 		"Demolish": (30 + 70 * 9) / 10,
 		"Dragon Kick": (100 + 140 * 9) / 10,
@@ -1208,20 +1194,43 @@ function parseMonk(response) {
 		"Earth Tackle": 100,
 		"Wind Tackle": 65,
 		"Fire Tackle": 130,
-		"Attack": 80,
+		"Attack": 110,
 	}
 	//console.log(potencies);
 
 	var positional = {
-		"Bootshine": 140 * 1.5,
+		"Bootshine": 140 * 1.45,
 		"True Strike": 180,
 		"Demolish": 70,
 		"Dragon Kick": 140,
 		"Twin Snakes": 130,
 		"Snap Punch": 170
 	}
-
-	var lightnings = ["Demolish", "Snap Punch", "Arm of the Destroyer"]
+	
+	var dot_potencies = {
+		"Demolish": 50,
+	}
+	
+	var lightnings = ["Demolish", "Snap Punch", "Rockbreaker"]
+	
+	var buffs = {
+		"Riddle Of Fire": new Buff("Riddle of Fire", .30),
+		"Fists Of Fire": new Buff("Fists of Fire", .05, true),
+		"Internal Release": new Buff("Internal Release", .3 * .45, false, ['Bootshine']),
+		"True North": new Buff("True North", 0),
+		"Perfect Balance": new Buff("Perfect Balance", 0),
+		"Twin Snakes": new Buff("Twin Snakes", .10),
+		"Blunt Resistance Down": new Debuff("Dragon Kick", .10),
+	}
+	
+	var colors = {
+		"Twin Snakes": "#B7727D",
+		"Blunt Resistance Down": "#EFE0A4",
+		"Internal Release": "#8DD7AF",
+		"Riddle Of Fire": "#D8786F",
+		"Perfect Balance": "#DF964C",
+		"True North":  "#C07F4F",
+	}
 
 	var prevTime = 0;
 	for (var e in response.events) {
@@ -1234,89 +1243,82 @@ function parseMonk(response) {
 			}
 		}
 
-		result.events[e] = getBasicData(event, result.fight);
+		getBasicData(event, result.fight);
 		var potency = 0;
 		var stackChange = false;
 
-		if (result.events[e].type == "damage" && result.events[e].amount != 0) {
-			var potency = potencies[event.ability.name];
+		if (event.type == "damage" && event.amount != 0) {
+			var potency = 0;
+			if (event.dmgType == 64 || event.dmgType == 1) {
+				//dots
+				potency = dot_potencies[event.name];
+				event.tooltip = "DoT: " + event.name;
+			} else {
 
-			if (event.ability.name == "Demolish") {
-				if (!demCast)
-					potency = demDot;
-				demCast = false;
-			}
+				potency = potencies[event.name];
+				if(buffs["True North"].active)
+					if(positional.hasOwnProperty(event.name))
+						potency = positional[event.name];
+				
+				
+				if (event.name == "Demolish") {
+					dot_potencies[event.name] = applyBuffs(50, event, buffs);
+				}
+				
+				event.tooltip = event.name + ": " + potency + "<br/>";
+				
+				potency = applyBuffs(potency, event, buffs);
 
-			if (fire)
-				potency *= 1.05;
+				 //GL
+				 if(glstacks > 0){
+					potency = Math.trunc(potency * (1 + (.1 * glstacks)));
+					event.tooltip += "Greased Lightning "+glstacks+": " + ((.1 * glstacks)*100).toFixed(0) + "% [" + potency.toFixed(0) + "]<br/>";
+				 }
 
-			if (riddle)
-				potency *= 1.3;
+				if (potency == undefined)
+					potency = 0;
+				
+				if (lightnings.indexOf(event.name) > -1) {
+					gl.restart();
+					var old = glstacks;
+					glstacks = Math.min(3, glstacks + 1);
+					stackChange = glstacks != old
+				}
 
-			if (internalrelease && event.ability.name != "Bootshine") //bootshine already has built in crit
-				potency *= 1.15;
-
-			if (twinsnakes.isActive())
-				potency *= 1.1;
-
-			if (dragonkick.isActive())
-				potency *= 1.1;
-
-			potency *= 1 + (.1 * effectiveStacks);
-
-			if (potency == undefined)
-				potency = 0;
-
-			if (event.ability.name == "Twin Snakes")
-				twinsnakes.restart();
-			if (event.ability.name == "Dragon Kick")
-				dragonkick.restart();
-		}
-
-		var ellapsed = result.events[e].fightTime - prevTime;
-
-		gl.update(ellapsed);
-		if (gl.current != gl.duration)
-			effectiveStacks = glstacks;
-
-		if (result.events[e].type == "cast") {
-			if (event.ability.name == "Demolish")
-				demCast = true;
-
-			if (lightnings.indexOf(event.ability.name) > -1) {
-				gl.restart();
-				var old = glstacks;
-				glstacks = Math.min(3, glstacks + 1);
-				stackChange = glstacks != old
 			}
 		}
 
-		if (result.events[e].type == "applybuff") {
-			if (event.ability.name == "Internal Release")
-				internalrelease = true;
-			if (event.ability.name == "Riddle Of Fire") {
-				fire = true;
-				riddle = true;
+		var ellapsed = event.fightTime - prevTime;
+		if (lightnings.indexOf(event.name) == -1)
+			gl.update(ellapsed);
+
+		if (event.type == "applybuff") {
+			if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].active = true;
+
+			if (event.ability.name == "Fists Of Wind" || event.ability.name == "Fists Of Earth"){
+				buffs["Fists Of Fire"].active = false;
+				buffs["Riddle Of Fire"].active = false;
 			}
-
-			if (event.ability.name == "Fists Of Wind" || event.ability.name == "Fists Of Earth")
-				fire = false;
-			if (event.ability.name == "Fists Of Fire")
-				fire = true;
-
 		}
 
-		if (result.events[e].type == "removebuff") {
-			if (event.ability.name == "Internal Release")
-				internalrelease = false;
-
-			if (event.ability.name == "Riddle Of Fire") {
-				riddle = false;
-			}
+		if (event.type == "removebuff") {
+			if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].active = false;
+		}
+		
+		if (event.type == "applydebuff") {
+			if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].add(event.targetID);
+		}
+		
+		if (event.type == "removedebuff") {
+			if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].remove(event.targetID);
 		}
 
 		var extra = [];
-		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
 		if (gl.isActive()) {
 			var img = "";
 			if (stackChange) {
@@ -1331,15 +1333,16 @@ function parseMonk(response) {
 		} else {
 			extra.push("");
 		}
-		extra.push(twinsnakes.isActive() ? `<div class="center status-block" style="background-color: #B7727D"></div>` : ``);
-		extra.push(dragonkick.isActive() ? `<div class="center status-block" style="background-color: #EFE0A4"></div>` : ``);
-		extra.push(internalrelease ? `<div class="center status-block" style="background-color: #8DD7AF"></div>` : ``);
-		extra.push(riddle ? `<div class="center status-block" style="background-color: #D8786F"></div>` : ``);
+		for (var b in colors) {
+			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
+		}
 
-		result.events[e].extra = extra;
-		result.events[e].potency = potency;
+		event.extra = extra;
+		event.potency = potency;
 
-		prevTime = result.events[e].fightTime;
+		prevTime = event.fightTime;
+		
+		result.events[e] = event;
 	}
 	//console.log(result);
 	return result;
@@ -1350,30 +1353,25 @@ function parseNinja(response) {
 	console.log("Parsing NIN");
 
 	var prevTime = 0;
-	var totalPotency = 0;
-	var totalDamage = 0;
 
 	//trackers
-	var shadowCast = false;
-	var shadowDot = 40;
-	var tenchijin = false;
-	var trick = {};
-	var shadowfang = {};
 	var duality = false;
+	var huton = new Timer("Huton", 70);
+
 
 	var potencies = {
-		'Attack': 80,
+		'Attack':110,
 		'Spinning Edge': 150,
 		'Gust Slash': 100,
 		'Assassinate': 200,
 		'Throwing Dagger': 120,
 		'Mug': 140,
-		'Trick Attack': 400,  //scan ahead for the vuln up state?
-		'Aeolian Edge': (160*9 + 100)/10,
+		'Trick Attack': 400, //scan ahead for the vuln up state?
+		'Aeolian Edge': (160 * 9 + 100) / 10,
 		'Jugulate': 80,
 		'Shadow Fang': 100,
 		'Death Blossom': 110,
-		'Armor Crush': (160*9 + 100)/10,
+		'Armor Crush': (160 * 9 + 100) / 10,
 		'Dream Within A Dream': 150,
 		'Hellfrog Medium': 400,
 		'Bhavacakra': 600,
@@ -1385,11 +1383,26 @@ function parseNinja(response) {
 		'Suiton': 180
 	}
 
+	var pos_potencies = {
+		'Aeolian Edge': 160,
+		'Armor Crush': 160,
+	}
+
 	var combo_potencies = {
 		'Gust Slash': 200,
-		'Aeolian Edge': (340*9 + 280)/10,
+		'Aeolian Edge': (340 * 9 + 280) / 10,
 		'Shadow Fang': 200,
-		'Armor Crush': (300*9 + 240)/10,
+		'Armor Crush': (300 * 9 + 240) / 10,
+	}
+
+	var pos_combo_potencies = {
+		'Aeolian Edge': 340,
+		'Armor Crush': 300,
+	}
+	
+	var dot_potencies = {
+		'Shadow Fang': 35,
+		'Doton': 40,
 	}
 
 	var combo = {
@@ -1397,23 +1410,33 @@ function parseNinja(response) {
 		'Aeolian Edge': 'Gust Slash',
 		'Shadow Fang': 'Gust Slash',
 	}
+	
+	
 
 	//anything that makes/breaks a combo
-	var comboskills = ['Gust Slash', 'Spinning Edge','Aeolian Edge','Shadow Fang', 'Throwing Dagger', 'Death Blossom'];
+	var comboskills = ['Gust Slash', 'Spinning Edge', 'Aeolian Edge', 'Shadow Fang', 'Throwing Dagger', 'Death Blossom'];
 	//all "WeaponSkills"
 	var mudras = ['Fuma Shuriken', 'Katon', 'Raiton', 'Hyoton', 'Doton', 'Suiton'];
 	var lastWS = '';
 
-	var first = true;
-
-	//prescan first couple attacks to see what buffs fall off
-	for (var i = 0; i < 5; i++) {
-		var event = response.events[i];
-
+	var buffs = {
+		"Dripping Blades": new Buff("Dripping Blades II", .2, true, ["Attack"]),
+		"True North": new Buff("True North", 0),
+		"Ten Chi Jin": new Buff("Ten Chi Jin", 1.0, false, [], mudras),
+		"Shadow Fang": new Debuff("Shadow Fang", .10, ['Katon', 'Hellfrog Medium', 'Suiton', 'Raiton', 'Bhavacakra']),
+		"Vulnerability Up": new Debuff("Trick Attack", .10),
 	}
-
+	
+	var colors = {
+		"Vulnerability Up": "#933630",
+		"Shadow Fang": "#44B3DA",
+		"Ten Chi Jin": "#BA4B4A",
+		"True North": "#C07F4F",
+	}
+	huton.restart();
 	for (var e in response.events) {
 		var event = response.events[e];
+		var potency = 0;
 
 		//only events of self	pets	or targetted on self
 		if (event.sourceID != result.player.ID) {
@@ -1421,134 +1444,101 @@ function parseNinja(response) {
 				continue;
 			}
 		}
+		
+		getBasicData(event, result.fight);
 
-		result.events[e] = getBasicData(event, result.fight);
-		var potency = 0;
+		if (event.type == "damage" && event.amount != 0) {
+			if (event.dmgType == 1 || event.dmgType == 64) {
+				//DOTS
+				potency = dot_potencies[event.name];
+				event.tooltip = "DoT: " + event.name;
+			} else {
+				if (combo[event.name] == lastWS || (combo.hasOwnProperty(event.name) && event.name == lastWS)) //hack for aoe combos
+					if (buffs["True North"].active && pos_combo_potencies.hasOwnProperty(event.name))
+						potency = pos_combo_potencies[event.name];
+					else
+						potency = combo_potencies[event.name];
+				else
+					if (buffs["True North"].active && pos_potencies.hasOwnProperty(event.name))
+						potency = pos_potencies[event.name];
+					else
+						potency = potencies[event.name];
 
-		if (result.events[e].type == "damage" && result.events[e].amount != 0) {
-			if (combo[result.events[e].name] == lastWS)
-				potency = combo_potencies[result.events[e].name];
-			else
-				potency = potencies[result.events[e].name];
-
-			
-			if (comboskills.indexOf(result.events[e].name) > -1 && !(result.events[e].name == "Shadow Fang" && !shadowCast) && !duality){
-					lastWS = result.events[e].name;
-			}
-			
-			//ten chi jin for mudras
-			if(tenchijin && mudras.indexOf(result.events[e].name)>-1)
-				potency *= 2;
-			
-			//trick attack
-			if (trick[result.events[e].target] > 0)
-				potency *= 1.1;
-			//shadowfang resist
-			if (shadowfang[result.events[e].target] > 0 && result.events[e].dmgType == 1)
-				potency *= 1.1;
-			
-			//Dripping Blades II
-			if(result.events[e].name != "Attack")
-				potency *= 1.2;
-
-			//shadow fang dot 
-			if (result.events[e].name == "Shadow Fang") {
-				if (shadowCast) {
-					shadowDot = 40 * (1 + (trick[result.events[e].target] > 0 ? .1 : 0));
-					shadowCast = false;
-				} else {
-					potency = shadowDot;
+				if (comboskills.indexOf(event.name) > -1 && !duality) {
+					lastWS = event.name;
 				}
+
+				//if (comboskills.indexOf(event.name) > -1)
+				//	lastWS = event.name;
+
+				event.tooltip = event.name + ": " + potency + "<br/>";
+
+				potency = applyBuffs(potency, event, buffs)
+
+				//update dot damage
+				if (event.name == "Shadow Fang") {
+					dot_potencies[event.name] = applyBuffs(35, event, buffs);
+				}
+
 			}
-			
-			
-			if (result.events[e].amount == 0)
-				potency = 0;
 			if (potency == undefined)
 				potency = 0;
 		}
 
 		//update timers
-		var ellapsed = result.events[e].fightTime - prevTime;
-		for(var i in trick){
-			trick[i] = Math.max(0, trick[i] - ellapsed);
-		}
-		for(var i in shadowfang){
-			shadowfang[i] = Math.max(0, shadowfang[i] - ellapsed);
-		}
-
-		if (result.events[e].type == "applydebuff") {
-			if(result.events[e].name == "Vulnerability Up")
-				trick[result.events[e].target] = 10;
-			if(result.events[e].name == "Shadow Fang")
-				shadowfang[result.events[e].target] = 21;
-			
+		var ellapsed = event.fightTime - prevTime;
+		huton.update(ellapsed);
+		
+		if (event.type == "cast") {
+			if(event.name == "Doton")
+				dot_potencies[event.name] = applyBuffs(40, event, buffs);
+			else if(event.name == "Armor Crush")
+				huton.update(-30);
+			else if(event.name == "Huton")
+				huton.restart();
 		}
 		
-		if (result.events[e].type == "refreshdebuff") {
-			if(result.events[e].name == "Shadow Fang")
-				shadowfang[result.events[e].target] = 21;
-			
+		if (event.type == "applybuff") {
+			if(event.name == "Duality")
+				duality = true;
+			else if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].active = true;
+		}
+		if (event.type == "removebuff") {
+			if(event.name == "Duality")
+				duality = false;
+			else if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].active = false;
+		}
+		
+		
+		if (event.type == "applydebuff") {
+			if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].add(event.targetID);
 		}
 
-		if (result.events[e].type == "applybuff") {
-			switch(result.events[e].name){
-				case "Duality":
-					duality = true;
-					break;
-				case "Ten Chi Jin":
-					tenchijin = true;
-					break;
-			}
+		if (event.type == "refreshdebuff") {
+			if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].add(event.targetID);
 		}
-
-		if (result.events[e].type == "removedebuff") {
-			if(result.events[e].name == "Vulnerability Up")
-				trick[result.events[e].target] = 0;
-			if(result.events[e].name == "Shadow Fang")
-				shadowfang[result.events[e].target] = 0;
+		
+		if (event.type == "removedebuff") {
+			if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].remove(event.targetID);
 		}
-
-		if (result.events[e].type == "removebuff") {
-			switch(result.events[e].name){
-				case "Duality":
-					duality = false;
-					break;
-				case "Ten Chi Jin":
-					tenchijin = false;
-					break;
-			}
-		}
-
-		if (result.events[e].type == "cast") {
-			if(result.events[e].name == "Shadow Fang")
-				shadowCast = true;
-		}
-
+		
 		var extra = [];
-		extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
 
-		var trickTD = '';
-		for(var i in trick){
-			if(trick[i] > 0)
-				trickTD = `<div class="center status-block" style="background-color: #933630"></div>`;
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		for (var b in colors) {
+			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
-		extra.push(trickTD);
-		
-		var shadowTD = '';
-		for(var i in shadowfang){
-			if(shadowfang[i] > 0)
-				shadowTD = `<div class="center status-block" style="background-color: #44B3DA"></div>`;
-		}
-		extra.push(shadowTD);
-		extra.push(tenchijin ? `<div class="center status-block" style="background-color: #BA4B4A"></div>` : ``);
-		
-		
-		
-		
-		result.events[e].extra = extra;
-		result.events[e].potency = potency;
-		prevTime = result.events[e].fightTime;
+		extra.push(huton.isActive() ? `<div class="center status-block" style="background-color: #7DB6C3"></div>` : ``);
+
+		event.extra = extra;
+		event.potency = potency;
+		prevTime = event.fightTime;
+		result.events[e] = event;
 	}
 
 	return result;
