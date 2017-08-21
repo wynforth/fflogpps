@@ -186,10 +186,14 @@ function processClass(response, spec) {
 
 	if (spec == "RedMage") {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/embolden.png" title="Embolden"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/acceleration.png" title="Acceleration"/></td>`);
 	}
 
 	if (spec == "Samurai") {
+		
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/jinpu.png" title="Jinpu"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/slashing_resistance_down.png" title="Yukikaze"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/hissatsu_kaiten.png" title="Hissatsu: Kaiten"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`);
 	}
 	

@@ -124,9 +124,10 @@ function buildRankingsURL() {
 
 	
 	url += "&page=" + $("#page_number").val();
-	url += "&filter=date.1502168400000.9999999999999"; //only after the type format change
+	url += "&filter=date.1502168400000.9999999999999"; //only after the type format change - August 8, 2017
 	url += "&api_key=" + api_key
 
+	console.log(url);
 	return url;
 }
 
@@ -155,8 +156,11 @@ function displayRankings(response){
 	var tbl_body = '';
 	for(var key in ranks){
 		var rank = ranks[key];
-		console.log(rank);
+		//console.log(JSON.stringify(rank));
+		if(rank.hidden != 0)
+			continue;
 		var link = `https://www.fflogs.com/reports/${rank.reportID}#fight=${rank.fightID}&type=damage-done`;
+		
 		var tbl_row = "";
 		//git hub
 		tbl_row += `<td><a href="events.html?name=${rank.name}&report=${rank.reportID}&fight=${rank.fightID}&api_key=${api_key}">${rank.name}</a><span class="damage-block ${classes[rank.spec].replace(' ','')}"></span></td>`;

@@ -96,13 +96,62 @@ class Buff {
 	
 	apply(potency, event){
 		if(this.isAllowed(event)){
-			return Math.trunc(potency * (1+this.bonus));
+			
+			return Math.trunc(potency * (1 + this.getBonus()));
 		}
 		return potency;
 	}
 	
 	getDisplayPercent(){
-		return (this.bonus * 100).toFixed(0);
+		return (this.getBonus() * 100).toFixed(0);
+	}
+	
+	getBonus(){
+		return this.bonus;
+	}
+	
+	applybuff(){
+		this.active = true;
+	}
+}
+
+class BuffStack extends Buff{
+	constructor(name, initial, stackbonus, maxStacks,  baseStacks, active, restricted, exclusive){
+		super(name, initial, active, restricted, exclusive);
+		this.maxStacks = maxStacks;
+		this.baseStacks = baseStacks;
+		this.stacks = baseStacks;
+		this.stackBonus = stackbonus == undefined ? 0:stackbonus;
+	}
+	
+	isAllowed(event){
+		if(this.stacks > 0)
+			return super.isAllowed(event);
+		return false;
+	}
+	
+	getBonus(){
+		return this.bonus + (this.stackBonus * this.stacks);
+	}
+	
+	addStacks(num){
+		this.stacks = Math.min(this.maxStacks, this.stacks + num);
+	}
+	
+	remStacks(num){
+		this.stacks = Math.max(0, this.stacks - num);
+	}
+	
+	setStacks(num){
+		if(num < 0)
+			this.stacks = 0;
+		else
+			this.stacks = Math.min(this.maxStacks, num);
+	}
+	
+	applybuff(){
+		super.applybuff();
+		this.stacks = this.baseStacks;
 	}
 }
 
