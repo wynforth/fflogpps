@@ -102,8 +102,8 @@ class Buff {
 		return potency;
 	}
 	
-	getDisplayPercent(){
-		return (this.getBonus() * 100).toFixed(0);
+	getDisplay(){
+		return (this.getBonus() * 100).toFixed(0) + "%";
 	}
 	
 	getBonus(){
@@ -112,6 +112,23 @@ class Buff {
 	
 	applybuff(){
 		this.active = true;
+	}
+}
+
+class BuffDirect extends Buff{
+	constructor(name, bonus, active, restricted, exclusive){
+		super(name, bonus, active, restricted, exclusive);
+	}
+	
+	apply(potency, event){
+		if(this.isAllowed(event)){
+			return potency + this.getBonus();
+		}
+		return potency;
+	}
+	
+	getDisplay(){
+		return this.getBonus();
 	}
 }
 
@@ -189,9 +206,26 @@ class Debuff extends Buff{
 	}
 	
 	apply(potency, event){
-		if(this.isTarget(event.targetID))
+		if(this.isAllowed(event))
 			return super.apply(potency, event);
 		return potency;
+	}
+}
+
+class DebuffDirect extends Debuff{
+	constructor(name, bonus, restricted, exclusive){
+		super(name, bonus, restricted, exclusive);
+	}
+	
+	apply(potency, event){
+		if(this.isAllowed(event)){
+			return potency + this.getBonus();
+		}
+		return potency;
+	}
+	
+	getDisplay(){
+		return this.getBonus();
 	}
 }
 

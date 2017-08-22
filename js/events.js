@@ -38,7 +38,7 @@ function processReport(report) {
 	$(".container.summaries .header").append(` <b>VS.</b> ${nme.slice(0,-2)}`);
 	
 	$(".summary").append(`<span class="castType">Full report at <a href="${link}">FFLogs</a></span>`);
-	$('.summary').append(`<b>Duration:</b> ${result.fight.duration} seconds.`)
+	$('.summary').append(`<b>Reportd Duration:</b> ${result.fight.duration} seconds.`)
 
 	var url = base_url + "/report/events/" + result.report.reportID + "?translate=true";
 	url += "&start=" + result.fight.start;
@@ -61,22 +61,39 @@ function updateEvent(data, fight) {
 	tbl_row = '';
 
 	//console.log(data);
+	tbl_row += `<td class="center">${data.fightTime.toFixed(2)}</td>`;
 	tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
+	//tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
 	if(damageTypes[data.dmgType] == undefined){
 		console.log("Damage Type: " + data.dmgType + " is undefined");
 		console.log(data);
 	}
 	tbl_row += `<td>${data.amount == 0 ? '':data.amount} <span class="castType">${data.isDirect ? "Direct ":''}${data.hitType}</span><span class="damage-block ${damageTypes[data.dmgType]}"></span></td>`;
-	if (data.targetIsFriendly)
-		tbl_row += `<td>${fight.team[data.targetID]}</td>`;
-	else{
-		if(data.hasOwnProperty("targetResources")){
-			tbl_row += `<td>${fight.enemies[data.targetID]} <span class="castType">${((data.targetResources.hitPoints/data.targetResources.maxHitPoints)*100).toFixed(2)}%</span></td>`;
-		} else {
-			tbl_row += `<td>${fight.enemies[data.targetID]}</td>`;
+	
+	if (data.sourceIsFriendly)
+		tbl_row += `<td>${fight.team[data.sourceID]}<span class="castType">-></span></td>`;
+	else
+		tbl_row += `<td>${fight.enemies[data.sourceID]}<span class="castType">-></span></td>`;
+	
+	
+	
+	if (!data.hasOwnProperty('targetID')) {
+		tbl_row += `<td>self/ground</td>`;
+	} else {
+		if (data.targetIsFriendly)
+			tbl_row += `<td>${fight.team[data.targetID]}</td>`;
+		else {
+			if (data.hasOwnProperty("targetResources")) {
+				tbl_row += `<td>${fight.enemies[data.targetID]} <span class="castType">${((data.targetResources.hitPoints/data.targetResources.maxHitPoints)*100).toFixed(2)}%</span></td>`;
+			} else {
+				tbl_row += `<td>${fight.enemies[data.targetID]}</td>`;
+			}
 		}
 	}
-	tbl_row += `<td class="center">${data.fightTime.toFixed(2)}</td>`;
+	if(data.potency == 0)
+		tbl_row += `<td></td>`;
+	else
+		tbl_row += `<td><div class="right"><span data-toggle="tooltip" title="${data.tooltip}">${data.potency}</span></div></td>`;
 
 	if (data.extra != undefined) {
 		for (var i = 0; i < data.extra.length; i++) {
@@ -202,6 +219,7 @@ function processClass(response, spec) {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/ruination.png" title="Ruination"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/bio_iii.png" title="Bio III"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/miasma_iii.png" title="Miasma III"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/magic_vulnerability_up.png" title="Contagion"/></td>`);
 	}
 
 	result = parseFunctions[spec](response);
@@ -235,26 +253,30 @@ function processClass(response, spec) {
 	}
 	document.getElementById('rank-body').innerHTML = rows.join('')
 	$('[data-toggle="tooltip"]').tooltip({html: true})
-	//$(".ranking-table tbody").html(rows.join(''));
-
 	//update summary
-	
-	
-	/*
-	$(".summary").append(`<b>Total Damage:</b> ${totalDamage.toFixed(3)}</br>`);
-	$(".summary").append(`<b>DPS:</b> ${(totalDamage / result.fight.duration).toFixed(2)}</br>`);
-	$(".summary").append(`<b>Total Potency:</b> ${totalPotency.toFixed(3)}</br>`);
-	$(".summary").append(`<b>PPS:</b> ${(totalPotency / result.fight.duration).toFixed(2)}<br/>`);
-	$(".summary").append(`<b>Potency Ratio:</b> 1:${(totalDamage/totalPotency).toFixed(2)}`);
-	*/
-	$(".summary-table tbody").append(`<tr>
-		<td>${result.player.name}</td>
-		<td>${totalDamage.toFixed(3)}</td>
-		<td>${(totalDamage / result.fight.duration).toFixed(2)}</td>
-		<td>${totalPotency.toFixed(3)}</td>
-		<td>${(totalPotency / result.fight.duration).toFixed(2)}</td>
-		<td>1:${(totalDamage/totalPotency).toFixed(2)}</td>
-		</tr>`);
+	if (Object.keys(result.totals).length > 1) {
+		for (var k in result.totals) {
+			var total = result.totals[k];
+			if(total.potency > 0)
+				$(".summary-table tbody").append(getSummaryRow(total.name, total.amount, total.potency, total.time));
+		}
+		$(".summary-table tbody").append(getSummaryRow("Combined", totalDamage, totalPotency, result.fight.duration));
+	}
+	else {
+		$(".summary-table tbody").append(getSummaryRow(result.player.name, totalDamage, totalPotency, result.fight.duration));
+	}
+}
+
+function getSummaryRow(name, damage, potency, duration){
+	return `<tr>
+		<td><div class="center">${name}</div></td>
+		<td><div class="center">${damage}</div></td>
+		<td><div class="center">${duration.toFixed(3)}</div></td>
+		<td><div class="center">${(damage / duration).toFixed(2)}</div></td>
+		<td><div class="center">${potency}</div></td>
+		<td><div class="center">${(potency / duration).toFixed(2)}</div></td>
+		<td><div class="center">1:${(damage/potency).toFixed(2)}</div></td>
+		</tr>`;
 }
 
 function isSameEvent(current, previous) {

@@ -186,6 +186,11 @@ table tr td .center {
 	text-align: center !important;
 }
 
+table tr td .right {
+	margin: auto;
+	text-align: right !important;
+}
+
 table .status-block {
 	width: 12px;
 	height: 100%;

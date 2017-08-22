@@ -11,7 +11,8 @@ var result = {
 		name: getUrlParameter("name"),
 		pets: []
 	},
-	events: {}
+	events: {},
+	totals: {},
 }
 
 function parseReport(report) {
@@ -120,7 +121,7 @@ function applyBuffs(value, event, buffs) {
 		var buff = buffs[b];
 		if (buff.isAllowed(event) && buff.getBonus() != 0) {
 			value = buff.apply(value, event);
-			event.tooltip += buff.name + ": " + buff.getDisplayPercent() + "% [" + value.toFixed(0) + "]<br/>";
+			event.tooltip += buff.name + ": " + buff.getDisplay() + " [" + value.toFixed(0) + "]<br/>";
 		}
 	}
 	return value;
@@ -348,7 +349,7 @@ function parseBard(response) {
 		}
 
 		var extra = [];
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		extra.push(buffs["Straight Shot"].active ? `<div class="center status-block" style="background-color: #B01F00"></div>` : ``);
 		extra.push(buffs["Foe Requiem"].targets.length > 0 ? `<div class="center status-block" style="background-color: #90D0D0"></div>` : ``);
 		extra.push(buffs["Raging Strikes"].active ? `<div class="center status-block" style="background-color: #D03F00"></div>` : ``);
@@ -659,7 +660,7 @@ function parseBlackmage(response) {
 
 		var extra = [];
 
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		extra.push(enoch.isActive() > 0 ? `<div class="center status-block" style="background-color: #7F5FB0"></div>` : ``);
 		if (img != '')
 			img = `<img src="img/${img}"/>`;
@@ -874,7 +875,7 @@ function parseDragoon(response) {
 		buffs["Blood Of The Dragon"].active = botd.isActive();
 
 		var extra = [];
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
@@ -1141,7 +1142,7 @@ function parseMachinist(response) {
 		}
 
 		var extra = [];
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		extra.push(gauss ? `<div class="center status-block" style="background-color: #A4786F"></div>` : ``);
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
@@ -1308,7 +1309,7 @@ function parseMonk(response) {
 		}
 	
 		var extra = [];
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		if (gl.isActive()) {
 			var img = "";
 			if (stackChange) {
@@ -1516,7 +1517,7 @@ function parseNinja(response) {
 
 		var extra = [];
 
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
@@ -1685,7 +1686,7 @@ function parseRedmage(response) {
 		}
 
 		var extra = [];
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
@@ -1838,7 +1839,7 @@ function parseSamurai(response) {
 
 		var extra = [];
 
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
@@ -1857,27 +1858,9 @@ function parseSummoner(response) {
 	console.log("Parsing SMN");
 
 	var prevTime = 0;
-	var totalPotency = 0;
-	var totalDamage = 0;
-
-	var playerDamage = 0;
-	var petDamage = 0;
-
-	var playerPotency = 0;
-	var petPotency = 0;
 
 	//trackers
-	var infernoDot = 20;
-	var bioDot = 0;
-	var bioCast = false;
-	var bio = {};
-	var miasmaDot = 0;
-	var miasmaCast = false;
-	var miasma = {};
-	var shadowDot = 0;
-	var ruination = {};
 	var trance = {};
-	var magicDebuff = {}; //shining emerald or contagion
 
 
 	var potencies = {
@@ -1909,6 +1892,7 @@ function parseSummoner(response) {
 		'Miasma': 35,
 		'Miasma III': 50,
 		'Inferno': 20,
+		'Radiant Shield': 50,
 	}
 	
 	var dot_base = {
@@ -1919,6 +1903,7 @@ function parseSummoner(response) {
 		'Miasma': 35,
 		'Miasma III': 50,
 		'Inferno': 20,
+		'Radiant Shield': 50,
 	}
 
 	var petPotencies = {
@@ -1950,28 +1935,49 @@ function parseSummoner(response) {
 		'Radiant Shield': 50,
 		'Flaming Crush': 110,
 		'Inferno': 200,
+		'Radiant Shield': 50,
 	}
 
 	var buffs = {
-		"Magic & Mend": new Buff("Trait", .30, true, [], Object.keys(potencies)),
-		
+		"Bio III": new DebuffDirect("Bio III", 150, [], ["Fester"]),
+		"Miasma III": new DebuffDirect("Miasma III", 150, [], ["Fester"]),
+		"Ruination": new DebuffDirect("Ruination", 20, [], ["Ruin", "Ruin II", "Ruin III", "Ruin IV"]),
+		"Magic & Mend": new Buff("Trait", .30, true, ["Radiant Shield"], Object.keys(potencies)),
+		"Dreadwyrm Trance": new Buff("Dreadwyrm Trance", .10, false,["Attack", "Radiant Shield"]),
+		"Magic Vulnerability Up": new Debuff("Contagion", .10, ["Attack", "Radiant Shield"]),
+	};
+	
+	var pet_buffs = {
+		"Magic & Mend": new Buff("Trait", .30, true, ["Attack", "Radiant Shield"]),
+		"Magic Vulnerability Up": new Debuff("Contagion", .10, ["Attack", "Radiant Shield"]),
 	};
 	
 	var colors = {
-		
+		"Dreadwyrm Trance": "#C1294D",
+		"Ruination": "#4BA1EC",
+		"Bio III": "#56631E",
+		"Miasma III": "#4B494F",
+		"Magic Vulnerability Up": "#932F2F"
 	};
 	
 	for (var e in response.events) {
 		var event = response.events[e];
-
+		
 
 		//only events of self	pets	or targetted on self
-		if (event.sourceID != result.player.ID) {
-			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
+		
+		if (event.sourceID != result.player.ID && event.sourceID != undefined) {
+			
+			if ((result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff" && event.type != "death") ) {
+				//console.log(event.ability.name);
+				//console.log(result.player.pets.indexOf(event.targetID));
 				continue;
 			}
 		}
-
+		
+		//if(event.type == "damage")
+		//	console.log(JSON.stringify(event));
+		
 		getBasicData(event, result.fight);
 		
 		var potency = 0;
@@ -1984,45 +1990,39 @@ function parseSummoner(response) {
 				} else {
 					potency = potencies[event.name];
 
-					if (event.name == "Fester") {
-						potency = 0 + (bio[event.target] > 0 ? 150 : 0) + (miasma[event.target] > 0 ? 150 : 0);
-					}
-
 					event.tooltip = event.name + ": " + potency + "<br/>";
 					potency = applyBuffs(potency, event, buffs);
-
-				
 					
-					if (ruination[event.target] > 0) {
-						if (event.name.indexOf('Ruin') > -1)
-							potency += 20;
-					}
-					
-					if (event.name == "Higanbana") {
-						event.tooltip += "<br/>Dot Damage:<br/>";
-						dot_potencies[event.name] = applyBuffs(35, event, buffs);
-					}
 					switch (event.name) {
-					case 'Bio III':
-					case 'Miasma III':
-					case 'Shadow Flare':
-						event.tooltip += "<br/>Dot Damage:<br/>";
-						dot_potencies[event.name] = applyBuffs(dot_base[event.name],event,buffs);
-						break;
-					case 'Deathflare':
-						trance[event.source] = 0;
-						break;
+						case 'Bio III':
+						case 'Miasma III':
+						case 'Shadow Flare':
+							event.tooltip += "<br/>Dot Damage: "+dot_base[event.name]+"<br/>";
+							dot_potencies[event.name] = applyBuffs(dot_base[event.name],event,buffs);
+							break;
+						case 'Deathflare':
+							trance[event.source] = 0;
+							break;
 					}
 
 				
 				}
 			} else {
 				//Pet
-				potency = petPotencies[event.name];
-				event.tooltip = event.name + ": " + potency + "<br/>";
-				
-				if (event.name == 'Inferno' && event.dmgType != 1) {
-					infernoDot = 20;
+				if (event.dmgType == 1 || event.dmgType == 64) {
+					//dots
+					potency = dot_potencies[event.name];
+					event.tooltip = "DoT: " + event.name;
+				} else {
+					potency = petPotencies[event.name];
+
+					event.tooltip = event.name + ": " + potency + "<br/>";
+					potency = applyBuffs(potency, event, pet_buffs);
+
+					if (event.name == 'Inferno') {
+						event.tooltip += "<br/>Dot Damage: " + dot_base[event.name] + "<br/>";
+						dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, pet_buffs);
+					}
 				}
 			}
 
@@ -2037,18 +2037,11 @@ function parseSummoner(response) {
 			*/
 			if (potency == undefined)
 				potency = 0;
-			console.log(potency)
 		}
 
 		//update timers
 		var ellapsed = event.fightTime - prevTime;
 
-		var ruinationTD = '';
-		for (var i in ruination) {
-			ruination[i] = Math.max(0, ruination[i] - ellapsed);
-			if (ruination[i] > 0)
-				ruinationTD = `<div class="center status-block" style="background-color: #4BA1EC"></div>`;
-		}
 		var tranceTD = '';
 		for (var i in trance) {
 			trance[i] = Math.max(0, trance[i] - ellapsed);
@@ -2056,49 +2049,44 @@ function parseSummoner(response) {
 		if (trance[result.player.ID] > 0)
 			tranceTD = `<div class="center status-block" style="background-color: #C1294D"></div>`;
 
-		var bioTD = '';
-		for (var i in bio) {
-			bio[i] = Math.max(0, bio[i] - ellapsed);
-			if (bio[i] > 0)
-				bioTD = `<div class="center status-block" style="background-color: #56631E"></div>`;
-		}
-		var miasmaTD = '';
-		for (var i in miasma) {
-			miasma[i] = Math.max(0, miasma[i] - ellapsed);
-			if (miasma[i] > 0)
-				miasmaTD = `<div class="center status-block" style="background-color: #4B494F"></div>`;
-		}
-		var magicTD = '';
-		for (var i in magicDebuff) {
-			magicDebuff[i] = Math.max(0, magicDebuff[i] - ellapsed);
-			if (magicDebuff[i] > 0)
-				magicTD = `<div class="center status-block" style="background-color: #721DD7"></div>`;
+		if (event.type == "applybuff") {
+			if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].applybuff();
+			if(pet_buffs.hasOwnProperty(event.name))
+				pet_buffs[event.name].applybuff();
 		}
 
-		if (event.type == "applybuff") {}
-
-		if (event.type == "removebuff") {}
+		if (event.type == "removebuff") {
+			if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].active = false;
+			if(pet_buffs.hasOwnProperty(event.name))
+				pet_buffs[event.name].active = false;
+		}
 
 		if (event.type == "applydebuff") {
-			if (event.name == 'Ruination')
-				ruination[event.target] = 20;
-
+			if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].add(event.targetID);
+			if(pet_buffs.hasOwnProperty(event.name))
+				pet_buffs[event.name].add(event.targetID);
+			if(event.name == "Shining Emerald"){
+				buffs["Magic Vulnerability Up"].add(event.targetID);
+				pet_buffs["Magic Vulnerability Up"].add(event.targetID);
+			}
 		}
 
 		if (event.type == "removedebuff") {
-			if (event.name == 'Ruination')
-				ruination[event.target] = 0;
-
-			if (event.name == 'Shining Emerald' || event.name == 'Contagion')
-				magicDebuff[event.target] = 0;
+			if(buffs.hasOwnProperty(event.name))
+				buffs[event.name].remove(event.targetID);
+			if(pet_buffs.hasOwnProperty(event.name))
+				pet_buffs[event.name].remove(event.targetID);
+			if(event.name == "Shining Emerald"){
+				buffs["Magic Vulnerability Up"].remove(event.targetID);
+				pet_buffs["Magic Vulnerability Up"].remove(event.targetID);
+			}
 		}
 
 		if (event.type == "cast") {
-			var dotMod = 1 + (trance[event.source] > 0 ? .1 : 0);
-			if (event.dmgType != 1 && magicDebuff[event.target] > 0)
-				dotMod += .1;
-			if (event.name == 'Shining Emerald' || event.name == 'Contagion')
-				magicDebuff[event.target] = 15;
+			
 			if (event.name == 'Dreadwyrm Trance') {
 				//console.log(event);
 				if (event.source == result.player.ID && event.source == event.target)
@@ -2120,7 +2108,6 @@ function parseSummoner(response) {
 				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
 				break;
 			}
-
 		}
 
 		var extra = [];
@@ -2132,7 +2119,7 @@ function parseSummoner(response) {
 		extra.push(bioTD);
 		extra.push(miasmaTD);
 		*/
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency.toFixed(2)}</span>`);
+		//extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
@@ -2141,8 +2128,22 @@ function parseSummoner(response) {
 		event.extra = extra;
 		event.potency = potency;
 		
+		
 		prevTime = event.fightTime;
 		result.events[e] = event;
+		if(result.totals.hasOwnProperty(event.sourceID)){
+			result.totals[event.sourceID].amount += event.amount;
+			result.totals[event.sourceID].potency += potency;
+			result.totals[event.sourceID].time += ellapsed;
+		} else {
+			result.totals[event.sourceID] = {
+				'amount': event.amount,
+				'potency': potency,
+				'name': result.fight.team[event.sourceID],
+				'id': event.sourceID,
+				'time': ellapsed,
+			}
+		}
 	}
 
 	return result;
@@ -2248,7 +2249,7 @@ var ellapsed = event.fightTime - prevTime;
 //update timers
 
 var extra = [];
-extra.push(`${potency == 0 ? "" : potency.toFixed(2)}`);
+extra.push(`${potency == 0 ? "" : potency}`);
 
 event.extra = extra;
 event.potency = potency;
