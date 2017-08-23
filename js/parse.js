@@ -349,7 +349,6 @@ function parseBard(response) {
 		}
 
 		var extra = [];
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		extra.push(buffs["Straight Shot"].active ? `<div class="center status-block" style="background-color: #B01F00"></div>` : ``);
 		extra.push(buffs["Foe Requiem"].targets.length > 0 ? `<div class="center status-block" style="background-color: #90D0D0"></div>` : ``);
 		extra.push(buffs["Raging Strikes"].active ? `<div class="center status-block" style="background-color: #D03F00"></div>` : ``);
@@ -659,8 +658,6 @@ function parseBlackmage(response) {
 		}
 
 		var extra = [];
-
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		extra.push(enoch.isActive() > 0 ? `<div class="center status-block" style="background-color: #7F5FB0"></div>` : ``);
 		if (img != '')
 			img = `<img src="img/${img}"/>`;
@@ -875,7 +872,6 @@ function parseDragoon(response) {
 		buffs["Blood Of The Dragon"].active = botd.isActive();
 
 		var extra = [];
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
@@ -894,6 +890,12 @@ function parseMachinist(response) {
 	console.log("Parsing MCH");
 
 	var prevTime = 0;
+	var turret = "";
+	var turretIDs = {};
+	for(var p in result.player.pets){
+		turretIDs[result.fight.team[result.player.pets[p]]] = 0;		
+	}
+	console.log(turretIDs);
 
 	//trackers
 	var gauss = false;
@@ -966,6 +968,7 @@ function parseMachinist(response) {
 	}
 
 	var notgauss = false;
+	var startRook = true;
 	//prescan first 20 seconds to see what buffs fall off or abilities are used to determine pre-fight buffs
 	var start = response.events[0].timestamp;
 	for (var e in response.events) {
@@ -977,12 +980,20 @@ function parseMachinist(response) {
 		if (event.ability.name == "Barrel Stabilizer" || event.ability.name == "Flamethrower") {
 			gauss = true;
 		}
+		
+		if(event.ability.name == "Volley Fire" || event.ability.name == "Charged Volley Fire")
+			startRook = true;
 
 		if (event.timestamp > start + 20000)
 			break;
 
 	}
 
+	if(startRook)
+		turret = "Rook Autoturret";
+	else 
+		turret = "Bishop Autoturret";
+	
 	if (notgauss)
 		gauss = false;
 
@@ -1138,11 +1149,13 @@ function parseMachinist(response) {
 				dot_potencies[event.name] = applyBuffs(60, event, buffs);
 				break;
 			}
+			
+			if(event.name == "Bishop Autoturret" || event.name == "Rook Autoturret")
+				turret = event.name;
 
 		}
 
 		var extra = [];
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		extra.push(gauss ? `<div class="center status-block" style="background-color: #A4786F"></div>` : ``);
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
@@ -1154,6 +1167,27 @@ function parseMachinist(response) {
 		prevTime = event.fightTime;
 
 		result.events[e] = event;
+		
+		if(result.totals.hasOwnProperty(event.sourceID)){
+			result.totals[event.sourceID].amount += event.amount;
+			result.totals[event.sourceID].potency += potency;
+			
+		} else {
+			result.totals[event.sourceID] = {
+				'amount': event.amount,
+				'potency': potency,
+				'name': result.fight.team[event.sourceID],
+				'id': event.sourceID,
+				'time': 0//result.fight.duration,
+			}
+			if(event.sourceID != result.player.ID)
+				result.totals[event.sourceID].time = 0;
+		}
+		result.totals[result.player.ID].time += ellapsed;
+		turretIDs[turret] += ellapsed;
+	}
+	for(var p in result.player.pets){
+		result.totals[result.player.pets[p]].time = turretIDs[result.fight.team[result.player.pets[p]]];
 	}
 
 	return result;
@@ -1309,7 +1343,6 @@ function parseMonk(response) {
 		}
 	
 		var extra = [];
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		if (gl.isActive()) {
 			var img = "";
 			if (stackChange) {
@@ -1517,7 +1550,6 @@ function parseNinja(response) {
 
 		var extra = [];
 
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
@@ -1686,7 +1718,6 @@ function parseRedmage(response) {
 		}
 
 		var extra = [];
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
@@ -1839,7 +1870,6 @@ function parseSamurai(response) {
 
 		var extra = [];
 
-		extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
@@ -1858,10 +1888,7 @@ function parseSummoner(response) {
 	console.log("Parsing SMN");
 
 	var prevTime = 0;
-
-	//trackers
-	var trance = {};
-
+	var bahamutCount = 0;
 
 	var potencies = {
 		'Attack': 110,
@@ -1875,7 +1902,7 @@ function parseSummoner(response) {
 		'Miasma': 20,
 		'Miasma III': 50,
 		'Fester': 0,
-		'Tri-Bind': 20,
+		'Tri-bind': 20,
 		'Shadow Flare': 0,
 		'Bio': 0,
 		'Bio II': 0,
@@ -2001,7 +2028,7 @@ function parseSummoner(response) {
 							dot_potencies[event.name] = applyBuffs(dot_base[event.name],event,buffs);
 							break;
 						case 'Deathflare':
-							trance[event.source] = 0;
+//							trance[event.source] = 0;
 							break;
 					}
 
@@ -2042,13 +2069,6 @@ function parseSummoner(response) {
 		//update timers
 		var ellapsed = event.fightTime - prevTime;
 
-		var tranceTD = '';
-		for (var i in trance) {
-			trance[i] = Math.max(0, trance[i] - ellapsed);
-		}
-		if (trance[result.player.ID] > 0)
-			tranceTD = `<div class="center status-block" style="background-color: #C1294D"></div>`;
-
 		if (event.type == "applybuff") {
 			if(buffs.hasOwnProperty(event.name))
 				buffs[event.name].applybuff();
@@ -2085,8 +2105,7 @@ function parseSummoner(response) {
 			}
 		}
 
-		if (event.type == "cast") {
-			
+		if (event.type == "cast") {			
 			if (event.name == 'Dreadwyrm Trance') {
 				//console.log(event);
 				if (event.source == result.player.ID && event.source == event.target)
@@ -2108,6 +2127,10 @@ function parseSummoner(response) {
 				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
 				break;
 			}
+		}
+		
+		if(event.name == "Summon Bahamut"){
+			bahamutCount ++;
 		}
 
 		var extra = [];
@@ -2134,18 +2157,24 @@ function parseSummoner(response) {
 		if(result.totals.hasOwnProperty(event.sourceID)){
 			result.totals[event.sourceID].amount += event.amount;
 			result.totals[event.sourceID].potency += potency;
-			result.totals[event.sourceID].time += ellapsed;
 		} else {
 			result.totals[event.sourceID] = {
 				'amount': event.amount,
 				'potency': potency,
 				'name': result.fight.team[event.sourceID],
 				'id': event.sourceID,
-				'time': ellapsed,
+				'time': result.fight.duration,
 			}
 		}
 	}
 
+	for(var p in result.player.pets){
+		if(result.fight.team[result.player.pets[p]] ==  "Demi-Bahamut")
+			result.totals[result.player.pets[p]].time = bahamutCount * 20;
+		else
+			result.totals[result.player.pets[p]].time -= (bahamutCount * 20);
+	}
+	
 	return result;
 }
 

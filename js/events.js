@@ -38,7 +38,7 @@ function processReport(report) {
 	$(".container.summaries .header").append(` <b>VS.</b> ${nme.slice(0,-2)}`);
 	
 	$(".summary").append(`<span class="castType">Full report at <a href="${link}">FFLogs</a></span>`);
-	$('.summary').append(`<b>Reportd Duration:</b> ${result.fight.duration} seconds.`)
+	$('.summary').append(`<b>Reported Duration:</b> ${result.fight.duration} seconds.`)
 
 	var url = base_url + "/report/events/" + result.report.reportID + "?translate=true";
 	url += "&start=" + result.fight.start;
@@ -254,13 +254,17 @@ function processClass(response, spec) {
 	document.getElementById('rank-body').innerHTML = rows.join('')
 	$('[data-toggle="tooltip"]').tooltip({html: true})
 	//update summary
+	var totalTime = 0;
 	if (Object.keys(result.totals).length > 1) {
 		for (var k in result.totals) {
 			var total = result.totals[k];
-			if(total.potency > 0)
+			if(total.potency > 0){
 				$(".summary-table tbody").append(getSummaryRow(total.name, total.amount, total.potency, total.time));
+				totalTime = Math.max(totalTime, total.time);
+			}
+				
 		}
-		$(".summary-table tbody").append(getSummaryRow("Combined", totalDamage, totalPotency, result.fight.duration));
+		$(".summary-table tbody").append(getSummaryRow("Combined", totalDamage, totalPotency, totalTime));
 	}
 	else {
 		$(".summary-table tbody").append(getSummaryRow(result.player.name, totalDamage, totalPotency, result.fight.duration));
@@ -271,7 +275,7 @@ function getSummaryRow(name, damage, potency, duration){
 	return `<tr>
 		<td><div class="center">${name}</div></td>
 		<td><div class="center">${damage}</div></td>
-		<td><div class="center">${duration.toFixed(3)}</div></td>
+		<td><div class="center">${duration.toFixed(2)}</div></td>
 		<td><div class="center">${(damage / duration).toFixed(2)}</div></td>
 		<td><div class="center">${potency}</div></td>
 		<td><div class="center">${(potency / duration).toFixed(2)}</div></td>
