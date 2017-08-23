@@ -126,6 +126,7 @@ label {
 	font-size: .9em;	
 	text-align: right;
 	margin-right: 20px;
+	font-weight: bold;
 }
    
 select:hover, textarea:hover, 
@@ -174,16 +175,25 @@ table {
 
 table td {
 	border-top: 0px !important;
+	
 }
 
 table tbody td {
 	height: 1;
 	padding: 0px 5px !important;
+	position: relative;
 }
 
 table tr td .center {
 	margin: auto;
 	text-align: center !important;
+}
+
+table td.name {
+	overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+	max-width: 150px;
 }
 
 table tr td .right {
@@ -233,6 +243,8 @@ li {
 }
 
 .castType {
+	position: absolute;
+	right: 0px;
 	float: right;
 	color: #bbb;
 	font-size: .7em;

@@ -131,27 +131,34 @@ function buildRankingsURL() {
 	return url;
 }
 
-function getRankings(){
-		if($("#zone_select").val() == "0"){
+function canSearch(){
+	if($("#zone_select").val() == "0"){
 		$("#zone_select").toggleClass("missing", true);
-		return;
+		return false;
 	} else {
 		$("#zone_select").toggleClass("missing", false);
 	}
 
 	if($("#encounter_select").val() == "0"){
 		$("#encounter_select").toggleClass("missing", true);
-		return;
+		return false;
 	} else {
 		$("#encounter_select").toggleClass("missing", false);
 	}
-		
-	httpGetAsync(buildRankingsURL(), displayRankings);
-	
+	return true;
+}
+
+function getRankings(){
+	if(canSearch())
+		httpGetAsync(buildRankingsURL(), displayRankings);
 }
 
 function displayRankings(response){
 	var ranks = response['rankings']
+	
+	
+	$(".ranking-table thead").html(`<tr><td>Player</td><td>DPS</td><td>Duration</td><td>Region</td><td>Server</td><td>FFLog Link</td></tr>`);
+	
 	
 	var tbl_body = '';
 	for(var key in ranks){
@@ -181,7 +188,88 @@ function displayRankings(response){
 	
 }
 
+function updateRankingFetch(){
+	var res = canSearch();
+	
+	$('#ranking_submit').toggleClass('disabled', !res);
+	$('#ranking_submit').prop('disabled', !res);
+}
 
+function canSearchReport(){
+	var valid = true;
+	if($("#report_api_key").val().length != 32){
+		$("#report_api_key").toggleClass("missing", true);
+		valid = false;
+	} else {
+		$("#report_api_key").toggleClass("missing", false);
+	}
+	
+	if($("#report_key").val().length != 16){
+		$("#report_key").toggleClass("missing", true);
+		valid = false;
+	} else {
+		$("#report_key").toggleClass("missing", false);
+	}
+	return valid;
+}
+
+function getReport(){
+	if(canSearchReport()){
+		var url = base_url + '/report/fights/' + $("#report_key").val() + '?translate=true&api_key=' + $("#report_api_key").val();
+		httpGetAsync(url, displayReport);
+	}
+}
+
+function displayReport(response){
+	console.log(response);
+	
+	var reportID = $("#report_key").val();
+	
+	var results = {}
+	
+	$(".ranking-table thead").html(`<tr><td>Player</td><td>Target</td><td>Zone</td><td>Duration</td><td>Kill</td><td>FFLog Link</td></tr>`)
+	var tbl_body = '';
+	
+	var fights = {};
+	for(var f in response.fights){
+		var fight = response.fights[f];
+		fights[fight.id] = fight;
+	}
+	
+	for(var i in response.friendlies){
+		var player = response.friendlies[i]
+		
+		if(player.name == "Multiple Players" || player.name == "Limit Break")
+			continue;
+		
+		for(var f in player.fights){
+			var fight = fights[player.fights[f].id];
+			var link = `https://www.fflogs.com/reports/${reportID}#fight=${player.fights[f].id}&type=damage-done`;
+			
+			if(fight.name == "Striking Dummy")
+				continue;
+			
+			var tbl_row = '';
+			tbl_row += `<td><a href="events.html?name=${player.name}&report=${reportID}&fight=${player.fights[f].id}&api_key=${api_key}">${player.name}</a><span class="damage-block ${player.type}"></span></td>`;
+			tbl_row += `<td>${fight.name}</td>`;
+			tbl_row += `<td>${fight.zoneName}</td>`;
+			tbl_row += `<td>${((fight.end_time-fight.start_time)/1000).toFixed(2)}s</td>`;
+			if(fight.hasOwnProperty('kill')){
+				if(fight.kill)
+					tbl_row += `<td>Kill</td>`;
+				else
+					tbl_row += `<td>${(fight.fightPercentage/100).toFixed(2)}%</td>`;
+			} else 
+				tbl_row += `<td>N/A</td>`;
+			tbl_row += `<td><a href="${link}">${reportID}</a></td>`;
+		
+			tbl_body += `<tr>${tbl_row}</tr>`;	
+			$(".ranking-table tbody").append(`<tr>${tbl_row}</tr>`);
+		}
+	}
+	//.html(tbl_body);
+	
+}
 
 
 
@@ -204,17 +292,14 @@ $("#zone_select").change(function () {
 		updateEncounters(zones[val]);
 		updateBrackets(zones[val]);
 	}
+	updateRankingFetch();
 });
 
-/*
-$("#all_pages").change(function () {
-	var val = $(this).is(':checked');
-	$("#page_number_label").toggleClass("disabled", val);
-	$("#page_number").toggleClass('disabled', val);
-	$("#page_number").prop('disabled', val);
-
+$("#encounter_select").change(function () {
+	updateRankingFetch();
 });
-*/
+
+
 
 $("#api_key").change(function () {
 	var val = $(this).val();
@@ -223,6 +308,18 @@ $("#api_key").change(function () {
 		fetchZones();
 		fetchClasses();
 	}
-
+	updateRankingFetch();
 });
 
+$("#report_api_key").change(function () {
+	var val = $(this).val();
+	if(val.length == 32){
+		api_key = val;
+		//fetchClasses();
+	}
+	canSearchReport()
+});
+
+$("#report_key").change(function () {
+	canSearchReport()
+});

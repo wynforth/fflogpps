@@ -61,7 +61,7 @@ function updateEvent(data, fight) {
 	tbl_row = '';
 
 	//console.log(data);
-	tbl_row += `<td class="center">${data.fightTime.toFixed(2)}</td>`;
+	tbl_row += `<td class="center">${data.fightTime.toFixed(2)}s</td>`;
 	tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
 	//tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
 	if(damageTypes[data.dmgType] == undefined){
@@ -71,31 +71,34 @@ function updateEvent(data, fight) {
 	tbl_row += `<td>${data.amount == 0 ? '':data.amount} <span class="castType">${data.isDirect ? "Direct ":''}${data.hitType}</span><span class="damage-block ${damageTypes[data.dmgType]}"></span></td>`;
 	
 	if (data.sourceIsFriendly)
-		tbl_row += `<td>${fight.team[data.sourceID]}<span class="castType">-></span></td>`;
+		tbl_row += `<td class="name">${fight.team[data.sourceID]}<span class="castType">-></span></td>`;
 	else
-		tbl_row += `<td>${fight.enemies[data.sourceID]}<span class="castType">-></span></td>`;
+		tbl_row += `<td class="name">${fight.enemies[data.sourceID]}<span class="castType">-></span></td>`;
 	
 	
-	
+	tbl_row += '<td class="name">';
 	if (!data.hasOwnProperty('targetID')) {
-		tbl_row += `<td>self/ground</td>`;
+		tbl_row += 'self/ground';
 	} else {
 		if (data.targetIsFriendly)
-			tbl_row += `<td>${fight.team[data.targetID]}</td>`;
+			tbl_row += fight.team[data.targetID];
 		else {
 			if (data.hasOwnProperty("targetResources")) {
-				tbl_row += `<td>${fight.enemies[data.targetID]} <span class="castType">${((data.targetResources.hitPoints/data.targetResources.maxHitPoints)*100).toFixed(2)}%</span></td>`;
+				tbl_row += `${fight.enemies[data.targetID]} <span class="castType">${((data.targetResources.hitPoints/data.targetResources.maxHitPoints)*100).toFixed(2)}%</span>`;
 			} else {
-				tbl_row += `<td>${fight.enemies[data.targetID]}</td>`;
+				tbl_row += fight.enemies[data.targetID];
 			}
 		}
 	}
-	if(data.potency == 0)
-		tbl_row += `<td></td>`;
-	else
-		tbl_row += `<td><div class="right"><span data-toggle="tooltip" title="${data.tooltip}">${data.potency}</span></div></td>`;
-
-	if (data.extra != undefined) {
+	tbl_row += '</td>'
+	
+	if(data.hasOwnProperty('potency')){
+		if(data.potency == 0)
+			tbl_row += `<td></td>`;
+		else
+			tbl_row += `<td><div class="right"><span data-toggle="tooltip" title="${data.tooltip}">${data.potency}</span></div></td>`;
+	}
+	if (data.hasOwnProperty('extra')) {
 		for (var i = 0; i < data.extra.length; i++) {
 			tbl_row += `<td class="center">${data.extra[i]}</td>`;
 		}
@@ -118,18 +121,22 @@ function processGeneric(response) {
 		amount: '',
 		type: ''
 	};
+	var rows = [];
 	for (var e in result.events) {
 		var event = result.events[e];
-		//var type = event.type;
+
 		if (isSameEvent(event, lastEvent))
 			continue;
 
-		updateEvent(event, result.fight);
-
-		if (event.type != 'heal')
+		rows.push(updateEvent(event, result.fight));
+		//$(".ranking-table tbody").append(updateEvent(event, result.fight));
+		
+		if (event.type != 'heal') {
 			totalDamage += event.amount == undefined ? 0 : event.amount;
+		}
 		lastEvent = event;
 	}
+	document.getElementById('rank-body').innerHTML = rows.join('')
 
 	//update summary
 	$(".summary").append(`<b>Total Damage:</b> ${totalDamage.toFixed(3)}</br>`);
@@ -253,6 +260,7 @@ function processClass(response, spec) {
 	}
 	document.getElementById('rank-body').innerHTML = rows.join('')
 	$('[data-toggle="tooltip"]').tooltip({html: true})
+	
 	//update summary
 	var totalTime = 0;
 	if (Object.keys(result.totals).length > 1) {

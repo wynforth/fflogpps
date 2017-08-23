@@ -8,14 +8,13 @@
   <link rel="stylesheet" href="css/style_fflog.css">
 </head>
 <body>
-
   <div class="container abilities">	
-	<div class="header">Which Rankings?</div>
+	<div class="header">Ranking Lookup</div>
 	<div class="jobs border-top-0">
 		<form name="rankings" onSubmit="getRankings(); return false;">
 			<div class="form-group">
 				<label for="api">Api Key:</label>
-				<input class="form-control long" id="api_key"></select>
+				<input class="form-control long" id="api_key"></input>
 			</div>
 		
 			<div class="form-group">
@@ -45,12 +44,33 @@
 			</div>
 			<div class="form-group">
 				<label for="class" class="disabled">Get all pages:</label>
-				<input disabled type="checkbox disabled"  class="form-control" id="all_pages" checked></input>
+				<input disabled type="checkbox disabled"  class="form-control disabled" id="all_pages" checked></input>
 				<label for="class" class="" id="page_number_label">Page:</label>
 				<input class="form-control" id="page_number" value="1"></input>
 			</div>
 			<div class="form-group">
-				<input type="submit" value="Fetch" class="form-control"></select>
+				<input disabled type="submit" value="Fetch" class="form-control disabled" id="ranking_submit"></input>
+			</div>
+			
+		</form>
+	</div>
+  </div>
+  
+  <div class="container abilities">	
+	<div class="header">Specific Report</div>
+	<div class="jobs border-top-0">
+		<form name="reportlookup" onSubmit="getReport(); return false;">
+			<div class="form-group">
+				<label for="api_key_report">Api Key:</label>
+				<input class="form-control long" id="report_api_key"></input>
+			</div>
+		
+			<div class="form-group">
+				<label for="report_key">Report:</label>
+				<input class="form-control long" id="report_key"></input>
+			</div>
+			<div class="form-group">
+				<input type="submit" value="Fetch" class="form-control"></input>
 			</div>
 			
 		</form>
@@ -66,9 +86,6 @@
 					<td>Player</td>
 					<td>DPS</td>
 					<td>Duration</td>
-					<!-- <td>Class</td> -->
-					<!-- <td>Report ID</td> -->
-					<!-- <td>Fight ID</td> -->
 					<td>Region</td>
 					<td>Server</td>
 					<td>FFLog Link</td>

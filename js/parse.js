@@ -76,6 +76,7 @@ function parseReport(report) {
 }
 
 function parseGeneric(response) {
+	console.log("Parse Generic");
 	var prevTime = 0;
 	for (var e in response.events) {
 		var event = response.events[e];
@@ -88,9 +89,10 @@ function parseGeneric(response) {
 			}
 		}
 
-		result.events[e] = getBasicData(event, result.fight);
+		getBasicData(event, result.fight);
 		var potency = 0;
-
+		
+		result.events[e] = event;
 	}
 	return result;
 
