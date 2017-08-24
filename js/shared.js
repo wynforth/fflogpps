@@ -75,8 +75,8 @@ class Buff {
 		this.active = active == undefined ? false:active;
 		this.restricted = restricted == undefined ? []:restricted;
 		this.exclusive = exclusive == undefined ? []:exclusive;
-		console.log(this.name);
-		console.log(this.restricted);
+		//console.log(this.name);
+		//console.log(this.restricted);
 	}
 	
 	isAllowed(event){
