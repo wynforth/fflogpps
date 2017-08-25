@@ -28,18 +28,15 @@ var all_potencies = {
 		'Fire III': 240,
 		'Fire IV': 260,
 		'Flare': 260,
-
 		'Blizzard I': 180,
 		'Blizzard II': 50,
 		'Blizzard III': 240,
 		'Blizzard IV': 260,
 		'Freeze': 100,
-
 		'Thunder I': 30,
 		'Thunder II': 30,
 		'Thunder III': 70,
 		'Thunder IV': 50,
-
 		'Scathe': 100,
 		'Foul': 650,
 	},
@@ -501,7 +498,15 @@ var buff_display = {
 }
 
 var all_timers = {
+	'Bard': {},
+	'BlackMage': {},
+	'Dragoon': {},
+	'Machinist': {},
+	'Monk': {},
 	'Ninja': {
 		'Huton': new Timer('Huton', 70),
-	}
+	},
+	'RedMage': {},
+	'Samurai': {},
+	'Summoner': {},
 }

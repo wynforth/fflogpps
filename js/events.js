@@ -12,6 +12,7 @@ var parseFunctions = {
 }
 
 function processReport(report) {
+	console.log("Report:");
 	console.log(report);
 	result = parseReport(report);
 	console.log(result);

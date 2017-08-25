@@ -163,7 +163,7 @@ function parseClass(response){
 	//timers
 	var timers = all_timers[type];
 	
-	if(type == "Ninja") timers['huton'].restart(); //assume huton starts on
+	if(type == "Ninja") timers['Huton'].restart(); //assume huton starts on
 	
 	//prescan
 	var acceleration_cast = false;
