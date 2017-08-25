@@ -141,6 +141,7 @@ function parseClass(response){
 	console.log("Parsing " + type);
 	
 	var prevTime = 0;
+	var ellapsed = 0;
 	var lastWS = ""
 	
 	
@@ -208,27 +209,21 @@ function parseClass(response){
 			} else {
 				potency = potencies[event.name];
 
-				if(combo.hasOwnProperty(event.name)){
-				if (combo[event.name].indexOf(lastWS) > -1 || event.name == lastWS) //hack for aoe combos
-					if (hasBuff("True North",buffs) && pos_combo_potencies.hasOwnProperty(event.name))
-						potency = pos_combo_potencies[event.name];
-					else
-						potency = combo_potencies[event.name];
-				}
-				else
-					if (hasBuff("True North",buffs) && pos_potencies.hasOwnProperty(event.name))
+				if (combo.hasOwnProperty(event.name)) {
+					if (combo[event.name].indexOf(lastWS) > -1 || event.name == lastWS || hasBuff('Meikyo Shisui', buffs)){ //hack for aoe combos
+						if (hasBuff("True North", buffs) && pos_combo_potencies.hasOwnProperty(event.name))
+							potency = pos_combo_potencies[event.name];
+						else
+							potency = combo_potencies[event.name];
+					}
+				} else {
+					if (hasBuff("True North", buffs) && pos_potencies.hasOwnProperty(event.name))
 						potency = pos_potencies[event.name];
-					else
-						potency = potencies[event.name];
+				}
 
 				if (comboskills.indexOf(event.name) > -1 && !hasBuff("Duality", buffs)) {
 					lastWS = event.name;
 				}
-				
-				
-				
-				
-
 				event.tooltip = event.name + ": " + potency + "<br/>";
 				potency = applyBuffs(potency, event, buffs);
 				
@@ -242,16 +237,27 @@ function parseClass(response){
 				potency = 0;
 		}
 	
-		//update timers
-		var ellapsed = event.fightTime - prevTime;
-		if(timers != undefined){
-			for(var t in timers){
+		//TIEMRS AND TIMED BUFFS
+		ellapsed = event.fightTime - prevTime;
+		if (timers != undefined) {
+			for (var t in timers) {
 				timers[t].update(ellapsed);
 			}
 		}
+		for (var b in buffs) {
+			if (buffs[b].constructor.name === 'DebuffTimed') {
+				//for (var ta in buffs[b].targets)
+				//	console.log(event.fightTime + ": " + JSON.stringify(buffs[b]));
+				buffs[b].update(event);
+
+			}
+		}
+		
+		
+		
 
 		//BUFF APPLICATION
-		if (event.type == "applybuff") {
+		if (event.type == "applybuff" || event.type == "refreshbuff") {
 			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
 				buffs[event.name].applybuff();
 		}
@@ -261,9 +267,9 @@ function parseClass(response){
 				buffs[event.name].setStacks(event.stack);
 			}	
 		}
-		if (event.type == "applydebuff") {
+		if (event.type == "applydebuff" || event.type == "refreshdebuff") {
 			if (buffs.hasOwnProperty(event.name)){
-				buffs[event.name].add(event.targetID);
+				buffs[event.name].add(event);
 			}
 		}
 		
@@ -279,7 +285,7 @@ function parseClass(response){
 		}
 		if (event.type == "removedebuff") {
 			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].remove(event.targetID);
+				buffs[event.name].remove(event);
 		}
 		
 		if(event.type == "cast"){
@@ -1985,13 +1991,15 @@ function parseSamurai(response) {
 	var weaponskills = ["Hakaze", "Jinpu", "Gekko", "Shifu", "Kasha", "Yukikaze", "Mangetsu", "Fuga", "Oka", "Enpi", "Higanbana", "Midare Setsugekka", "Tenka Goken"]
 
 	var buffs = {
+		'Meikyo Shisui': new Buff("Meikyo Shisui", 0),
 		"True North": new Buff("True North", 0),
 		"Jinpu": new Buff("Jinpu", .10),
 		"Kaiten": new Buff("Hissatsu: Kaiten", .50, false, [], weaponskills),
-		"Slashing Resistance Down": new Debuff("Yukikaze", .10),
+		"Slashing Resistance Down": new DebuffTimed("Yukikaze", .10, 30),
 	}
 
 	var colors = {
+		'Meikyo Shisui': '#E04F4F',
 		"Jinpu": "#E0B000",
 		"Slashing Resistance Down": "#932F2F",
 		"Kaiten": "#C04F0F",
@@ -2018,7 +2026,7 @@ function parseSamurai(response) {
 				potency = dot_potencies[event.name];
 				event.tooltip = "DoT: " + event.name;
 			} else {
-				if (combo[event.name] == lastWS)
+				if ((combo[event.name] == lastWS || hasBuff("Meikyo Shisui", buffs)) && combo_potencies.hasOwnProperty(event.name))
 					potency = combo_potencies[event.name];
 				else
 					potency = potencies[event.name];
@@ -2039,6 +2047,13 @@ function parseSamurai(response) {
 		}
 
 		var ellapsed = event.fightTime - prevTime;
+		for(var b in buffs){
+			if(buffs[b].constructor.name === 'DebuffTimed'){
+				buffs[b].update(ellapsed);
+				console.log(buffs[b]);
+			}
+		}
+		
 
 		if (event.type == "applybuff") {
 			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
@@ -2050,13 +2065,13 @@ function parseSamurai(response) {
 				buffs[event.name].active = false;
 		}
 
-		if (event.type == "applydebuff") {
+		if (event.type == "applydebuff" || event.type == "refreshdebuff") {
 			if (buffs.hasOwnProperty(event.name))
 				buffs[event.name].add(event.targetID);
 		}
 
 		if (event.type == "removedebuff") {
-			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
+			if (buffs.hasOwnProperty(event.name))
 				buffs[event.name].remove(event.targetID);
 		}
 

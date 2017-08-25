@@ -4,9 +4,9 @@ var parseFunctions = {
 	'Dragoon': parseDragoon,
 	'Machinist': parseMachinist,
 	'Monk': parseMonk,
-	'Ninja': parseClass,//parseNinja,
-	'RedMage': parseClass,//parseRedmage,
-	'Samurai': parseSamurai,
+	'Ninja': parseClass,	//parseNinja,
+	'RedMage': parseClass,	//parseRedmage,
+	'Samurai': parseClass,	//parseSamurai,
 	'Summoner': parseSummoner,
 
 }
@@ -62,7 +62,7 @@ function updateEvent(data, fight) {
 	tbl_row = '';
 
 	//console.log(data);
-	tbl_row += `<td class="center">${data.fightTime.toFixed(2)}s</td>`;
+	tbl_row += `<td class="center">${data.fightTime.toFixed(3)}s</td>`;
 	tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
 	//tbl_row += `<td>${data.name}<span class="castType">${data.type}</span></td>`;
 	if(damageTypes[data.dmgType] == undefined){
@@ -215,7 +215,7 @@ function processClass(response, spec) {
 	}
 
 	if (spec == "Samurai") {
-		
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/meikyo_shisui.png" title="Meikyo Shisui"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/jinpu.png" title="Jinpu"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/slashing_resistance_down.png" title="Yukikaze"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/hissatsu_kaiten.png" title="Hissatsu: Kaiten"/></td>`);

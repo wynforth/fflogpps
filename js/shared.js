@@ -178,14 +178,14 @@ class Debuff extends Buff{
 		this.targets = [];
 	}
 	
-	add(targetID){
-		if(this.targets.indexOf(targetID) == -1)
-			this.targets.push(targetID);
+	add(event){
+		if(this.targets.indexOf(event.targetID) == -1)
+			this.targets.push(event.targetID);
 		this.active = this.targets.length > 0;
 	}
 	
-	remove(targetID){
-		var index = this.targets.indexOf(targetID);
+	remove(event){
+		var index = this.targets.indexOf(event.targetID);
 		if(index > -1)
 			this.targets.splice(index, 1);
 		this.active = this.targets.length > 0;
@@ -209,6 +209,40 @@ class Debuff extends Buff{
 		if(this.isAllowed(event))
 			return super.apply(potency, event);
 		return potency;
+	}
+}
+
+class DebuffTimed extends Debuff {
+	constructor(name, bonus, duration, restricted, exclusive){
+		super(name, bonus, false, restricted, exclusive);
+		this.duration = duration;
+		this.targets = {};
+	}
+	
+	add(event){
+		this.targets[event.targetID] = event.fightTime + this.duration;
+		this.active = Object.keys(this.targets).length > 0;
+	}
+	
+	remove(targetID){
+		//noop only removed when time runs out
+		this.active = Object.keys(this.targets).length > 0;
+	}
+	
+	update(event){
+		for(var t in this.targets){
+			if(this.targets[t] <= event.fightTime)
+				delete this.targets[t];
+		}
+		this.active = Object.keys(this.targets).length > 0;
+	}
+	
+	clear(){
+		this.targets = {};
+	}
+	
+	isTarget(targetID){
+		return this.targets.hasOwnProperty(targetID);
 	}
 }
 

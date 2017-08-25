@@ -274,12 +274,15 @@ var all_dot_base = {
 }
 	
 var all_pos_potencies = {
+	'Bard': {},
+	'BlackMage': {},
 	'Dragoon': {
 		'Heavy Thrust': 180,
 		'Chaos Thrust': 140,
 		'Fang And Claw': 290,
 		'Wheeling Thrust': 290,
 	},
+	'Machinist': {},
 	'Monk': {
 		'Bootshine': 140 * 1.45,
 		'True Strike': 180,
@@ -291,10 +294,15 @@ var all_pos_potencies = {
 	'Ninja': {
 		'Aeolian Edge': 160,
 		'Armor Crush': 160,
-	}
+	},
+	'RedMage': {},
+	'Samurai': {},
+	'Summoner': {},
 }
 
 var all_combo_potencies = {
+	'Bard': {},
+	'BlackMage': {},
 	'Dragoon': {
 		'Vorpal Thrust': 240,
 		'Full Thrust': 440,
@@ -331,19 +339,27 @@ var all_combo_potencies = {
 		'Kasha': 400,
 		'Mangetsu': 200,
 		'Oka': 200,
-	}
+	},
+	'Summoner': {},
 }
 
 var all_pos_combo_potencies = {
+	'Bard': {},
+	'BlackMage': {},
 	'Dragoon': {
 		'Chaos Thrust': 270,
 		'Fang And Claw': 100 + 290,
 		'Wheeling Thrust': 100 + 290,
 	},
+	'Machinist': {},
+	'Monk': {},
 	'Ninja': {
 		'Aeolian Edge': 340,
 		'Armor Crush': 300,
-	}
+	},
+	'RedMage': {},
+	'Samurai': {},
+	'Summoner': {},
 }
 
 var all_combo = {
@@ -383,7 +399,7 @@ var all_comboskills = {
 	'Dragoon': ['True Thrust', 'Vorpal Thrust', 'Impulse Drive', 'Heavy Thrust', 'Full Thrust', 'Disembowel', 'Chaos Thrust', 'Fang And Claw', 'Wheeling Thrust', 'Doom Spike', 'Sonic Thrust', 'Piercing Talon'],
 	'Ninja': ['Gust Slash', 'Spinning Edge', 'Aeolian Edge', 'Shadow Fang', 'Throwing Dagger', 'Death Blossom'],
 	'RedMage': ['Moulinet', 'Enchanted Moulinet', 'Zwerchhau', 'Riposte', 'Enchanted Riposte', 'Redoublement', 'Enchanted Zwerchhau', 'Enchanted Redoublement'],
-	'Samurai': ["Hakaze", "Jinpu", "Gekko", "Shifu", "Kasha", "Yukikaze", "Mangetsu", "Fuga", "Oka", "Enpi"],
+	'Samurai': ['Hakaze', 'Jinpu', 'Gekko', 'Shifu', 'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi'],
 }
 
 	//all 'WeaponSkills'
@@ -391,21 +407,21 @@ var all_weaponskills = {
 	'Dragoon': ['True Thrust', 'Vorpal Thrust', 'Impulse Drive', 'Heavy Thrust', 'Full Thrust', 'Disembowel', 'Chaos Thrust', 'Fang And Claw', 'Wheeling Thrust', 'Doom Spike', 'Sonic Thrust', 'Piercing Talon'],
 	'Machinist': ['Hot Shot', 'Split Shot', 'Slug Shot', 'Spread Shot', 'Clean Shot', 'Cooldown', 'Heated Split Shot', 'Heated Slug Shot', 'Heated Clean Shot'],
 	'RedMage': ['Moulinet', 'Zwerchhau', 'Riposte', 'Redoublement', 'Enchanted Moulinet', 'Enchanted Riposte', 'Enchanted Zwerchhau', 'Enchanted Redoublement'],
-	'Samurai': ["Hakaze", "Jinpu", "Gekko", "Shifu", "Kasha", "Yukikaze", "Mangetsu", "Fuga", "Oka", "Enpi", "Higanbana", "Midare Setsugekka", "Tenka Goken"],
+	'Samurai': ['Hakaze', 'Jinpu', 'Gekko', 'Shifu', 'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi', 'Higanbana', 'Midare Setsugekka', 'Tenka Goken'],
 }	
 
 //buffs
 
 var all_buffs = {
 	'Bard': {
-		"Increased Action Damage II": new Buff("Trait II", .20, true, ["Shot"]),
-		"Raging Strikes": new Buff("Raging Strikes", .10),
-		"Straight Shot": new Buff("Straight Shot", (.10 * .45)),
-		"Foe Requiem": new Debuff("Foe Requiem", .03)
+		'Increased Action Damage II': new Buff('Trait II', .20, true, ['Shot']),
+		'Raging Strikes': new Buff('Raging Strikes', .10),
+		'Straight Shot': new Buff('Straight Shot', (.10 * .45)),
+		'Foe Requiem': new Debuff('Foe Requiem', .03)
 	},
 	'BlackMage':{
-		"Trait": new Buff("Magic & Mend II", .3, true, ["Attack"]),
-		"Enochian": new Buff("Enochian", .1, false, ["Attack"])
+		'Trait': new Buff('Magic & Mend II', .3, true, ['Attack']),
+		'Enochian': new Buff('Enochian', .1, false, ['Attack'])
 	},
 	'Dragoon': {
 		'Blood Of The Dragon': new Buff('Blood Of The Dragon', .30, false, [], ['Jump', 'Spineshatter Dive']),
@@ -445,7 +461,7 @@ var all_buffs = {
 		'True North': new Buff('True North', 0),
 		'Ten Chi Jin': new BuffStack('Ten Chi Jin', 1.0, 0,1, 1, false, [], ['Fuma Shuriken', 'Katon', 'Raiton', 'Hyoton', 'Doton', 'Suiton']),
 		'Shadow Fang': new Debuff('Shadow Fang', .10, ['Katon', 'Hellfrog Medium', 'Suiton', 'Raiton', 'Bhavacakra']),
-		'Vulnerability Up': new Debuff('Trick Attack', .10),
+		'Vulnerability Up': new DebuffTimed('Trick Attack', .10, 10),
 		'Duality': new Buff('Duality',0),
 		'Huton': new Buff('Huton',0),
 	},
@@ -453,6 +469,21 @@ var all_buffs = {
 		'Main & Mend II': new Buff('Trait', .30, true, ['Attack'], []),
 		'Embolden': new BuffStack('Embolden', 0, .02, 5, 5, false, ['Attack', 'Fleche', 'Contre Sixte', 'Corps-a-corps', 'Displacement', 'Moulinet', 'Zwerchhau', 'Riposte', 'Redoublement'], []),
 		'Acceleration': new Buff('Acceleration', 0),
+	},
+	'Samurai': {
+		'Meikyo Shisui': new Buff('Meikyo Shisui', 0),
+		'True North': new Buff('True North', 0),
+		'Jinpu': new Buff('Jinpu', .10),
+		'Kaiten': new Buff('Hissatsu: Kaiten', .50, false, [], ['Hakaze', 'Jinpu', 'Gekko', 'Shifu', 'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi', 'Higanbana', 'Midare Setsugekka', 'Tenka Goken']),
+		'Slashing Resistance Down': new DebuffTimed('Yukikaze', .10, 30),
+	},
+	'Summoner': {
+		'Bio III': new DebuffDirect('Bio III', 150, [], ['Fester']),
+		'Miasma III': new DebuffDirect('Miasma III', 150, [], ['Fester']),
+		'Ruination': new DebuffDirect('Ruination', 20, [], ['Ruin', 'Ruin II', 'Ruin III', 'Ruin IV']),
+		'Magic & Mend': new Buff('Trait', .30, true, ['Radiant Shield']),
+		'Dreadwyrm Trance': new Buff('Dreadwyrm Trance', .10, false,['Attack', 'Radiant Shield']),
+		'Magic Vulnerability Up': new Debuff('Contagion', .10, ['Attack', 'Radiant Shield']),
 	}
 }
 
@@ -494,6 +525,20 @@ var buff_display = {
 	'RedMage': {
 		'Embolden': '#C19143',
 		'Acceleration': '#AF2234',
+	},
+	'Samurai': {
+		'Meikyo Shisui': '#E04F4F',
+		'Jinpu': '#E0B000',
+		'Slashing Resistance Down': '#932F2F',
+		'Kaiten': '#C04F0F',
+		'True North': '#C07F4F',
+	},
+	'Summoner': {
+		'Dreadwyrm Trance': '#C1294D',
+		'Ruination': '#4BA1EC',
+		'Bio III': '#56631E',
+		'Miasma III': '#4B494F',
+		'Magic Vulnerability Up': '#932F2F'
 	}
 }
 
@@ -506,6 +551,18 @@ var all_timers = {
 	'Ninja': {
 		'Huton': new Timer('Huton', 70),
 	},
+	'RedMage': {},
+	'Samurai': {},
+	'Summoner': {},
+}
+
+var template = {
+	'Bard': {},
+	'BlackMage': {},
+	'Dragoon': {},
+	'Machinist': {},
+	'Monk': {},
+	'Ninja': {},
 	'RedMage': {},
 	'Samurai': {},
 	'Summoner': {},
