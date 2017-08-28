@@ -363,6 +363,7 @@ var all_pos_combo_potencies = {
 }
 
 var all_combo = {
+	'Bard': {},
 	'Dragoon': {
 		'Vorpal Thrust': ['True Thrust'],
 		'Full Thrust': ['Vorpal Thrust'],
@@ -396,6 +397,7 @@ var all_combo = {
 
 	//anything that makes/breaks a combo
 var all_comboskills = {
+	'Bard': [],
 	'Dragoon': ['True Thrust', 'Vorpal Thrust', 'Impulse Drive', 'Heavy Thrust', 'Full Thrust', 'Disembowel', 'Chaos Thrust', 'Fang And Claw', 'Wheeling Thrust', 'Doom Spike', 'Sonic Thrust', 'Piercing Talon'],
 	'Ninja': ['Gust Slash', 'Spinning Edge', 'Aeolian Edge', 'Shadow Fang', 'Throwing Dagger', 'Death Blossom'],
 	'RedMage': ['Moulinet', 'Enchanted Moulinet', 'Zwerchhau', 'Riposte', 'Enchanted Riposte', 'Redoublement', 'Enchanted Zwerchhau', 'Enchanted Redoublement'],
@@ -404,6 +406,7 @@ var all_comboskills = {
 
 	//all 'WeaponSkills'
 var all_weaponskills = {
+	'Bard': ["Heavy Shot","Straight Shot","Empyreal Arrow","Iron Jaws","Refulgent Arrow","Quick Nock","Caustic Bite","Stormbite"],
 	'Dragoon': ['True Thrust', 'Vorpal Thrust', 'Impulse Drive', 'Heavy Thrust', 'Full Thrust', 'Disembowel', 'Chaos Thrust', 'Fang And Claw', 'Wheeling Thrust', 'Doom Spike', 'Sonic Thrust', 'Piercing Talon'],
 	'Machinist': ['Hot Shot', 'Split Shot', 'Slug Shot', 'Spread Shot', 'Clean Shot', 'Cooldown', 'Heated Split Shot', 'Heated Slug Shot', 'Heated Clean Shot'],
 	'RedMage': ['Moulinet', 'Zwerchhau', 'Riposte', 'Redoublement', 'Enchanted Moulinet', 'Enchanted Riposte', 'Enchanted Zwerchhau', 'Enchanted Redoublement'],
@@ -417,7 +420,10 @@ var all_buffs = {
 		'Increased Action Damage II': new Buff('Trait II', .20, true, ['Shot']),
 		'Raging Strikes': new Buff('Raging Strikes', .10),
 		'Straight Shot': new Buff('Straight Shot', (.10 * .45)),
-		'Foe Requiem': new Debuff('Foe Requiem', .03)
+		'Foe Requiem': new Debuff('Foe Requiem', .03),
+		'song': new Debuff('Placeholder', 0),
+		'Storm Bite': new Debuff('Storm Bite', 0),
+		'Caustic Bite': new Debuff('Caustic Bite', 0),
 	},
 	'BlackMage':{
 		'Trait': new Buff('Magic & Mend II', .3, true, ['Attack']),
@@ -492,6 +498,9 @@ var buff_display = {
 		'Straight Shot': '#B01F00',
 		'Foe Requiem': '#90D0D0',
 		'Raging Strikes': '#D03F00',
+		'song': '#fff',
+		'Storm Bite': '#9DBBD2',
+		'Caustic Bite': '#D75896',
 	},
 	'Dragoon': {
 		'Blood Of The Dragon': '#7DA3AD',

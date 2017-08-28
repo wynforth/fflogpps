@@ -1,5 +1,5 @@
 var parseFunctions = {
-	'Bard': parseBard,
+	'Bard': parseClass,//parseBard,
 	'BlackMage': parseBlackmage,
 	'Dragoon': parseDragoon,
 	'Machinist': parseMachinist,

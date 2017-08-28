@@ -1,4 +1,3 @@
-
 var result = {
 	report: {
 		reportID: getUrlParameter("report"),
@@ -136,6 +135,51 @@ function hasBuff(name, buffs){
 	return false;
 }
 
+
+function preScreen(type, events, buffs) {
+	var start = events[0].timestamp;
+
+	if (type == "Bard") {
+		//prescan first couple attacks to see what buffs fall off
+		var prefoe = true;
+		for (var e in events) {
+			var event = events[e];
+			if (event.timestamp > start + 5000) //just 5 seconds which is enough time to ensure a server tick to see if foe is applied
+				break;
+
+			//if foe shows as an applybuff to self first in the log first, it wasn't precasted
+			if (event.type == "applybuff") {
+				if (event.ability.name == "Foe Requiem")
+					prefoe = false;
+			}
+
+			if (event.type == "applydebuff") {
+				if (event.ability.name == "Foe Requiem" && prefoe)
+					buffs[event.ability.name].add(event.targetID);
+			}
+		}
+	} else if (type == "RedMage") {
+		var acceleration_cast = false;
+		for (var e in events) {
+			var event = events[e];
+			if (event.timestamp > start + 10000) //10 seconds ahead
+				break;
+
+			//foe shows as an applybuff to self first in the log first, it wasn't precasted
+			if (event.type == "removebuff") {
+				if (event.ability.name == "Acceleration")
+					buffs["Acceleration"].applybuff();
+			}
+			if (event.type == "applybuff") {
+				if (event.ability.name == "Acceleration")
+					acceleration_cast = true;
+			}
+		}
+		if (acceleration_cast)
+			buffs["Acceleration"].active = false;
+	}
+}
+
 function parseClass(response){
 	var type = result.player.type;
 	console.log("Parsing " + type);
@@ -167,27 +211,9 @@ function parseClass(response){
 	if(type == "Ninja") timers['Huton'].restart(); //assume huton starts on
 	
 	//prescan
-	var acceleration_cast = false;
-	var start = response.events[0].timestamp;
-	for (var e in response.events) {
-		var event = response.events[e];
-		if (event.timestamp > start + 10000) //10 seconds ahead
-			break;
-
-		//foe shows as an applybuff to self first in the log first, it wasn't precasted
-		if (event.type == "removebuff") {
-			if (event.ability.name == "Acceleration")
-				buffs["Acceleration"].applybuff();
-		}
-		if (event.type == "applybuff") {
-			if (event.ability.name == "Acceleration")
-				acceleration_cast = true;
-		}
-	}
-	if (acceleration_cast)
-		buffs["Acceleration"].active = false;
+	preScreen(type,response.events, buffs);
 	
-	//Main PArsing
+	//Main Parsing
 	for (var e in response.events) {
 		var event = response.events[e];
 		
@@ -377,6 +403,8 @@ function parseBard(response) {
 		"Storm Bite": 55,
 		"Caustic Bite": 45,
 	};
+	
+	var weaponskills = ["Heavy Shot","Straight Shot","Empyreal Arrow","Iron Jaws","Refulgent Arrow","Quick Nock","Caustic Bite","Stormbite"];
 
 	//prescan first couple attacks to see what buffs fall off
 	var prefoe = true;
