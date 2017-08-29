@@ -172,6 +172,33 @@ class BuffStack extends Buff{
 	}
 }
 
+class BuffTimed extends Buff {
+	constructor(name, bonus, duration, restricted, exclusive){
+		super(name, bonus, false, restricted, exclusive);
+		this.duration = duration;
+		this.current = 0;
+	}
+	
+	applyBuff(event){
+		super.applyBuff(event);
+		this.current = event.fightTime + this.duration;
+		this.active = Object.keys(this.targets).length > 0;
+	}
+	
+	update(event){
+		if(this.current != 0){
+			if(this.current <= event.fightTime){
+				this.current = 0;
+				this.active = false;
+			}
+		}
+	}
+	
+	isAllowed(event){
+		return this.current >= event.fightTime && super.isAllowed(event);
+	}
+}
+
 class Debuff extends Buff{
 	constructor(name, bonus, restricted, exclusive){
 		super(name, bonus, false, restricted, exclusive);
@@ -179,6 +206,8 @@ class Debuff extends Buff{
 	}
 	
 	add(event){
+		if(event.targetID == null)
+			console.log(event);
 		if(this.targets.indexOf(event.targetID) == -1)
 			this.targets.push(event.targetID);
 		this.active = this.targets.length > 0;

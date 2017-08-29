@@ -152,6 +152,8 @@ function processClass(response, spec) {
 	//console.log(response);
 	if(['Dragoon','Ninja','Monk'].indexOf(spec) > -1)
 		$('.summary').append(`<br/><b>Positionals:</b> Unless under True North positional potency is a weighted average assuming 9 in 10 hits are from the correct position.`)
+	else if(spec == "Bard")
+		$('.summary').append(`<br/><b>Pitch Perfect:</b> As DoT crits are not able to be tracked accurately the base potency for Pitch Perfect is only a guess.`)
 	
 	$(".ranking-table tbody").html("");
 	$(".ranking-table thead tr").append(`<td style="width: 90px">Potency</td>`);
@@ -161,9 +163,9 @@ function processClass(response, spec) {
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/foe_requiem.png" title="Foe Requiem"/></td>`);
 		//$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/battle_voice.png" title="Battle Voice"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/raging_strikes.png" title="Raging Strikes"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/bard_song.png" title="Bard Song's"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/storm_bite.png" title="Storm Bite"/></td>`);
 		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/caustic_bite.png" title="Caustic Bite"/></td>`);
+		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/bard_song.png" title="Bard Song's"/></td>`);
 	}
 	
 	if (spec == "BlackMage") {

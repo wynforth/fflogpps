@@ -155,7 +155,7 @@ function preScreen(type, events, buffs) {
 
 			if (event.type == "applydebuff") {
 				if (event.ability.name == "Foe Requiem" && prefoe)
-					buffs[event.ability.name].add(event.targetID);
+					buffs[event.ability.name].add(event);
 			}
 		}
 	} else if (type == "RedMage") {
@@ -187,6 +187,7 @@ function parseClass(response){
 	var prevTime = 0;
 	var ellapsed = 0;
 	var lastWS = ""
+	var ratio = 0;
 	
 	
 	var potencies = all_potencies[type];
@@ -250,11 +251,30 @@ function parseClass(response){
 				if (comboskills.indexOf(event.name) > -1 && !hasBuff("Duality", buffs)) {
 					lastWS = event.name;
 				}
+				
+				if(event.name == "Pitch Perfect"){
+					var val = event.amount;
+					if(event.isDirect) val *= 1/1.25;
+					if(event.hitType == "Crit") val *= 1/1.45;
+					val = val/ratio;
+					
+					if(val >= 400)
+						potency = 420;
+					else if(val >= 150)
+						potency = 240;
+				}
+				
 				event.tooltip = event.name + ": " + potency + "<br/>";
 				potency = applyBuffs(potency, event, buffs);
 				
 				if(dot_base.hasOwnProperty(event.name))
 					dot_potencies[event.name] = applyBuffs(dot_base[event.name],event,buffs);
+				else if(event.name == "Stormbite")
+					dot_potencies['Storm Bite'] = applyBuffs(dot_base['Storm Bite'],event,buffs);
+				else if (event.name == "Iron Jaws") {
+					dot_potencies["Storm Bite"] = applyBuffs(dot_base["Storm Bite"], event, buffs);
+					dot_potencies["Caustic Bite"] = applyBuffs(dot_base["Caustic Bite"], event, buffs);
+				}
 			}
 			
 			
@@ -271,17 +291,13 @@ function parseClass(response){
 			}
 		}
 		for (var b in buffs) {
-			if (buffs[b].constructor.name === 'DebuffTimed') {
-				//for (var ta in buffs[b].targets)
-				//	console.log(event.fightTime + ": " + JSON.stringify(buffs[b]));
+			if (typeof buffs[b].update === 'function') {
 				buffs[b].update(event);
-
 			}
 		}
 		
+		var img = '';
 		
-		
-
 		//BUFF APPLICATION
 		if (event.type == "applybuff" || event.type == "refreshbuff") {
 			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
@@ -314,13 +330,30 @@ function parseClass(response){
 				buffs[event.name].remove(event);
 		}
 		
-		if(event.type == "cast"){
-			if(dot_base.hasOwnProperty(event.name))
-				dot_potencies[event.name] = applyBuffs(dot_base[event.name],event,buffs);
-			else if(timers.hasOwnProperty(event.name))
+		
+		
+		if (event.type == "cast") {
+			if (dot_base.hasOwnProperty(event.name)){
+				
+				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
+			} else if (timers.hasOwnProperty(event.name)) {
+				//bard song special
+				if (type == "Bard") {
+					var songs = ["The Wanderer's Minuet", "Mage's Ballad", "Army's Paeon"];
+					//if its a song cast we stop all songs that way we only restart the new one.
+					if (songs.indexOf(event.name) > -1) {
+						for (var i = 0; i < songs.length; i++)
+							timers[songs[i]].stop(); 
+						img = `<img src="/img/${event.name.replace(/'/g,"").replace(/ /g, "_").toLowerCase()}.png"/>`;
+					}
+				}
 				timers[event.name].restart();
-			else if(event.name == "Armor Crush")
-				timers["Huton"].update(-30);
+			} else if (event.name == "Armor Crush") {
+					timers["Huton"].update(-30);
+			} else if (event.name == "Iron Jaws") {
+				dot_potencies["Storm Bite"] = applyBuffs(dot_base["Storm Bite"], event, buffs);
+				dot_potencies["Caustic Bite"] = applyBuffs(dot_base["Caustic Bite"], event, buffs);
+			}
 		}
 		
 		//update matching buffs to timers
@@ -338,12 +371,38 @@ function parseClass(response){
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
+		if (type == "Bard") {
+			
+			if (buffs["The Wanderer's Minuet"].active)
+				extra.push(`<div class="center status-block" style="background-color: #4F6F1F">${img}</div>`);
+			else if (buffs["Mage's Ballad"].active)
+				extra.push(`<div class="center status-block" style="background-color: #A07FC0">${img}</div>`);
+			else if (buffs["Army's Paeon"].active)
+				extra.push(`<div class="center status-block" style="background-color: #D07F5F">${img}</div>`);
+			else
+				extra.push(``);
+			
+		}
 
 		event.extra = extra;
 		event.potency = potency;
 		prevTime = event.fightTime;
 
 		result.events[e] = event;
+		//update ratio currently used for guessing pitch perfect :/
+		if (event.potency != 0) {
+			var tp = event.potency;
+			if (event.isDirect)
+				tp *= 1.25;
+			if (event.hitType == 'Crit')
+				tp *= 1.45;
+			var r = event.amount / tp;
+			
+			if (ratio == 0)
+				ratio = r;
+			else
+				ratio = (ratio + r) / 2
+		}
 	}
 
 	return result;
@@ -423,7 +482,7 @@ function parseBard(response) {
 
 		if (event.type == "applydebuff") {
 			if (event.ability.name == "Foe Requiem" && prefoe)
-				buffs[event.ability.name].add(event.targetID);
+				buffs[event.ability.name].add(event);
 		}
 	}
 

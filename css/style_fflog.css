@@ -214,9 +214,9 @@ table .status-block {
 }
 
 tbody img {
-	width: 18px;
+	width: 16px;
 	#height: 16px;	
-	transform: translate(-3px, -3px);
+	transform: translate(-2px, -3px);
 }
 
 thead img {

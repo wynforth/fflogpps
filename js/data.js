@@ -20,6 +20,8 @@ var all_potencies = {
 
 		'Caustic Bite': 120,
 		'Stormbite': 120,
+		
+		'Pitch Perfect': 100,
 	},
 	'BlackMage': {
 		'Attack': 110,
@@ -421,7 +423,9 @@ var all_buffs = {
 		'Raging Strikes': new Buff('Raging Strikes', .10),
 		'Straight Shot': new Buff('Straight Shot', (.10 * .45)),
 		'Foe Requiem': new Debuff('Foe Requiem', .03),
-		'song': new Debuff('Placeholder', 0),
+		"Army's Paeon": new Buff("Army's Paeon", 0),
+		"Mage's Ballad": new Buff("Mage's Ballad", 0),
+		"The Wanderer's Minuet": new Buff("The Wanderer's Minuet", 0),
 		'Storm Bite': new Debuff('Storm Bite', 0),
 		'Caustic Bite': new Debuff('Caustic Bite', 0),
 	},
@@ -498,7 +502,7 @@ var buff_display = {
 		'Straight Shot': '#B01F00',
 		'Foe Requiem': '#90D0D0',
 		'Raging Strikes': '#D03F00',
-		'song': '#fff',
+		//'song': '#fff',
 		'Storm Bite': '#9DBBD2',
 		'Caustic Bite': '#D75896',
 	},
@@ -552,7 +556,11 @@ var buff_display = {
 }
 
 var all_timers = {
-	'Bard': {},
+	'Bard': {
+		"Army's Paeon": new Timer("Army's Paeon", 30),
+		"Mage's Ballad": new Timer("Mage's Ballad", 30),
+		"The Wanderer's Minuet": new Timer("The Wanderer's Minuet", 30),
+	},
 	'BlackMage': {},
 	'Dragoon': {},
 	'Machinist': {},
