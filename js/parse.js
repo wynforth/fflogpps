@@ -136,7 +136,7 @@ function hasBuff(name, buffs){
 }
 
 
-function preScreen(type, events, buffs) {
+function preScreen(type, events, buffs, timers) {
 	var start = events[0].timestamp;
 
 	if (type == "Bard") {
@@ -177,6 +177,19 @@ function preScreen(type, events, buffs) {
 		}
 		if (acceleration_cast)
 			buffs["Acceleration"].active = false;
+	} else if (type == "Dragoon") {
+		for (var e in events) {
+			var event = events[e];
+			if (event.type == "cast") {
+				if (event.ability.name == "Fang And Claw" || event.ability.name == "Wheeling Thrust" || event.ability.name == "Sonic Thrust") {
+					timers["Blood Of The Dragon"].restart();
+				}
+			}
+			if (event.timestamp > start + 20000)
+				break;
+
+		}
+		buffs["Blood Of The Dragon"].active = timers["Blood Of The Dragon"].isActive();
 	}
 }
 
@@ -212,7 +225,7 @@ function parseClass(response){
 	if(type == "Ninja") timers['Huton'].restart(); //assume huton starts on
 	
 	//prescan
-	preScreen(type,response.events, buffs);
+	preScreen(type,response.events, buffs, timers);
 	
 	//Main Parsing
 	for (var e in response.events) {
@@ -237,7 +250,7 @@ function parseClass(response){
 				potency = potencies[event.name];
 
 				if (combo.hasOwnProperty(event.name)) {
-					if (combo[event.name].indexOf(lastWS) > -1 || event.name == lastWS || hasBuff('Meikyo Shisui', buffs)){ //hack for aoe combos
+					if (combo[event.name].indexOf(lastWS) > -1 || event.name == lastWS || hasBuff('Meikyo Shisui', buffs)) { //hack for aoe combos
 						if (hasBuff("True North", buffs) && pos_combo_potencies.hasOwnProperty(event.name))
 							potency = pos_combo_potencies[event.name];
 						else
@@ -251,33 +264,37 @@ function parseClass(response){
 				if (comboskills.indexOf(event.name) > -1 && !hasBuff("Duality", buffs)) {
 					lastWS = event.name;
 				}
-				
-				if(event.name == "Pitch Perfect"){
+
+				if (event.name == "Pitch Perfect") {
 					var val = event.amount;
-					if(event.isDirect) val *= 1/1.25;
-					if(event.hitType == "Crit") val *= 1/1.45;
-					val = val/ratio;
-					
-					if(val >= 400)
+					if (event.isDirect)
+						val *= 1 / 1.25;
+					if (event.hitType == "Crit")
+						val *= 1 / 1.45;
+					val = val / ratio;
+
+					if (val >= 400)
 						potency = 420;
-					else if(val >= 150)
+					else if (val >= 150)
 						potency = 240;
 				}
-				
+
 				event.tooltip = event.name + ": " + potency + "<br/>";
 				potency = applyBuffs(potency, event, buffs);
-				
-				if(dot_base.hasOwnProperty(event.name))
-					dot_potencies[event.name] = applyBuffs(dot_base[event.name],event,buffs);
-				else if(event.name == "Stormbite")
-					dot_potencies['Storm Bite'] = applyBuffs(dot_base['Storm Bite'],event,buffs);
-				else if (event.name == "Iron Jaws") {
+
+				if (dot_base.hasOwnProperty(event.name)) {
+					event.tooltip += "<br/>Dot Damage:<br/>";
+					dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
+				} else if (event.name == "Stormbite") {
+					event.tooltip += "<br/>Dot Damage:<br/>";
+					dot_potencies['Storm Bite'] = applyBuffs(dot_base['Storm Bite'], event, buffs);
+				} else if (event.name == "Iron Jaws") {
+					event.tooltip += "<br/>Dot Damage:<br/>";
 					dot_potencies["Storm Bite"] = applyBuffs(dot_base["Storm Bite"], event, buffs);
+					event.tooltip += "<br/>Dot Damage:<br/>";
 					dot_potencies["Caustic Bite"] = applyBuffs(dot_base["Caustic Bite"], event, buffs);
 				}
 			}
-			
-			
 
 			if (potency == undefined)
 				potency = 0;
@@ -353,6 +370,9 @@ function parseClass(response){
 			} else if (event.name == "Iron Jaws") {
 				dot_potencies["Storm Bite"] = applyBuffs(dot_base["Storm Bite"], event, buffs);
 				dot_potencies["Caustic Bite"] = applyBuffs(dot_base["Caustic Bite"], event, buffs);
+			} else if (event.name == "Fang And Claw" || event.name == "Wheeling Thrust" || event.name == "Sonic Thrust"){
+				if(timers["Blood Of The Dragon"].isActive())
+					timers["Blood Of The Dragon"].extend(10, 30);
 			}
 		}
 		

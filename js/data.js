@@ -437,7 +437,7 @@ var all_buffs = {
 		'Blood Of The Dragon': new Buff('Blood Of The Dragon', .30, false, [], ['Jump', 'Spineshatter Dive']),
 		'Heavy Thrust': new Buff('Heavy Thrust', .15),
 		'Blood For Blood': new Buff('Blood For Blood', .15),
-		'Right Eye': new Buff('Right Eye', .10),
+		'Right Eye': new BuffStack('Right Eye', .10, 0, 1),
 		'Battle Litany': new Buff('Battle Litany', (.15 * .45)),
 		'True North': new Buff('True North', 0),
 		'Piercing Resistance Down': new Debuff('Disemboweled', .05),
@@ -562,7 +562,9 @@ var all_timers = {
 		"The Wanderer's Minuet": new Timer("The Wanderer's Minuet", 30),
 	},
 	'BlackMage': {},
-	'Dragoon': {},
+	'Dragoon': {
+		"Blood Of The Dragon": new Timer("Blood of the Dragon", 20),
+	},
 	'Machinist': {},
 	'Monk': {},
 	'Ninja': {
