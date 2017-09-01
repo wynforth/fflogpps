@@ -319,10 +319,16 @@ function parseClass(response){
 		if (event.type == "applybuff" || event.type == "refreshbuff") {
 			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
 				buffs[event.name].applybuff();
+			
+			if (event.name == "Fists Of Wind" || event.name == "Fists Of Earth") {
+				buffs["Fists Of Fire"].active = false;
+				buffs["Riddle Of Fire"].active = false;
+			}
 		}
 
 		if (event.type == "applybuffstack") {
 			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID){
+				console.log(event.name);
 				buffs[event.name].setStacks(event.stack);
 			}	
 		}

@@ -148,6 +148,7 @@ class BuffStack extends Buff{
 	}
 	
 	getBonus(){
+		//console.log(this);
 		return this.bonus + (this.stackBonus * this.stacks);
 	}
 	
@@ -168,7 +169,8 @@ class BuffStack extends Buff{
 	
 	applybuff(){
 		super.applybuff();
-		this.stacks = this.baseStacks;
+		if(this.stacks <= 0)
+			this.stacks = this.baseStacks;
 	}
 }
 

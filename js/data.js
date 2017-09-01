@@ -375,6 +375,7 @@ var all_combo = {
 		'Wheeling Thrust': ['Fang And Claw'],
 		'Fang And Claw': ['Wheeling Thrust'],
 	},
+	'Monk': {},
 	'Ninja': {
 		'Gust Slash': ['Spinning Edge'],
 		'Aeolian Edge': ['Gust Slash'],
@@ -401,6 +402,7 @@ var all_combo = {
 var all_comboskills = {
 	'Bard': [],
 	'Dragoon': ['True Thrust', 'Vorpal Thrust', 'Impulse Drive', 'Heavy Thrust', 'Full Thrust', 'Disembowel', 'Chaos Thrust', 'Fang And Claw', 'Wheeling Thrust', 'Doom Spike', 'Sonic Thrust', 'Piercing Talon'],
+	'Monk': [],
 	'Ninja': ['Gust Slash', 'Spinning Edge', 'Aeolian Edge', 'Shadow Fang', 'Throwing Dagger', 'Death Blossom'],
 	'RedMage': ['Moulinet', 'Enchanted Moulinet', 'Zwerchhau', 'Riposte', 'Enchanted Riposte', 'Redoublement', 'Enchanted Zwerchhau', 'Enchanted Redoublement'],
 	'Samurai': ['Hakaze', 'Jinpu', 'Gekko', 'Shifu', 'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi'],
@@ -437,7 +439,7 @@ var all_buffs = {
 		'Blood Of The Dragon': new Buff('Blood Of The Dragon', .30, false, [], ['Jump', 'Spineshatter Dive']),
 		'Heavy Thrust': new Buff('Heavy Thrust', .15),
 		'Blood For Blood': new Buff('Blood For Blood', .15),
-		'Right Eye': new BuffStack('Right Eye', .10, 0, 1),
+		'Right Eye': new BuffStack('Right Eye', .10, 0, 1, 1),
 		'Battle Litany': new Buff('Battle Litany', (.15 * .45)),
 		'True North': new Buff('True North', 0),
 		'Piercing Resistance Down': new Debuff('Disemboweled', .05),
@@ -458,7 +460,8 @@ var all_buffs = {
 		'Vulnerability Up': new Debuff('Hypercharge', .05),
 	},
 	'Monk': {
-		'Riddle Of Fire': new Buff('Riddle of Fire', .30),
+		'Greased Lightning': new BuffStack('Greased Lightning', 0, .1, 3, 1),
+		'Riddle Of Fire': new BuffStack('Riddle of Fire', .30, 0, 1, 1),
 		'Fists Of Fire': new Buff('Fists of Fire', .05, true),
 		'Internal Release': new Buff('Internal Release', .3 * .45, false, ['Bootshine']),
 		'True North': new Buff('True North', 0),
@@ -521,6 +524,7 @@ var buff_display = {
 		'Overheated': '#A6391E',
 	},
 	'Monk': {
+		'Greased Lightning': '#4099CE',
 		'Twin Snakes': '#B7727D',
 		'Blunt Resistance Down': '#932F2F',
 		'Internal Release': '#8DD7AF',
