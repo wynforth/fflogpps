@@ -375,6 +375,7 @@ var all_combo = {
 		'Wheeling Thrust': ['Fang And Claw'],
 		'Fang And Claw': ['Wheeling Thrust'],
 	},
+	'Machinist': {},
 	'Monk': {},
 	'Ninja': {
 		'Gust Slash': ['Spinning Edge'],
@@ -402,6 +403,7 @@ var all_combo = {
 var all_comboskills = {
 	'Bard': [],
 	'Dragoon': ['True Thrust', 'Vorpal Thrust', 'Impulse Drive', 'Heavy Thrust', 'Full Thrust', 'Disembowel', 'Chaos Thrust', 'Fang And Claw', 'Wheeling Thrust', 'Doom Spike', 'Sonic Thrust', 'Piercing Talon'],
+	'Machinist': [],
 	'Monk': [],
 	'Ninja': ['Gust Slash', 'Spinning Edge', 'Aeolian Edge', 'Shadow Fang', 'Throwing Dagger', 'Death Blossom'],
 	'RedMage': ['Moulinet', 'Enchanted Moulinet', 'Zwerchhau', 'Riposte', 'Enchanted Riposte', 'Redoublement', 'Enchanted Zwerchhau', 'Enchanted Redoublement'],
@@ -578,6 +580,30 @@ var all_timers = {
 	'Samurai': {},
 	'Summoner': {},
 }
+
+const roleActions = {
+	
+	'caster': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
+	'healer': ["Cleric Stance","Break","Protect","Esuna","Lucid Dreaming","Swiftcast","Eye for an Eye","Largesse","Surecast","Rescue"],
+	'tank': ["Rampart","Low Blow","Provoke","Convalescence","Anticipation","Reprisal","Awareness","Interject","Ultimatum","Shirk"],
+	'melee': ["Second Wind","Arm's Length","Leg Sweep","Diversion","Invigorate","Bloodbath","Goad","Feint","Crutch","True North"],
+	'ranged': ["Second Wind","Foot Graze","Leg Graze","Peloton","Invigorate","Tactician","Refresh","Head Graze","Arm Graze","Palisade"]
+};
+
+var role_actions = {
+	'Bard': ["Second Wind","Foot Graze","Leg Graze","Peloton","Invigorate","Tactician","Refresh","Head Graze","Arm Graze","Palisade"],
+	'Machinist': ["Second Wind","Foot Graze","Leg Graze","Peloton","Invigorate","Tactician","Refresh","Head Graze","Arm Graze","Palisade"],
+	
+	'Dragoon': ["Second Wind","Arm's Length","Leg Sweep","Diversion","Invigorate","Bloodbath","Goad","Feint","Crutch","True North"],
+	'Monk': ["Second Wind","Arm's Length","Leg Sweep","Diversion","Invigorate","Bloodbath","Goad","Feint","Crutch","True North"],
+	'Ninja': ["Second Wind","Arm's Length","Leg Sweep","Diversion","Invigorate","Bloodbath","Goad","Feint","Crutch","True North"],
+	'Samurai': ["Second Wind","Arm's Length","Leg Sweep","Diversion","Invigorate","Bloodbath","Goad","Feint","Crutch","True North"],
+	
+	'RedMage': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
+	'BlackMage': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
+	'Summoner': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
+}
+
 
 var template = {
 	'Bard': {},

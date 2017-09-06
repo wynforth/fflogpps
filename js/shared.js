@@ -154,23 +154,52 @@ class BuffStack extends Buff{
 	
 	addStacks(num){
 		this.stacks = Math.min(this.maxStacks, this.stacks + num);
+		this.active = this.stacks > 0;
 	}
 	
 	remStacks(num){
 		this.stacks = Math.max(0, this.stacks - num);
+		this.active = this.stacks > 0;
 	}
 	
 	setStacks(num){
 		if(num < 0)
 			this.stacks = 0;
-		else
+		else{
+			super.applybuff();
 			this.stacks = Math.min(this.maxStacks, num);
+		}
 	}
 	
 	applybuff(){
 		super.applybuff();
 		if(this.stacks <= 0)
 			this.stacks = this.baseStacks;
+	}
+}
+
+class BuffDirectConsumedStack extends BuffStack{
+	constructor(name, initial, stackbonus, maxStacks, baseStacks, active, restricted, exclusive){
+		super(name, initial, stackbonus, maxStacks,  baseStacks, active, restricted, exclusive);
+	}
+	
+	getBonus(){
+		//console.log(this);
+		return this.bonus + (this.stackBonus * this.stacks);
+	}
+	
+	apply(potency, event){
+		if(this.isAllowed(event)){
+			var ret = potency + this.getBonus();
+			this.stacks--;
+			this.active = this.stacks > 0;
+			return ret;
+		}
+		return potency;
+	}
+	
+	getDisplay(){
+		return this.getBonus();
 	}
 }
 

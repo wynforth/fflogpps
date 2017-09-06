@@ -1,12 +1,12 @@
 var parseFunctions = {
-	'Bard': parseClass,//parseBard,
+		'Bard': parseClass,//parseBard,
 	'BlackMage': parseBlackmage,
-	'Dragoon': parseClass,//parseDragoon,
+		'Dragoon': parseClass,//parseDragoon,
 	'Machinist': parseMachinist,
-	'Monk': parseClass, //parseMonk,
-	'Ninja': parseClass,	//parseNinja,
-	'RedMage': parseClass,	//parseRedmage,
-	'Samurai': parseClass,	//parseSamurai,
+		'Monk': parseClass, //parseMonk,
+		'Ninja': parseClass,	//parseNinja,
+		'RedMage': parseClass,	//parseRedmage,
+		'Samurai': parseClass,	//parseSamurai,
 	'Summoner': parseSummoner,
 
 }
@@ -279,6 +279,10 @@ function processClass(response, spec) {
 	}
 	else {
 		$(".summary-table tbody").append(getSummaryRow(result.player.name, totalDamage, totalPotency, result.fight.duration));
+	}
+	
+	if(result.hasOwnProperty('role_actions')){
+		$('.summary').append(`<br/><b>Role Actions Used:</b> ${result['role_actions'].join(", ")}`);
 	}
 }
 

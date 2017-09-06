@@ -208,6 +208,12 @@ function parseClass(response){
 	var pos_potencies = all_pos_potencies[type];
 	var pos_combo_potencies = all_pos_combo_potencies[type];
 	
+	var role_all = role_actions[type];
+	var role_taken = {};
+	for(var i=0; i< role_all.length; i++){
+		role_taken[role_all[i]] = 0;
+	}
+	
 	
 	var dot_base = all_dot_base[type];
 	var combo = all_combo[type]
@@ -356,14 +362,17 @@ function parseClass(response){
 		
 		
 		if (event.type == "cast") {
+			//id match shouldn't be needed bt being safe
+			if(role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID){ 
+				role_taken[event.name]++;
+			}
+			
 			if (dot_base.hasOwnProperty(event.name)){
-				
 				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
 			} else if (timers.hasOwnProperty(event.name)) {
-				//bard song special
+				//bard unique, other songs need to stop when a new song starts
 				if (type == "Bard") {
 					var songs = ["The Wanderer's Minuet", "Mage's Ballad", "Army's Paeon"];
-					//if its a song cast we stop all songs that way we only restart the new one.
 					if (songs.indexOf(event.name) > -1) {
 						for (var i = 0; i < songs.length; i++)
 							timers[songs[i]].stop(); 
@@ -372,7 +381,7 @@ function parseClass(response){
 				}
 				timers[event.name].restart();
 			} else if (event.name == "Armor Crush") {
-					timers["Huton"].update(-30);
+				timers["Huton"].update(-30);
 			} else if (event.name == "Iron Jaws") {
 				dot_potencies["Storm Bite"] = applyBuffs(dot_base["Storm Bite"], event, buffs);
 				dot_potencies["Caustic Bite"] = applyBuffs(dot_base["Caustic Bite"], event, buffs);
@@ -415,7 +424,7 @@ function parseClass(response){
 		prevTime = event.fightTime;
 
 		result.events[e] = event;
-		//update ratio currently used for guessing pitch perfect :/
+		//update ratio currently only used for guessing pitch perfect :/
 		if (event.potency != 0) {
 			var tp = event.potency;
 			if (event.isDirect)
@@ -430,11 +439,15 @@ function parseClass(response){
 				ratio = (ratio + r) / 2
 		}
 	}
-
+	for(var r in role_taken){
+		if(role_taken[r] == 0)
+			delete role_taken[r];
+	}
+	result.role_actions = Object.keys(role_taken);
 	return result;
 }
 
-function parseBard(response) {
+/* function parseBard(response) {
 	console.log("Parsing BRD");
 
 	var prevTime = 0;
@@ -681,7 +694,7 @@ function parseBard(response) {
 		prevTime = event.fightTime;
 	}
 	return result;
-}
+} */
 
 function parseBlackmage(response) {
 	console.log("Parsing BLM");
@@ -990,7 +1003,7 @@ function parseBlackmage(response) {
 	//console.log(result);
 	return result;
 }
-
+/* 
 function parseDragoon(response) {
 	console.log("Parsing DRG");
 
@@ -1194,7 +1207,7 @@ function parseDragoon(response) {
 
 	return result;
 }
-
+ */
 function parseMachinist(response) {
 	console.log("Parsing MCH");
 
@@ -1237,7 +1250,7 @@ function parseMachinist(response) {
 		'Wildfire': 0,
 	}
 
-	var enhanced_potencies = {
+	var combo_potencies = {
 		'Slug Shot': 200,
 		'Clean Shot': 240,
 		'Cooldown': 230,
@@ -1254,20 +1267,27 @@ function parseMachinist(response) {
 		'Bishop Overload': 600,
 	}
 
+	var dot_base = {
+		"Flamethrower": 60,
+	}
+	
 	var dot_potencies = {
-		"Flamethrower": 10,
-		"Wildfire": 10,
+		"Flamethrower": 60,
+		"Wildfire": 0,
 	}
 
 	var weaponskills = ['Hot Shot', 'Split Shot', 'Slug Shot', 'Spread Shot', 'Clean Shot', 'Cooldown', 'Heated Split Shot', 'Heated Slug Shot', 'Heated Clean Shot'];
 	var petskills = ['Charged Volley Fire', 'Volley Fire', 'Aether Mortar', 'Charged Aether Mortar', 'Rook Overload', 'Bishop Overload'];
 
 	var buffs = {
+		'Ammunition': new BuffDirectConsumedStack("Ammunition", 25, 0, 3, 3, false, [], weaponskills), 
 		"Trait": new Buff("Action Damage II", .20, true, ["Shot"]),
 		"Hot Shot": new Buff("Hot Shot", .08, false, petskills),
 		"Overheated": new Buff("Overheated", .20, false, petskills),
-		"Vulnerability Up": new Debuff("Hypercharge", .05, false, petskills),
+		"Vulnerability Up": new Debuff("Hypercharge", .05),
 		"Reassembled": new Buff("Reassembled", .45, false, [], weaponskills),
+		"Cleaner Shot": new Buff("Cleaner Shot", 0, false),
+		"Enhanced Slug Shot": new Buff("Enhanced Slug Shot", 0, false)
 	}
 
 	var colors = {
@@ -1278,7 +1298,7 @@ function parseMachinist(response) {
 
 	var notgauss = false;
 	var startRook = true;
-	console.log(JSON.stringify(result));
+	buffs['Ammunition'].applybuff();
 	//prescan first 20 seconds to see what buffs fall off or abilities are used to determine pre-fight buffs
 	var start = response.events[0].timestamp;
 	for (var e in response.events) {
@@ -1338,20 +1358,22 @@ function parseMachinist(response) {
 					potency = potencies[event.name];
 					//action specific
 					if (heat >= 50 && event.name == "Cooldown")
-						potency = enhanced_potencies[event.name];
-					else if (cleanerShot && (event.name == "Clean Shot" || event.name == "Heated Clean Shot"))
-						potency = enhanced_potencies[event.name];
-					else if (enhancedSlugShot && (event.name == "Slug Shot" || event.name == "Heated Slug Shot"))
-						potency = enhanced_potencies[event.name];
+						potency = combo_potencies[event.name];
+					else if (hasBuff("Cleaner Shot", buffs) && (event.name == "Clean Shot" || event.name == "Heated Clean Shot"))
+						potency = combo_potencies[event.name];
+					else if (hasBuff("Enhanced Slug Shot", buffs) && (event.name == "Slug Shot" || event.name == "Heated Slug Shot"))
+						potency = combo_potencies[event.name];
 
 					event.tooltip = event.name + ": " + potency + "<br/>";
 
+					/*
 					if (weaponskills.indexOf(event.name) > -1) {
 						if (ammunition > 0) {
 							potency += 25;
 							event.tooltip += "Ammunition: +25 [" + potency.toFixed(0) + "]<br/>";
 						}
 					}
+					*/
 
 					potency = applyBuffs(potency, event, buffs);
 
@@ -1374,7 +1396,7 @@ function parseMachinist(response) {
 		overheated.update(ellapsed);
 
 		if (!overheated.isActive()) {
-			heat = Math.min(100, heat + heatChange);
+			heat = Math.max(0,Math.min(100, heat + heatChange));
 			heatChange = 0;
 
 			if (removeBarrel) {
@@ -1392,30 +1414,25 @@ function parseMachinist(response) {
 
 		if (event.type == "applybuff") {
 			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].active = true;
-			else if (event.name == "Cleaner Shot")
-				cleanerShot = true;
-			else if (event.name == "Enhanced Slug Shot")
-				enhancedSlugShot = true;
+				buffs[event.name].applybuff();
+			if (event.name == "Flamethrower")
+				heatChange = 20;
+		}
+
+		if (event.type == "applydebuff" || event.type == "refreshdebuff") {
+			if (buffs.hasOwnProperty(event.name)){
+				buffs[event.name].add(event);
+			}
 		}
 
 		if (event.type == "removebuff") {
 			if (buffs.hasOwnProperty(event.name))
 				buffs[event.name].active = false;
-			else if (event.name == "Cleaner Shot")
-				cleanerShot = false;
-			else if (event.name == "Enhanced Slug Shot")
-				enhancedSlugShot = false;
 		}
-
-		if (event.type == "applydebuff") {
-			if (event.name == "Vulnerability Up")
-				buffs[event.name].add(event.targetID);
-		}
-
+		
 		if (event.type == "removedebuff") {
-			if (event.name == "Vulnerability Up")
-				buffs[event.name].remove(event.targetID);
+			if (buffs.hasOwnProperty(event.name))
+				buffs[event.name].remove(event);
 		}
 		
 		if (event.type == "cast") {
@@ -1431,20 +1448,17 @@ function parseMachinist(response) {
 			case "Heated Split Shot":
 			case "Heated Slug Shot":
 			case "Heated Clean Shot":
-				if (ammunition > 0)
-					ammunition--;
-				else if (gauss)
+				if (!buffs['Ammunition'].active && gauss)
 					heatChange = 5;
 				break;
 			case "Cooldown":
 				heatChange = -25;
 				break;
 			case "Reload":
-				ammunition = 3;
+				buffs['Ammunition'].setStacks(3);
 				break;
 			case "Quick Reload":
-				if (ammunition < 3)
-					ammunition++;
+				buffs['Ammunition'].addStacks(1)
 				break;
 			case "Gauss Barrel":
 				gauss = true;
@@ -1456,9 +1470,10 @@ function parseMachinist(response) {
 				wildTarget = event.targetID;
 				dot_potencies[event.name] = 0;
 				break;
-			case 'Flamethrower':
-				dot_potencies[event.name] = applyBuffs(60, event, buffs);
-				break;
+			}
+			
+			if (dot_base.hasOwnProperty(event.name)){
+				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
 			}
 			
 			if(event.name == "Bishop Autoturret" || event.name == "Rook Autoturret")
@@ -1471,7 +1486,9 @@ function parseMachinist(response) {
 		for (var b in colors) {
 			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
 		}
-		extra.push(`<div class="center status-block">${ammunition}</div>`);
+		//extra.push(`<div class="center status-block">${ammunition}</div>`);
+		extra.push(`<div class="center status-block">${heat}</div>`);
+		extra.push(`<div class="center status-block">${buffs['Ammunition'].stacks}</div>`);
 
 		event.extra = extra;
 		event.potency = potency;
@@ -1482,7 +1499,6 @@ function parseMachinist(response) {
 		if(result.totals.hasOwnProperty(event.sourceID)){
 			result.totals[event.sourceID].amount += event.amount;
 			result.totals[event.sourceID].potency += potency;
-			
 		} else {
 			result.totals[event.sourceID] = {
 				'amount': event.amount,
@@ -1491,8 +1507,17 @@ function parseMachinist(response) {
 				'id': event.sourceID,
 				'time': 0//result.fight.duration,
 			}
-			if(event.sourceID != result.player.ID)
-				result.totals[event.sourceID].time = 0;
+			if(!result.totals.hasOwnProperty(result.player.ID)){
+				result.totals[result.player.ID] = {
+				'amount': 0,
+				'potency': 0,
+				'name': result.fight.team[result.player.ID],
+				'id': event.sourceID,
+				'time': 0//result.fight.duration,
+			}
+			}
+			//if(event.sourceID != result.player.ID)
+			//	result.totals[event.sourceID].time = 0;
 		}
 		result.totals[result.player.ID].time += ellapsed;
 		turretIDs[turret] += ellapsed;
@@ -1503,7 +1528,7 @@ function parseMachinist(response) {
 
 	return result;
 }
-
+/* 
 function parseMonk(response) {
 	console.log("Parsing Monk");
 
@@ -2203,7 +2228,7 @@ function parseSamurai(response) {
 
 	return result;
 }
-
+ */
 function parseSummoner(response) {
 	console.log("Parsing SMN");
 
@@ -2500,7 +2525,7 @@ function parseSummoner(response) {
 
 /*
 
-CLASS PARSGIN TEMPLATE
+CLASS PARSING TEMPLATE
 
  */
 /*
