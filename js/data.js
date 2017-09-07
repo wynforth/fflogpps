@@ -79,13 +79,11 @@ var all_potencies = {
 		'Heated Slug Shot': 100,
 		'Heated Clean Shot': 100,
 		'Wildfire': 0,
-	},
-	'Rook Autoturret': {
+		//Rook
 		'Charged Volley Fire': 160,
 		'Volley Fire': 80,
 		'Rook Overload': 800,
-	},
-	'Bishop Autoturret': {
+		//Bishop
 		'Aether Mortar': 60,
 		'Charged Aether Mortar': 90,
 		'Bishop Overload': 600,
@@ -447,19 +445,15 @@ var all_buffs = {
 		'Piercing Resistance Down': new Debuff('Disemboweled', .05),
 	},
 	'Machinist': {
+		'Ammunition': new BuffDirectConsumedStack('Ammunition', 25, 0, 3, 3, false, [], all_weaponskills['Machinist']), 
 		'Trait': new Buff('Action Damage II', .20, true, ['Shot']),
-		'Hot Shot': new Buff('Hot Shot', .08),
-		'Overheated': new Buff('Overheated', .20),
+		'Hot Shot': new Buff('Hot Shot', .08, false, ['Charged Volley Fire', 'Volley Fire', 'Aether Mortar', 'Charged Aether Mortar', 'Rook Overload', 'Bishop Overload']),
+		'Overheated': new Buff('Overheated', .20, false, ['Charged Volley Fire', 'Volley Fire', 'Aether Mortar', 'Charged Aether Mortar', 'Rook Overload', 'Bishop Overload']),
 		'Vulnerability Up': new Debuff('Hypercharge', .05),
 		'Reassembled': new Buff('Reassembled', .45, false, [], all_weaponskills['Machinist']),
-	},
-	'Rook Autoturret': {
-		'Trait': new Buff('Action Damage II', .20, true, ['Shot']),
-		'Vulnerability Up': new Debuff('Hypercharge', .05),
-	},
-	'Bishop Autoturret': {
-		'Trait': new Buff('Action Damage II', .20, true, ['Shot']),
-		'Vulnerability Up': new Debuff('Hypercharge', .05),
+		'Gauss Barrel': new Buff('Gauss Barrel', 0, true),
+		'Cleaner Shot': new Buff('Cleaner Shot', 0, false),
+		'Enhanced Slug Shot': new Buff('Enhanced Slug Shot', 0, false)
 	},
 	'Monk': {
 		'Greased Lightning': new BuffStack('Greased Lightning', 0, .1, 3, 1),
@@ -521,9 +515,9 @@ var buff_display = {
 		'True North': '#C07F4F',
 	},
 	'Machinist': {
+		'Gauss Barrel': '#A4786F',
 		'Hot Shot': '#6D2600',
 		'Vulnerability Up': '#9BA275',
-		'Overheated': '#A6391E',
 	},
 	'Monk': {
 		'Greased Lightning': '#4099CE',
@@ -571,7 +565,9 @@ var all_timers = {
 	'Dragoon': {
 		"Blood Of The Dragon": new Timer("Blood of the Dragon", 20),
 	},
-	'Machinist': {},
+	'Machinist': {
+		'Overheated': new Timer("Overheated", 10)
+	},
 	'Monk': {},
 	'Ninja': {
 		'Huton': new Timer('Huton', 70),
