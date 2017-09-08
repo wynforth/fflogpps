@@ -215,6 +215,85 @@ function preScreen(type, events, buffs, timers, activePet) {
 			buffs['Gauss Barrel'].active = false;
 		}
 		buffs['Ammunition'].applybuff();
+	}else if (type == "Ninja") {
+		var hutonCast = false;
+		for (var e in events) {
+			var event = events[e];
+			if (event.type == "cast") {
+				if (event.ability.name == "Huton") {
+					hutonCast;
+				}
+			}
+			if (event.timestamp > start + 20000)
+				break;
+
+		}
+		if(!hutonCast)
+			timers['Huton'].restart();
+
+	}
+}
+
+function updateTimers(timers, buffs, ellapsed) {
+	if (timers != undefined) {
+		for (var t in timers) {
+			timers[t].update(ellapsed);
+		}
+	}
+	for (var b in buffs) {
+		if (typeof buffs[b].update === 'function') {
+			buffs[b].update(event);
+		}
+	}
+
+
+}
+
+function updateBuffs(buffs, timers, event, result) {
+	//BUFF APPLICATION
+	if (event.type == "applybuff" || event.type == "refreshbuff") {
+		if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
+			buffs[event.name].applybuff();
+	} else if (event.type == "applybuffstack") {
+		if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID) {
+			buffs[event.name].setStacks(event.stack);
+		}
+	} else if (event.type == "applydebuff" || event.type == "refreshdebuff") {
+		if (buffs.hasOwnProperty(event.name)) {
+			buffs[event.name].add(event);
+		}
+	}
+	//BUFF REMOVAL
+	else if (event.type == "removebuff") {
+		if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
+			buffs[event.name].active = false;
+	} else if (event.type == "removebuffstack") {
+		if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
+			buffs[event.name].setStacks(event.stack);
+	} else if (event.type == "removedebuff") {
+		if (buffs.hasOwnProperty(event.name))
+			buffs[event.name].remove(event);
+	}
+
+	//update matching buffs to timers
+	if (timers != undefined) {
+		for (var t in timers) {
+			if (buffs.hasOwnProperty(t))
+				if (timers[t].isActive() && buffs[t].active == false)
+					buffs[t].applybuff();
+				else if (!timers[t].isActive())
+					buffs[t].active = false;
+		}
+	}
+}
+
+function updateExtras(extra, event, buffs, type){
+	var columns = buff_display[type];
+	
+	for (var b in columns) {
+		var displayString = columns[b].display(event, buffs[b]);
+		if(displayString != undefined)
+			extra.push(displayString);
 	}
 }
 
@@ -226,35 +305,52 @@ function parseClass(response){
 	var ellapsed = 0;
 	var lastWS = ""
 	var ratio = 0;
+	var activePet = 0;
+	var petLookup = {};
+	for(var p in result.player.pets){
+		petLookup[result.fight.team[result.player.pets[p]]] = result.player.pets[p];		
+	}
 	
+	result.totals[result.player.ID] = {
+		'amount': 0,
+		'potency': 0,
+		'name': result.fight.team[result.player.ID],
+		'id': result.player.ID,
+		'time': 0 //result.fight.duration,
+	}
+	for (var p in result.player.pets) {
+		result.totals[result.player.pets[p]] = {
+			'amount': 0,
+			'potency': 0,
+			'name': result.fight.team[result.player.pets[p]],
+			'id': result.player.pets[p],
+			'time': 0 //result.fight.duration,
+		}
+	}
 	
+	//potencies
 	var potencies = all_potencies[type];
 	var combo_potencies = all_combo_potencies[type];
 	var pos_potencies = all_pos_potencies[type];
 	var pos_combo_potencies = all_pos_combo_potencies[type];
-	
+	//dots
+	var dot_potencies = {};
+	var dot_base = all_dot_base[type];
+	//skills
+	var combo = all_combo[type]
+	var comboskills = all_comboskills[type];
+	var weaponskills = all_weaponskills[type];
+	//buffs
+	var buffs = all_buffs[type];
+	//role actions
 	var role_all = role_actions[type];
 	var role_taken = {};
 	for(var i=0; i< role_all.length; i++){
 		role_taken[role_all[i]] = 0;
 	}
-	
-	
-	var dot_base = all_dot_base[type];
-	var combo = all_combo[type]
-	var comboskills = all_comboskills[type];
-	var weaponskills = all_weaponskills[type];
-	var buffs = all_buffs[type];
-	console.log(buffs);
-	var colors = buff_display[type];
-	console.log(colors);
-	var dot_potencies = {};
-	
 	//timers
 	var timers = all_timers[type];
-	
-	if(type == "Ninja") timers['Huton'].restart(); //assume huton starts on
-	
+		
 	//prescan
 	preScreen(type,response.events, buffs, timers);
 	
@@ -317,9 +413,11 @@ function parseClass(response){
 					event.tooltip += "<br/>Dot Damage:<br/>";
 					dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
 				} else if (event.name == "Stormbite") {
+					//cast Stormbite, Dot Storm Bite so it doesnt fit the normal pattern
 					event.tooltip += "<br/>Dot Damage:<br/>";
 					dot_potencies['Storm Bite'] = applyBuffs(dot_base['Storm Bite'], event, buffs);
 				} else if (event.name == "Iron Jaws") {
+					//iron jaws reapplies both dots
 					event.tooltip += "<br/>Dot Damage:<br/>";
 					dot_potencies["Storm Bite"] = applyBuffs(dot_base["Storm Bite"], event, buffs);
 					event.tooltip += "<br/>Dot Damage:<br/>";
@@ -329,62 +427,17 @@ function parseClass(response){
 
 			if (potency == undefined)
 				potency = 0;
+			
+			if(potency == 0 && event.amount != 0){
+				console.log("WARNING: Damage dealt with unknown potency");
+				console.log(event);
+			}
+			
 		}
 	
-		//TIEMRS AND TIMED BUFFS
+		//TIMERS AND TIMED BUFFS
 		ellapsed = event.fightTime - prevTime;
-		if (timers != undefined) {
-			for (var t in timers) {
-				timers[t].update(ellapsed);
-			}
-		}
-		for (var b in buffs) {
-			if (typeof buffs[b].update === 'function') {
-				buffs[b].update(event);
-			}
-		}
-		
-		var img = '';
-		
-		//BUFF APPLICATION
-		if (event.type == "applybuff" || event.type == "refreshbuff") {
-			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
-				buffs[event.name].applybuff();
-			
-			if (event.name == "Fists Of Wind" || event.name == "Fists Of Earth") {
-				buffs["Fists Of Fire"].active = false;
-				buffs["Riddle Of Fire"].active = false;
-			}
-		}
-
-		if (event.type == "applybuffstack") {
-			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID){
-				console.log(event.name);
-				buffs[event.name].setStacks(event.stack);
-			}	
-		}
-		if (event.type == "applydebuff" || event.type == "refreshdebuff") {
-			if (buffs.hasOwnProperty(event.name)){
-				buffs[event.name].add(event);
-			}
-		}
-		
-		//BUFF REMOVAL
-		if (event.type == "removebuff") {
-			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
-				buffs[event.name].active = false;
-		}
-
-		if (event.type == "removebuffstack") {
-			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
-				buffs[event.name].setStacks(event.stack);
-		}
-		if (event.type == "removedebuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].remove(event);
-		}
-		
-		
+		updateTimers(timers, buffs, ellapsed);
 		
 		if (event.type == "cast") {
 			//id match shouldn't be needed bt being safe
@@ -394,9 +447,12 @@ function parseClass(response){
 			
 			if (dot_base.hasOwnProperty(event.name)){
 				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
-			} else if (timers.hasOwnProperty(event.name)) {
+			} 
+			
+			if (timers.hasOwnProperty(event.name)) {
 				//bard unique, other songs need to stop when a new song starts
 				if (type == "Bard") {
+					var img = '';
 					var songs = ["The Wanderer's Minuet", "Mage's Ballad", "Army's Paeon"];
 					if (songs.indexOf(event.name) > -1) {
 						for (var i = 0; i < songs.length; i++)
@@ -405,7 +461,9 @@ function parseClass(response){
 					}
 				}
 				timers[event.name].restart();
-			} else if (event.name == "Armor Crush") {
+			} 
+			//ability specific
+			if (event.name == "Armor Crush") {
 				timers["Huton"].update(-30);
 			} else if (event.name == "Iron Jaws") {
 				dot_potencies["Storm Bite"] = applyBuffs(dot_base["Storm Bite"], event, buffs);
@@ -416,21 +474,22 @@ function parseClass(response){
 			}
 		}
 		
-		//update matching buffs to timers
-		if(timers != undefined){
-			for(var t in timers){
-				if(buffs.hasOwnProperty(t))
-					if(timers[t].isActive() && buffs[t].active == false)
-						buffs[t].applybuff();
-					else if(!timers[t].isActive())
-						buffs[t].active = false;
+		//BUFF APPLICATION
+		updateBuffs(buffs, timers, event, result);
+		//class specifics
+		if (type == "Monk") {
+			if (event.type == "applybuff" || event.type == "refreshbuff") {
+				if (event.name == "Fists Of Wind" || event.name == "Fists Of Earth") {
+					buffs["Fists Of Fire"].active = false;
+					buffs["Riddle Of Fire"].active = false;
+				}
 			}
 		}
+		
 
 		var extra = [];
-		for (var b in colors) {
-			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
-		}
+		updateExtras(extra, event, buffs, type);
+		//class specific
 		if (type == "Bard") {
 			if (buffs["The Wanderer's Minuet"].active)
 				extra.push(`<div class="center status-block" style="background-color: #4F6F1F">${img}</div>`);
@@ -440,6 +499,7 @@ function parseClass(response){
 				extra.push(`<div class="center status-block" style="background-color: #D07F5F">${img}</div>`);
 			else
 				extra.push(``);
+			img = '';
 		}
 
 		event.extra = extra;
@@ -457,12 +517,29 @@ function parseClass(response){
 			else
 				ratio = (ratio + r) / 2
 		}
+		
+		if (event.amount > 0 && event.type != 'heal') {
+			if (result.totals.hasOwnProperty(event.sourceID)) {
+				result.totals[event.sourceID].amount += event.amount;
+				result.totals[event.sourceID].potency += potency;
+			} else {
+				console.log("Unaccounted for source");
+				console.log(event);
+			}
+		}
+		
+		result.totals[result.player.ID].time += ellapsed;
+		if(result.totals.hasOwnProperty(activePet))
+			result.totals[activePet].time += ellapsed;
+		
 	}
+	//role actions used
 	for(var r in role_taken){
 		if(role_taken[r] == 0)
 			delete role_taken[r];
 	}
 	result.role_actions = Object.keys(role_taken);
+	
 	return result;
 }
 
@@ -802,35 +879,44 @@ function parseMachinist(response) {
 	}
 
 	//trackers
-	var heat = 0;
 	var heatChange = 0;
 
 	var removeBarrel = false;
 	var wildTarget = 0;
 	var wildfirePot = 0;
 
-	var potencies = all_potencies['Machinist'];
-	var combo_potencies = all_combo_potencies['Machinist'];
-	var dot_base = all_dot_base['Machinist'];
+	var type = 'Machinist';
+	//potencies
+	var potencies = all_potencies[type];
+	var combo_potencies = all_combo_potencies[type];
+	var pos_potencies = all_pos_potencies[type];
+	var pos_combo_potencies = all_pos_combo_potencies[type];
+	//dots
 	var dot_potencies = {};
-	var weaponskills = all_weaponskills['Machinist'];
-	
-	var buffs = all_buffs['Machinist'];
-	var colors = buff_display['Machinist'];
+	var dot_base = all_dot_base[type];
+	//skills
+	var combo = all_combo[type]
+	var comboskills = all_comboskills[type];
+	var weaponskills = all_weaponskills[type];
+	//buffs
+	var buffs = all_buffs[type];
+	//role actions
+	var role_all = role_actions[type];
+	var role_taken = {};
+	for(var i=0; i< role_all.length; i++){
+		role_taken[role_all[i]] = 0;
+	}
 	//timers
-	var timers = all_timers['Machinist'];
+	var timers = all_timers[type];
 	
 	//prescan
+	//temp making it an array to pass by reference yay javascript
 	activePet = [0];
 	preScreen('Machinist',response.events, buffs, timers, activePet);
 	activePet = activePet[0];
 
 	for (var e in response.events) {
-		//reseting triggers
-		var ammoUsed = false;
-
 		var event = response.events[e];
-		//console.log(event);
 
 		//only events of self	pets	or targetted on self
 		if (event.sourceID != result.player.ID) {
@@ -848,14 +934,13 @@ function parseMachinist(response) {
 				if (event.dmgType == 64 || event.dmgType == 1) {
 					if (event.name == "Flamethrower")
 						heatChange = 20;
-
 					//dots
 					potency = dot_potencies[event.name];
 					event.tooltip = "DoT: " + event.name;
 				} else {
 					potency = potencies[event.name];
 					//action specific
-					if (heat >= 50 && event.name == "Cooldown")
+					if (buffs['Heat'].stacks >= 50 && event.name == "Cooldown")
 						potency = combo_potencies[event.name];
 					else if (hasBuff("Cleaner Shot", buffs) && (event.name == "Clean Shot" || event.name == "Heated Clean Shot"))
 						potency = combo_potencies[event.name];
@@ -863,16 +948,6 @@ function parseMachinist(response) {
 						potency = combo_potencies[event.name];
 
 					event.tooltip = event.name + ": " + potency + "<br/>";
-
-					/*
-					if (weaponskills.indexOf(event.name) > -1) {
-						if (ammunition > 0) {
-							potency += 25;
-							event.tooltip += "Ammunition: +25 [" + potency.toFixed(0) + "]<br/>";
-						}
-					}
-					*/
-
 					potency = applyBuffs(potency, event, buffs);
 
 					if (event.targetID == wildTarget) {
@@ -892,59 +967,33 @@ function parseMachinist(response) {
 
 		//update timers
 		var ellapsed = event.fightTime - prevTime;
-		ellapsed = event.fightTime - prevTime;
-		if (timers != undefined) {
-			for (var t in timers) {
-				timers[t].update(ellapsed);
-			}
-		}
-		for (var b in buffs) {
-			if (typeof buffs[b].update === 'function') {
-				buffs[b].update(event);
-			}
-		}
+		updateTimers(timers, buffs, ellapsed);
 
 		if (!timers['Overheated'].isActive()) {
-			heat = Math.max(0,Math.min(100, heat + heatChange));
+			buffs['Heat'].addStacks(heatChange);
 			heatChange = 0;
 
 			if (removeBarrel) {
-				heat = 0;
+				buffs['Heat'].setStacks(0);
 				buffs['Gauss Barrel'].active = false;
 				removeBarrel = false;
 			}
 
-			if (heat >= 100) {
+			if (buffs['Heat'].stacks >= 100) {
 				timers['Overheated'].restart();
 				removeBarrel = true; //mark barrel for removal
 			}
 		}
 		
 
-		if (event.type == "applybuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].applybuff();
-			if (event.name == "Flamethrower")
-				heatChange = 20;
-		}
-
-		if (event.type == "applydebuff" || event.type == "refreshdebuff") {
-			if (buffs.hasOwnProperty(event.name)){
-				buffs[event.name].add(event);
-			}
-		}
-
-		if (event.type == "removebuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].active = false;
-		}
 		
-		if (event.type == "removedebuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].remove(event);
-		}
 		
 		if (event.type == "cast") {
+			//id match shouldn't be needed bt being safe
+			if(role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID){ 
+				role_taken[event.name]++;
+			}
+			
 			switch (event.name) {
 			case "Reload":
 				buffs['Ammunition'].setStacks(3);
@@ -953,7 +1002,7 @@ function parseMachinist(response) {
 				buffs['Ammunition'].addStacks(1)
 				break;
 			case "Barrel Stabilizer":
-				heat = 50;
+				buffs['Heat'].setStacks(50);
 				break;
 			case "Hot Shot":
 			case "Split Shot":
@@ -982,36 +1031,27 @@ function parseMachinist(response) {
 				dot_potencies[event.name] = 0;
 				break;
 			}
-			
-			//update matching buffs to timers
-			if (timers != undefined) {
-				for (var t in timers) {
-					if (buffs.hasOwnProperty(t))
-						if (timers[t].isActive() && buffs[t].active == false)
-							buffs[t].applybuff();
-						else if (!timers[t].isActive())
-							buffs[t].active = false;
-				}
-			}
-			
+
 			if (dot_base.hasOwnProperty(event.name)){
 				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
 			}
-			
+		
 			if(event.name == "Bishop Autoturret" || event.name == "Rook Autoturret")
 				activePet = petLookup[event.name];
 
 		}
+		
+		//BUFF APPLICATION
+		updateBuffs(buffs, timers, event, result);
+		//class specifics
+		if (event.type == "applybuff") {
+			if (event.name == "Flamethrower")
+				heatChange = 20;
+		}
+
 
 		var extra = [];
-		//extra.push(gauss ? `<div class="center status-block" style="background-color: #A4786F"></div>` : ``);
-		for (var b in colors) {
-			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
-		}
-		var heat_color = getColorForPercentage(heat/100);
-		
-		extra.push(`<div title="Heat Level: ${heat}" class="center status-block" style="background-color: ${heat_color}"></div>`);
-		extra.push(`<div class="center status-block">${buffs['Ammunition'].stacks}</div>`);
+		updateExtras(extra, event, buffs, type);
 
 		event.extra = extra;
 		event.potency = potency;
@@ -1025,718 +1065,19 @@ function parseMachinist(response) {
 		}
 		
 		result.totals[result.player.ID].time += ellapsed;
-		console.log(activePet);
 		if(result.totals.hasOwnProperty(activePet))
 			result.totals[activePet].time += ellapsed;
 	}
+	//role actions used
+	for(var r in role_taken){
+		if(role_taken[r] == 0)
+			delete role_taken[r];
+	}
+	result.role_actions = Object.keys(role_taken);
 	
-	for(var p in result.player.pets){
-		//result.totals[result.player.pets[p]].time = turretIDs[result.fight.team[result.player.pets[p]]];
-	}
-
-	return result;
-}
-/* 
-function parseMonk(response) {
-	console.log("Parsing Monk");
-
-	var brotherhood = new Timer("Brotherhood", 15);
-	var gl = new Timer("Greased Lightning", 15);
-	var glstacks = 0;
-
-	var potencies = {
-		"Bootshine": (140 + (140 * 1.45) * 9) / 10, //weighted average 90% hitting positional
-		"True Strike": (140 + 180 * 9) / 10,
-		"Demolish": (30 + 70 * 9) / 10,
-		"Dragon Kick": (100 + 140 * 9) / 10,
-		"Twin Snakes": (100 + 130 * 9) / 10,
-		"Snap Punch": (130 + 170 * 9) / 10,
-		"Arm of the Destroyer": 50,
-		"One Ilm Punch": 120,
-		"Rockbreaker": 130,
-		"The Forbidden Chakra": 250,
-		"Elixir Field": 220,
-		"Steel Peak": 150,
-		"Shoulder Tackle": 100,
-		"Howling Fist": 210,
-		"Tornado Kick": 330,
-		"Riddle of Wind": 65,
-		"Earth Tackle": 100,
-		"Wind Tackle": 65,
-		"Fire Tackle": 130,
-		"Attack": 110,
-	}
-	//console.log(potencies);
-
-	var positional = {
-		"Bootshine": 140 * 1.45,
-		"True Strike": 180,
-		"Demolish": 70,
-		"Dragon Kick": 140,
-		"Twin Snakes": 130,
-		"Snap Punch": 170
-	}
-
-	var dot_potencies = {
-		"Demolish": 50,
-	}
-
-	var lightnings = ["Demolish", "Snap Punch", "Rockbreaker"]
-
-	var buffs = {
-		"Riddle Of Fire": new Buff("Riddle of Fire", .30),
-		"Fists Of Fire": new Buff("Fists of Fire", .05, true),
-		"Internal Release": new Buff("Internal Release", .3 * .45, false, ['Bootshine']),
-		"True North": new Buff("True North", 0),
-		"Perfect Balance": new Buff("Perfect Balance", 0),
-		"Twin Snakes": new Buff("Twin Snakes", .10),
-		"Blunt Resistance Down": new Debuff("Dragon Kick", .10),
-	}
-
-	var colors = {
-		"Twin Snakes": "#B7727D",
-		"Blunt Resistance Down": "#932F2F",
-		"Internal Release": "#8DD7AF",
-		"Riddle Of Fire": "#D8786F",
-		"Perfect Balance": "#DF964C",
-		"True North": "#C07F4F",
-	}
-
-	var prevTime = 0;
-	for (var e in response.events) {
-		var event = response.events[e];
-		
-		//only events of self	pets	or targetted on self
-		if (event.sourceID != result.player.ID) {
-			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
-				continue;
-			}
-		}
-
-		getBasicData(event, result.fight);
-		var potency = 0;
-		var stackChange = false;
-
-		if (event.type == "damage" && event.amount != 0) {
-			var potency = 0;
-			if (event.dmgType == 64 || event.dmgType == 1) {
-				//dots
-				potency = dot_potencies[event.name];
-				event.tooltip = "DoT: " + event.name;
-			} else {
-
-				potency = potencies[event.name];
-				if (buffs["True North"].active)
-					if (positional.hasOwnProperty(event.name))
-						potency = positional[event.name];
-
-				event.tooltip = event.name + ": " + potency + "<br/>";
-
-				potency = applyBuffs(potency, event, buffs);
-
-				if (event.name == "Demolish") {
-					event.tooltip += "<br/>Dot Damage:<br/>";
-					dot_potencies[event.name] = applyBuffs(50, event, buffs);
-				}
-				//GL
-				if (glstacks > 0) {
-					potency = Math.trunc(potency * (1 + (.1 * glstacks)));
-					event.tooltip += "Greased Lightning " + glstacks + ": " + ((.1 * glstacks) * 100).toFixed(0) + "% [" + potency.toFixed(0) + "]<br/>";
-				}
-
-				if (potency == undefined)
-					potency = 0;
-
-				if (lightnings.indexOf(event.name) > -1) {
-					gl.restart();
-					var old = glstacks;
-					glstacks = Math.min(3, glstacks + 1);
-					stackChange = glstacks != old
-				}
-
-			}
-		}
-
-		var ellapsed = event.fightTime - prevTime;
-		if (lightnings.indexOf(event.name) == -1)
-			gl.update(ellapsed);
-
-		if (event.type == "applybuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].active = true;
-
-			if (event.ability.name == "Fists Of Wind" || event.ability.name == "Fists Of Earth") {
-				buffs["Fists Of Fire"].active = false;
-				buffs["Riddle Of Fire"].active = false;
-			}
-		}
-
-		if (event.type == "removebuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].active = false;
-		}
-
-		if (event.type == "applydebuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].add(event.targetID);
-		}
-
-		if (event.type == "removedebuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].remove(event.targetID);
-		}
-	
-		var extra = [];
-		if (gl.isActive()) {
-			var img = "";
-			if (stackChange) {
-				if (glstacks == 1)
-					img = `<img src="/img/greased_lightning.png" />`;
-				if (glstacks == 2)
-					img = `<img src="/img/greased_lightning_ii.png" />`;
-				if (glstacks == 3)
-					img = `<img src="/img/greased_lightning_iii.png" />`;
-			}
-			extra.push(`<div class="center status-block" style="background-color: #4099CE">${img}</div>`);
-		} else {
-			extra.push("");
-		}
-		for (var b in colors) {
-			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
-		}
-
-		event.extra = extra;
-		event.potency = potency;
-
-		prevTime = event.fightTime;
-
-		result.events[e] = event;
-	}
-	//console.log(result);
-	return result;
-
-}
-
-function parseNinja(response) {
-	console.log("Parsing NIN");
-
-	var prevTime = 0;
-
-	//trackers
-	var duality = false;
-	var huton = new Timer("Huton", 70);
-
-	var potencies = {
-		'Attack': 110,
-		'Spinning Edge': 150,
-		'Gust Slash': 100,
-		'Assassinate': 200,
-		'Throwing Dagger': 120,
-		'Mug': 140,
-		'Trick Attack': 400, //scan ahead for the vuln up state?
-		'Aeolian Edge': (160 * 9 + 100) / 10,
-		'Jugulate': 80,
-		'Shadow Fang': 100,
-		'Death Blossom': 110,
-		'Armor Crush': (160 * 9 + 100) / 10,
-		'Dream Within A Dream': 150,
-		'Hellfrog Medium': 400,
-		'Bhavacakra': 600,
-		'Fuma Shuriken': 240,
-		'Katon': 250,
-		'Raiton': 360,
-		'Hyoton': 140,
-		'Doton': 40,
-		'Suiton': 180
-	}
-
-	var pos_potencies = {
-		'Aeolian Edge': 160,
-		'Armor Crush': 160,
-	}
-
-	var combo_potencies = {
-		'Gust Slash': 200,
-		'Aeolian Edge': (340 * 9 + 280) / 10,
-		'Shadow Fang': 200,
-		'Armor Crush': (300 * 9 + 240) / 10,
-	}
-
-	var pos_combo_potencies = {
-		'Aeolian Edge': 340,
-		'Armor Crush': 300,
-	}
-
-	var dot_potencies = {
-		'Shadow Fang': 35,
-		'Doton': 40,
-	}
-
-	var combo = {
-		'Gust Slash': 'Spinning Edge',
-		'Aeolian Edge': 'Gust Slash',
-		'Shadow Fang': 'Gust Slash',
-	}
-
-	//anything that makes/breaks a combo
-	var comboskills = ['Gust Slash', 'Spinning Edge', 'Aeolian Edge', 'Shadow Fang', 'Throwing Dagger', 'Death Blossom'];
-	//all "WeaponSkills"
-	var mudras = ['Fuma Shuriken', 'Katon', 'Raiton', 'Hyoton', 'Doton', 'Suiton'];
-	var lastWS = '';
-
-	var buffs = {
-		"Dripping Blades": new Buff("Dripping Blades II", .2, true, ["Attack"]),
-		"True North": new Buff("True North", 0),
-		"Ten Chi Jin": new Buff("Ten Chi Jin", 1.0, false, [], mudras),
-		"Shadow Fang": new Debuff("Shadow Fang", .10, ['Katon', 'Hellfrog Medium', 'Suiton', 'Raiton', 'Bhavacakra']),
-		"Vulnerability Up": new Debuff("Trick Attack", .10),
-	}
-
-	var colors = {
-		"Vulnerability Up": "#933630",
-		"Shadow Fang": "#44B3DA",
-		"Ten Chi Jin": "#BA4B4A",
-		"True North": "#C07F4F",
-	}
-	huton.restart();
-	for (var e in response.events) {
-		var event = response.events[e];
-		var potency = 0;
-
-		//only events of self	pets	or targetted on self
-		if (event.sourceID != result.player.ID) {
-			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
-				continue;
-			}
-		}
-
-		getBasicData(event, result.fight);
-
-		if (event.type == "damage" && event.amount != 0) {
-			if (event.dmgType == 1 || event.dmgType == 64) {
-				//DOTS
-				potency = dot_potencies[event.name];
-				event.tooltip = "DoT: " + event.name;
-			} else {
-				if (combo[event.name] == lastWS || (combo.hasOwnProperty(event.name) && event.name == lastWS)) //hack for aoe combos
-					if (buffs["True North"].active && pos_combo_potencies.hasOwnProperty(event.name))
-						potency = pos_combo_potencies[event.name];
-					else
-						potency = combo_potencies[event.name];
-				else
-					if (buffs["True North"].active && pos_potencies.hasOwnProperty(event.name))
-						potency = pos_potencies[event.name];
-					else
-						potency = potencies[event.name];
-
-				if (comboskills.indexOf(event.name) > -1 && !duality) {
-					lastWS = event.name;
-				}
-
-				//if (comboskills.indexOf(event.name) > -1)
-				//	lastWS = event.name;
-
-				event.tooltip = event.name + ": " + potency + "<br/>";
-
-				potency = applyBuffs(potency, event, buffs);
-
-				//update dot damage
-				if (event.name == "Shadow Fang") {
-					event.tooltip += "<br/>Dot Damage:<br/>";
-					dot_potencies[event.name] = applyBuffs(35, event, buffs);
-				}
-
-			}
-			if (potency == undefined)
-				potency = 0;
-		}
-
-		//update timers
-		var ellapsed = event.fightTime - prevTime;
-		huton.update(ellapsed);
-
-		if (event.type == "cast") {
-			if (event.name == "Doton")
-				dot_potencies[event.name] = applyBuffs(40, event, buffs);
-			else if (event.name == "Armor Crush")
-				huton.update(-30);
-			else if (event.name == "Huton")
-				huton.restart();
-		}
-
-		if (event.type == "applybuff") {
-			if (event.name == "Duality")
-				duality = true;
-			else if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].active = true;
-		}
-		if (event.type == "removebuff") {
-			if (event.name == "Duality")
-				duality = false;
-			else if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].active = false;
-		}
-
-		if (event.type == "applydebuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].add(event.targetID);
-		}
-
-		if (event.type == "refreshdebuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].add(event.targetID);
-		}
-
-		if (event.type == "removedebuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].remove(event.targetID);
-		}
-
-		var extra = [];
-
-		for (var b in colors) {
-			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
-		}
-		extra.push(huton.isActive() ? `<div class="center status-block" style="background-color: #7DB6C3"></div>` : ``);
-
-		event.extra = extra;
-		event.potency = potency;
-		prevTime = event.fightTime;
-		result.events[e] = event;
-	}
-
 	return result;
 }
 
-function parseRedmage(response) {
-	console.log("Parsing RDM");
-
-	var prevTime = 0;
-
-	//trackers
-	var lastWS = ""
-		var embolden = 0;
-
-	var potencies = {
-		"Attack": 110,
-
-		"Riposte": 130,
-		"Zwerchhau": 100,
-		"Redoublement": 100,
-
-		"Jolt": 180,
-		"Impact": 270,
-
-		"Verthunder": 300,
-		"Verfire": 270,
-		"Verflare": 550,
-
-		"Veraero": 300,
-		"Verstone": 270,
-		"Verholy": 550,
-
-		"Scatter": 100,
-		"Moulinet": 60,
-
-		"Corps-a-corps": 130,
-		"Displacement": 130,
-		"Fleche": 420,
-		"Contre Sixte": 300,
-
-		"Jolt II": 240,
-		"Enchanted Riposte": 210,
-		"Enchanted Zwerchhau": 100,
-		"Enchanted Redoublement": 100,
-		"Enchanted Moulinet": 60,
-	}
-
-	var combo_potencies = {
-		"Zwerchhau": 150,
-		"Redoublement": 230,
-		"Enchanted Zwerchhau": 290,
-		"Enchanted Redoublement": 470,
-	}
-
-	var combo = {
-		"Zwerchhau": ["Riposte", "Enchanted Riposte"],
-		"Redoublement": ["Zwerchhau", "Enchanted Zwerchhau"],
-		"Enchanted Zwerchhau": ["Riposte", "Enchanted Riposte"],
-		"Enchanted Redoublement": ["Zwerchhau", "Enchanted Zwerchhau"],
-	}
-
-	//anything that makes/breaks a combo
-	var comboskills = ["Moulinet", "Enchanted Moulinet", "Zwerchhau", "Riposte", "Enchanted Riposte", "Redoublement", "Enchanted Zwerchhau", "Enchanted Redoublement"];
-	//all "WeaponSkills"
-	var weaponskills = ["Moulinet", "Zwerchhau", "Riposte", "Redoublement", "Enchanted Moulinet", "Enchanted Riposte", "Enchanted Zwerchhau", "Enchanted Redoublement"]
-
-	var buffs = {
-		"Main & Mend II": new Buff("Trait", .30, true, ["Attack"], []),
-		"Embolden": new BuffStack("Embolden", 0, .02, 5, 5, false, ["Attack", "Fleche", "Contre Sixte", "Corps-a-corps", "Displacement", "Moulinet", "Zwerchhau", "Riposte", "Redoublement"], []),
-		"Acceleration": new Buff("Acceleration", 0),
-	}
-
-	var colors = {
-		"Embolden": "#C19143",
-		"Acceleration": "#AF2234",
-	}
-
-	//prescan
-	var accelCast = false;
-	var start = response.events[0].timestamp;
-	for (var e in response.events) {
-		var event = response.events[e];
-		if (event.timestamp > start + 5000) //just 5 seconds which is enough time to ensure a server tick to see if foe is applied
-			break;
-
-		//foe shows as an applybuff to self first in the log first, it wasn't precasted
-		if (event.type == "removebuff") {
-			if (event.ability.name == "Acceleration")
-				buffs["Acceleration"].applybuff();
-		}
-		if (event.type == "applybuff") {
-			if (event.ability.name == "Acceleration")
-				accelCast = true;
-		}
-	}
-	if (accelCast)
-		buffs["Acceleration"].active = false;
-
-	for (var e in response.events) {
-		var event = response.events[e];
-		
-		//only events of self	pets	or targetted on self
-		if (event.sourceID != result.player.ID) {
-			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
-				continue;
-			}
-		}
-
-		getBasicData(event, result.fight);
-		var potency = 0;
-
-		if (event.type == "damage" && event.amount != 0) {
-			if (event.dmgType == 1 || event.dmgType == 64) {
-				//dots
-				potency = dot_potencies[event.name];
-				event.tooltip = "DoT: " + event.name;
-			} else {
-				potency = potencies[event.name];
-				if (Object.keys(combo).indexOf(event.name) > -1)
-					if (combo[event.name].indexOf(lastWS) > -1)
-						potency = combo_potencies[event.name];
-
-				if (comboskills.indexOf(event.name) > -1)
-					lastWS = event.name;
-
-				event.tooltip = event.name + ": " + potency + "<br/>";
-				potency = applyBuffs(potency, event, buffs);
-			}
-
-			if (potency == undefined)
-				potency = 0;
-		}
-
-		var ellapsed = event.fightTime - prevTime;
-		//update timers
-
-		if (event.type == "applybuff") {
-			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
-				buffs[event.name].applybuff();
-		}
-
-		if (event.type == "applybuffstack") {
-			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID){
-				buffs[event.name].setStacks(event.stack);
-			}
-		}
-
-		if (event.type == "removebuff") {
-			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
-				buffs[event.name].active = false;
-		}
-
-		if (event.type == "removebuffstack") {
-			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID){
-				buffs[event.name].setStacks(event.stack);
-			}
-		}
-
-		var extra = [];
-		for (var b in colors) {
-			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
-		}
-
-		event.extra = extra;
-		event.potency = potency;
-		prevTime = event.fightTime;
-
-		result.events[e] = event;
-	}
-
-	return result;
-}
-
-function parseSamurai(response) {
-	console.log("Parsing SAM");
-
-	var prevTime = 0;
-	var lastWS = "";
-
-	var potencies = {
-		"Attack": 110,
-		"Hakaze": 150,
-		"Jinpu": 100,
-		"Gekko": 100,
-		"Yukikaze": 100,
-		"Shifu": 100,
-		"Kasha": 100,
-		"Fuga": 100,
-		"Mangetsu": 100,
-		"Oka": 100,
-		"Ageha": 200,
-		"Enpi": 100,
-		"Higanbana": 240,
-		"Midare Setsugekka": 720,
-		"Tenka Goken": 360,
-
-		"Hissatsu: Gyoten": 100,
-		"Hissatsu: Yaten": 100,
-		"Hissatsu: Shinten": 300,
-		"Hissatsu: Kyuten": 150,
-		"Hissatsu: Seigan": 200,
-		"Hissatsu: Guren": 800,
-
-	}
-
-	var combo_potencies = {
-		"Jinpu": 280,
-		"Gekko": 400,
-		"Yukikaze": 340,
-		"Shifu": 280,
-		"Kasha": 400,
-		"Mangetsu": 200,
-		"Oka": 200,
-
-	}
-
-	var combo = {
-		"Jinpu": "Hakaze",
-		"Gekko": "Jinpu",
-		"Shifu": "Hakaze",
-		"Kasha": "Shifu",
-		"Yukikaze": "Hakaze",
-		"Mangetsu": "Fuga",
-		"Oka": "Fuga",
-	}
-
-	var dot_potencies = {
-		"Higanbana": 35,
-	}
-
-	var comboskills = ["Hakaze", "Jinpu", "Gekko", "Shifu", "Kasha", "Yukikaze", "Mangetsu", "Fuga", "Oka", "Enpi"]
-	var weaponskills = ["Hakaze", "Jinpu", "Gekko", "Shifu", "Kasha", "Yukikaze", "Mangetsu", "Fuga", "Oka", "Enpi", "Higanbana", "Midare Setsugekka", "Tenka Goken"]
-
-	var buffs = {
-		'Meikyo Shisui': new Buff("Meikyo Shisui", 0),
-		"True North": new Buff("True North", 0),
-		"Jinpu": new Buff("Jinpu", .10),
-		"Kaiten": new Buff("Hissatsu: Kaiten", .50, false, [], weaponskills),
-		"Slashing Resistance Down": new DebuffTimed("Yukikaze", .10, 30),
-	}
-
-	var colors = {
-		'Meikyo Shisui': '#E04F4F',
-		"Jinpu": "#E0B000",
-		"Slashing Resistance Down": "#932F2F",
-		"Kaiten": "#C04F0F",
-		"True North": "#C07F4F",
-	}
-
-	for (var e in response.events) {
-		var event = response.events[e];
-
-		//only events of self	pets	or targetted on self
-
-		if (event.sourceID != result.player.ID) {
-			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
-				continue;
-			}
-		}
-
-		event = getBasicData(event, result.fight);
-		var potency = 0;
-
-		if (event.type == "damage" && event.amount != 0) {
-			if (event.dmgType == 1 || event.dmgType == 64) {
-				//dots
-				potency = dot_potencies[event.name];
-				event.tooltip = "DoT: " + event.name;
-			} else {
-				if ((combo[event.name] == lastWS || hasBuff("Meikyo Shisui", buffs)) && combo_potencies.hasOwnProperty(event.name))
-					potency = combo_potencies[event.name];
-				else
-					potency = potencies[event.name];
-				//combo
-				if (comboskills.indexOf(event.name) > -1)
-					lastWS = event.name;
-
-				event.tooltip = event.name + ": " + potency + "<br/>";
-				potency = applyBuffs(potency, event, buffs);
-
-				if (event.name == "Higanbana") {
-					event.tooltip += "<br/>Dot Damage:<br/>";
-					dot_potencies[event.name] = applyBuffs(35, event, buffs);
-				}
-			}
-			if (potency == undefined)
-				potency = 0;
-		}
-
-		var ellapsed = event.fightTime - prevTime;
-		for(var b in buffs){
-			if(buffs[b].constructor.name === 'DebuffTimed'){
-				buffs[b].update(ellapsed);
-				console.log(buffs[b]);
-			}
-		}
-		
-
-		if (event.type == "applybuff") {
-			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
-				buffs[event.name].applybuff();
-		}
-
-		if (event.type == "removebuff") {
-			if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
-				buffs[event.name].active = false;
-		}
-
-		if (event.type == "applydebuff" || event.type == "refreshdebuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].add(event.targetID);
-		}
-
-		if (event.type == "removedebuff") {
-			if (buffs.hasOwnProperty(event.name))
-				buffs[event.name].remove(event.targetID);
-		}
-
-		var extra = [];
-
-		for (var b in colors) {
-			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
-		}
-
-		event.extra = extra;
-		event.potency = potency;
-		prevTime = event.fightTime;
-
-		result.events[e] = event;
-	}
-
-	return result;
-}
- */
 function parseSummoner(response) {
 	console.log("Parsing SMN");
 

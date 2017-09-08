@@ -351,6 +351,51 @@ class DebuffDirect extends Debuff{
 	}
 }
 
+class BuffDisplay{
+	constructor(name, color, image){
+		this.name = name;
+		this.color = color;
+		if(image == undefined)
+			this.image = this.name.toLowerCase().replace(/ /g,'_') + '.png';
+		else
+			this.image = image;
+	}
+	
+	asHeader(){
+		return `<td class=\"status-col\"><img src="img/${this.image}" title="${this.name}"/></td>`
+	}
+	
+	display(event, buff){
+		if(buff == undefined) return undefined;
+		if(buff.active)
+			if(event.name == this.name)
+				return `<div class="center status-block" style="background-color: ${this.color}"><img src="img/${this.image}"/></div>`
+			else
+				return `<div class="center status-block" style="background-color: ${this.color}"></div>`
+		return '';
+	}
+}
+
+class BuffDisplayCount extends BuffDisplay{
+	constructor(name, image){
+		super(name, '', image);
+	}
+	
+	display(event, buff){
+		return `<div class="center status-block">${buff.stacks}</div>`
+	}
+}
+
+class BuffDisplayGradient extends BuffDisplay{
+	constructor(name, image){
+		super(name, '', image);
+	}
+	
+	display(event, buff){
+		return `<div title="Value: ${buff.stacks}" class="center status-block" style="background-color: ${getColorForPercentage(buff.stacks/buff.maxStacks)}"></div>`
+	}
+}
+
 
 function httpGetAsync(theUrl, callback)
 {
@@ -402,6 +447,8 @@ function getBasicData(event, fight) {
 	}
 	return data;
 }
+
+
 
 var hitTypes = {
 	0: "Miss",

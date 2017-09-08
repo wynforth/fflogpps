@@ -158,80 +158,14 @@ function processClass(response, spec) {
 	$(".ranking-table tbody").html("");
 	$(".ranking-table thead tr").append(`<td style="width: 90px">Potency</td>`);
 
-	if (spec == "Bard") {
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/straight_shot.png" title="Straight Shot"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/foe_requiem.png" title="Foe Requiem"/></td>`);
-		//$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/battle_voice.png" title="Battle Voice"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/raging_strikes.png" title="Raging Strikes"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/storm_bite.png" title="Storm Bite"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/caustic_bite.png" title="Caustic Bite"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/bard_song.png" title="Bard Song's"/></td>`);
+	/*
+	$(".ranking-table thead tr").append(buff_columns[spec]);
+	*/
+	var buffDisplay = buff_display[spec];
+	for(var b in buffDisplay){
+		if(buffDisplay[b].hasOwnProperty('name'))
+			$(".ranking-table thead tr").append(buffDisplay[b].asHeader());
 	}
-	
-	if (spec == "BlackMage") {
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/enochian.png" title="Enochian"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/astral_umbral.png" title="A Song of Ice & Fire"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/thunder_iii.png" title="Thunder Dot"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/thundercloud.png" title="Thundercloud"/></td>`);
-	}
-	
-	if (spec == "Dragoon") {
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/blood_of_the_dragon.png" title="Blood of the Dragon"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/heavy_thrust.png" title="Heavy Thrust"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/blood_for_blood.png" title="Blood For Blood"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/right_eye.png" title="Dragon Sight"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/battle_litany.png" title="Battle Litany"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/piercing_resistance_down.png" title="Disembowel"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`);
-	}
-
-	if (spec == "Machinist") {
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/gauss_barrel.png" title="Gauss Barrel"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/hot_shot.png" title="Hot Shot"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/hypercharge.png" title="Hypercharge"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/overheated.png" title="Heat"/></td>`); //heat
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/ammunition_loaded.png" title="Ammo"/></td>`); //ammo
-	}
-
-	if (spec == "Monk") {
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/greased_lightning.png" title="Greased Lightning! Go Greased Lightning!"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/twin_snakes.png" title="Twin Snakes"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/dragon_kick.png" title="Dragon Kick"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/internal_release.png" title="Internal Release"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/riddle_of_fire.png" title="Riddle of Fire"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/perfect_balance.png" title="Perfect Balance"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`);
-	}
-	
-	if (spec == "Ninja") {
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/vulnerability_up.png" title="Trick Attack"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/shadow_fang.png" title="Shadow Fang"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/ten_chi_jin.png" title="Ten Chi Jin"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/huton.png" title="Huton"/></td>`);
-	}
-
-	if (spec == "RedMage") {
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/embolden.png" title="Embolden"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/acceleration.png" title="Acceleration"/></td>`);
-	}
-
-	if (spec == "Samurai") {
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/meikyo_shisui.png" title="Meikyo Shisui"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/jinpu.png" title="Jinpu"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/slashing_resistance_down.png" title="Yukikaze"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/hissatsu_kaiten.png" title="Hissatsu: Kaiten"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`);
-	}
-	
-	if (spec == "Summoner") {
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/dreadwyrm_trance.png" title="Dreadwyrm Trance"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/ruination.png" title="Ruination"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/bio_iii.png" title="Bio III"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/miasma_iii.png" title="Miasma III"/></td>`);
-		$(".ranking-table thead tr").append(`<td class=\"status-col\"><img src="img/magic_vulnerability_up.png" title="Contagion"/></td>`);
-	}
-
 	result = parseFunctions[spec](response);
 	
 	var totalPotency = 0;
@@ -266,7 +200,7 @@ function processClass(response, spec) {
 	
 	//update summary
 	var totalTime = 0;
-	if (Object.keys(result.totals).length > 1) {
+	if (Object.keys(result.totals).length >= 1) {
 		for (var k in result.totals) {
 			var total = result.totals[k];
 			if(total.potency > 0){
@@ -275,9 +209,11 @@ function processClass(response, spec) {
 			}
 				
 		}
-		$(".summary-table tbody").append(getSummaryRow("Combined", totalDamage, totalPotency, totalTime));
+		if (Object.keys(result.totals).length > 1)
+			$(".summary-table tbody").append(getSummaryRow("Combined", totalDamage, totalPotency, totalTime));
 	}
 	else {
+		console.log("displaying from summed");
 		$(".summary-table tbody").append(getSummaryRow(result.player.name, totalDamage, totalPotency, result.fight.duration));
 	}
 	

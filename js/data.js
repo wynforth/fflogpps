@@ -448,6 +448,7 @@ var all_buffs = {
 		'Ammunition': new BuffDirectConsumedStack('Ammunition', 25, 0, 3, 3, false, [], all_weaponskills['Machinist']), 
 		'Trait': new Buff('Action Damage II', .20, true, ['Shot']),
 		'Hot Shot': new Buff('Hot Shot', .08, false, ['Charged Volley Fire', 'Volley Fire', 'Aether Mortar', 'Charged Aether Mortar', 'Rook Overload', 'Bishop Overload']),
+		'Heat': new BuffStack('Heat', 0, 0, 100, 0),
 		'Overheated': new Buff('Overheated', .20, false, ['Charged Volley Fire', 'Volley Fire', 'Aether Mortar', 'Charged Aether Mortar', 'Rook Overload', 'Bishop Overload']),
 		'Vulnerability Up': new Debuff('Hypercharge', .05),
 		'Reassembled': new Buff('Reassembled', .45, false, [], all_weaponskills['Machinist']),
@@ -498,60 +499,62 @@ var all_buffs = {
 
 var buff_display = {
 	'Bard':{
-		'Straight Shot': '#B01F00',
-		'Foe Requiem': '#90D0D0',
-		'Raging Strikes': '#D03F00',
-		//'song': '#fff',
-		'Storm Bite': '#9DBBD2',
-		'Caustic Bite': '#D75896',
+		'Straight Shot': new BuffDisplay('Straight Shot','#B01F00'),
+		'Foe Requiem': new BuffDisplay('Foe Requiem','#90D0D0'),
+		'Raging Strikes': new BuffDisplay('Raging Strikes','#D03F00'),
+		'Storm Bite': new BuffDisplay('Storm Bite','#9DBBD2'),
+		'Caustic Bite': new BuffDisplay('Caustic Bite','#D75896'),
+		'Bard Song': new BuffDisplay('Bard Song','', ),
 	},
 	'Dragoon': {
-		'Blood Of The Dragon': '#7DA3AD',
-		'Heavy Thrust': '#CDA34C',
-		'Blood For Blood': '#901F1D',
-		'Right Eye': '#B41512',
-		'Battle Litany': '#6F8C93',
-		'Piercing Resistance Down': '#932F2F',
-		'True North': '#C07F4F',
+		'Blood Of The Dragon': new BuffDisplay('Blood Of The Dragon', '#7DA3AD'),
+		'Heavy Thrust': new BuffDisplay('Heavy Thrust', '#CDA34C'),
+		'Blood For Blood': new BuffDisplay('Blood For Blood', '#901F1D'),
+		'Right Eye': new BuffDisplay('Right Eye', '#B41512'),
+		'Battle Litany': new BuffDisplay('Battle Litany', '#6F8C93'),
+		'Piercing Resistance Down': new BuffDisplay('Piercing Resistance Down', '#932F2F'),
+		'True North': new BuffDisplay('True North', '#C07F4F'),
 	},
 	'Machinist': {
-		'Gauss Barrel': '#A4786F',
-		'Hot Shot': '#6D2600',
-		'Vulnerability Up': '#9BA275',
+		'Gauss Barrel': new BuffDisplay('Gauss Barrel', '#A4786F'),
+		'Hot Shot': new BuffDisplay('Hot Shot', '#6D2600'),
+		'Vulnerability Up': new BuffDisplay('Vulnerability Up', '#932F2F', 'hypercharge.png'),
+		'Ammunition': new BuffDisplayCount('Ammunition', 'ammunition_loaded.png'),
+		'Heat': new BuffDisplayGradient('Heat', 'overheated.png'),
 	},
 	'Monk': {
-		'Greased Lightning': '#4099CE',
-		'Twin Snakes': '#B7727D',
-		'Blunt Resistance Down': '#932F2F',
-		'Internal Release': '#8DD7AF',
-		'Riddle Of Fire': '#D8786F',
-		'Perfect Balance': '#DF964C',
-		'True North': '#C07F4F',
+		'Greased Lightning': new BuffDisplay('Greased Lightning', '#4099CE'),
+		'Twin Snakes': new BuffDisplay('Twin Snakes', '#B7727D'),
+		'Blunt Resistance Down': new BuffDisplay('Blunt Resistance Down', '#932F2F', 'dragon_kick.png'),
+		'Internal Release': new BuffDisplay('Internal Release', '#8DD7AF'),
+		'Riddle Of Fire': new BuffDisplay('Riddle Of Fire', '#D8786F'),
+		'Perfect Balance': new BuffDisplay('Perfect Balance', '#DF964C'),
+		'True North': new BuffDisplay('True North', '#C07F4F'),
 	},
 	'Ninja': {
-		'Vulnerability Up': '#933630',
-		'Shadow Fang': '#44B3DA',
-		'Ten Chi Jin': '#BA4B4A',
-		'True North': '#C07F4F',
-		'Huton': '#7DB6C3',
+		'Vulnerability Up': new BuffDisplay('Vulnerability Up', '#933630'),
+		'Shadow Fang': new BuffDisplay('Shadow Fang','#44B3DA'),
+		'Ten Chi Jin': new BuffDisplay('Ten Chi Jin','#BA4B4A'),
+		'True North': new BuffDisplay('True North', '#C07F4F'),
+		'Huton': new BuffDisplay('Huton','#7DB6C3'),
 	},
 	'RedMage': {
-		'Embolden': '#C19143',
-		'Acceleration': '#AF2234',
+		'Embolden': new BuffDisplay('Embolden', '#C19143'),
+		'Acceleration': new BuffDisplay('Acceleration', '#AF2234'),
 	},
 	'Samurai': {
-		'Meikyo Shisui': '#E04F4F',
-		'Jinpu': '#E0B000',
-		'Slashing Resistance Down': '#932F2F',
-		'Kaiten': '#C04F0F',
-		'True North': '#C07F4F',
+		'Meikyo Shisui': new BuffDisplay('Meikyo Shisui','#E04F4F'),
+		'Jinpu': new BuffDisplay('Jinpu','#E0B000'),
+		'Slashing Resistance Down': new BuffDisplay('Slashing Resistance Down','#932F2F'),
+		'Kaiten': new BuffDisplay('Kaiten','#C04F0F','hissatsu_kaiten.png'),
+		'True North': new BuffDisplay('True North','#C07F4F'),
 	},
 	'Summoner': {
-		'Dreadwyrm Trance': '#C1294D',
-		'Ruination': '#4BA1EC',
-		'Bio III': '#56631E',
-		'Miasma III': '#4B494F',
-		'Magic Vulnerability Up': '#932F2F'
+		'Dreadwyrm Trance': new BuffDisplay('Dreadwyrm Trance','#C1294D'),
+		'Ruination': new BuffDisplay('Ruination','#4BA1EC'),
+		'Bio III': new BuffDisplay('Bio III','#56631E'),
+		'Miasma III': new BuffDisplay('Miasma III','#4B494F'),
+		'Magic Vulnerability Up': new BuffDisplay('Magic Vulnerability Up','#932F2F')
 	}
 }
 
@@ -598,8 +601,59 @@ var role_actions = {
 	'RedMage': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
 	'BlackMage': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
 	'Summoner': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
+
 }
 
+
+var buff_columns = {
+	"Bard": `<td class=\"status-col\"><img src="img/straight_shot.png" title="Straight Shot"/></td>
+		<td class=\"status-col\"><img src="img/foe_requiem.png" title="Foe Requiem"/></td>
+		<td class=\"status-col\"><img src="img/raging_strikes.png" title="Raging Strikes"/></td>
+		<td class=\"status-col\"><img src="img/storm_bite.png" title="Storm Bite"/></td>
+		<td class=\"status-col\"><img src="img/caustic_bite.png" title="Caustic Bite"/></td>
+		<td class=\"status-col\"><img src="img/bard_song.png" title="Bard Song's"/></td>`,
+	"BlackMage":
+		`<td class=\"status-col\"><img src="img/enochian.png" title="Enochian"/></td>
+		<td class=\"status-col\"><img src="img/astral_umbral.png" title="A Song of Ice & Fire"/></td>
+		<td class=\"status-col\"><img src="img/thunder_iii.png" title="Thunder Dot"/></td>
+		<td class=\"status-col\"><img src="img/thundercloud.png" title="Thundercloud"/></td>`,
+	"Dragoon": `<td class=\"status-col\"><img src="img/blood_of_the_dragon.png" title="Blood of the Dragon"/></td>
+		<td class=\"status-col\"><img src="img/heavy_thrust.png" title="Heavy Thrust"/></td>
+		<td class=\"status-col\"><img src="img/blood_for_blood.png" title="Blood For Blood"/></td>
+		<td class=\"status-col\"><img src="img/right_eye.png" title="Dragon Sight"/></td>
+		<td class=\"status-col\"><img src="img/battle_litany.png" title="Battle Litany"/></td>
+		<td class=\"status-col\"><img src="img/piercing_resistance_down.png" title="Disembowel"/></td>
+		<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`,
+	"Machinist": `<td class=\"status-col\"><img src="img/gauss_barrel.png" title="Gauss Barrel"/></td>
+		<td class=\"status-col\"><img src="img/hot_shot.png" title="Hot Shot"/></td>
+		<td class=\"status-col\"><img src="img/hypercharge.png" title="Hypercharge"/></td>
+		<td class=\"status-col\"><img src="img/overheated.png" title="Heat"/></td>
+		<td class=\"status-col\"><img src="img/ammunition_loaded.png" title="Ammo"/></td>`,
+	"Monk": `<td class=\"status-col\"><img src="img/greased_lightning.png" title="Greased Lightning! Go Greased Lightning!"/></td>
+		<td class=\"status-col\"><img src="img/twin_snakes.png" title="Twin Snakes"/></td>
+		<td class=\"status-col\"><img src="img/dragon_kick.png" title="Dragon Kick"/></td>
+		<td class=\"status-col\"><img src="img/internal_release.png" title="Internal Release"/></td>
+		<td class=\"status-col\"><img src="img/riddle_of_fire.png" title="Riddle of Fire"/></td>
+		<td class=\"status-col\"><img src="img/perfect_balance.png" title="Perfect Balance"/></td>
+		<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`,
+	"Ninja": `<td class=\"status-col\"><img src="img/vulnerability_up.png" title="Trick Attack"/></td>
+		<td class=\"status-col\"><img src="img/shadow_fang.png" title="Shadow Fang"/></td>
+		<td class=\"status-col\"><img src="img/ten_chi_jin.png" title="Ten Chi Jin"/></td>
+		<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>
+		<td class=\"status-col\"><img src="img/huton.png" title="Huton"/></td>`,
+	"RedMage": `<td class=\"status-col\"><img src="img/embolden.png" title="Embolden"/></td>
+		<td class=\"status-col\"><img src="img/acceleration.png" title="Acceleration"/></td>`,
+	"Samurai": `<td class=\"status-col\"><img src="img/meikyo_shisui.png" title="Meikyo Shisui"/></td>
+		<td class=\"status-col\"><img src="img/jinpu.png" title="Jinpu"/></td>
+		<td class=\"status-col\"><img src="img/slashing_resistance_down.png" title="Yukikaze"/></td>
+		<td class=\"status-col\"><img src="img/hissatsu_kaiten.png" title="Hissatsu: Kaiten"/></td>
+		<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`,
+	"Summoner": `<td class=\"status-col\"><img src="img/dreadwyrm_trance.png" title="Dreadwyrm Trance"/></td>
+		<td class=\"status-col\"><img src="img/ruination.png" title="Ruination"/></td>
+		<td class=\"status-col\"><img src="img/bio_iii.png" title="Bio III"/></td>
+		<td class=\"status-col\"><img src="img/miasma_iii.png" title="Miasma III"/></td>
+		<td class=\"status-col\"><img src="img/magic_vulnerability_up.png" title="Contagion"/></td>`
+}
 
 var template = {
 	'Bard': {},
@@ -612,3 +666,4 @@ var template = {
 	'Samurai': {},
 	'Summoner': {},
 }
+
