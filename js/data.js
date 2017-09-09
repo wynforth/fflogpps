@@ -1,3 +1,18 @@
+var  egiAbilities = [
+		//Demi-Bahamut
+		'Wyrmwave', 'Akh Morn',
+		//emerald
+		'Gust', 'Backdraft', 'Downburst', 
+		//topaz
+		'Gouge', 'Shining Topaz', 'Storm',
+		//garuda
+		'Wind Blade', 'Shockwave', 'Aerial Slash', 'Aerial Blast',
+		//titan
+		'Rock Buster', 'Mountain Buster', 'Landslide', 'Earthen Fury',
+		//ifrit
+		'Crimson Cyclone', 'Burning Strike', 'Radiant Shield', 'Flaming Crush', 'Inferno', 'Radiant Shield',
+	];
+
 var all_potencies = {
 	'Bard': {
 		'Shot': 100,
@@ -200,8 +215,8 @@ var all_potencies = {
 		'Bio III': 0,
 		//special case
 		'Radiant Shield': 50,
-	},
-	'Summoner-Egi': {
+	
+	//'Summoner-Egi':
 		'Attack': 80,
 		//Bahamut
 		'Wyrmwave': 160,
@@ -442,7 +457,8 @@ var all_buffs = {
 		'Right Eye': new BuffStack('Right Eye', .10, 0, 1, 1),
 		'Battle Litany': new Buff('Battle Litany', (.15 * .45)),
 		'True North': new Buff('True North', 0),
-		'Piercing Resistance Down': new Debuff('Disemboweled', .05),
+		//'Piercing Resistance Down': new Debuff('Disemboweled', .05),
+		'Piercing Resistance Down': new DebuffTimed('Disembowel', .05, 30),
 	},
 	'Machinist': {
 		'Ammunition': new BuffDirectConsumedStack('Ammunition', 25, 0, 3, 3, false, [], all_weaponskills['Machinist']), 
@@ -450,7 +466,7 @@ var all_buffs = {
 		'Hot Shot': new Buff('Hot Shot', .08, false, ['Charged Volley Fire', 'Volley Fire', 'Aether Mortar', 'Charged Aether Mortar', 'Rook Overload', 'Bishop Overload']),
 		'Heat': new BuffStack('Heat', 0, 0, 100, 0),
 		'Overheated': new Buff('Overheated', .20, false, ['Charged Volley Fire', 'Volley Fire', 'Aether Mortar', 'Charged Aether Mortar', 'Rook Overload', 'Bishop Overload']),
-		'Vulnerability Up': new Debuff('Hypercharge', .05),
+		'Vulnerability Up': new DebuffTimed('Hypercharge', .05, 10),
 		'Reassembled': new Buff('Reassembled', .45, false, [], all_weaponskills['Machinist']),
 		'Gauss Barrel': new Buff('Gauss Barrel', 0, true),
 		'Cleaner Shot': new Buff('Cleaner Shot', 0, false),
@@ -464,7 +480,7 @@ var all_buffs = {
 		'True North': new Buff('True North', 0),
 		'Perfect Balance': new Buff('Perfect Balance', 0),
 		'Twin Snakes': new Buff('Twin Snakes', .10),
-		'Blunt Resistance Down': new Debuff('Dragon Kick', .10),
+		'Blunt Resistance Down': new DebuffTimed('Dragon Kick', .10, 15),
 	},
 	'Ninja': {
 		'Dripping Blades': new Buff('Dripping Blades II', .2, true, ['Attack']),
@@ -492,7 +508,8 @@ var all_buffs = {
 		'Miasma III': new DebuffDirect('Miasma III', 150, [], ['Fester']),
 		'Ruination': new DebuffDirect('Ruination', 20, [], ['Ruin', 'Ruin II', 'Ruin III', 'Ruin IV']),
 		'Magic & Mend': new Buff('Trait', .30, true, ['Radiant Shield']),
-		'Dreadwyrm Trance': new Buff('Dreadwyrm Trance', .10, false,['Attack', 'Radiant Shield']),
+		'Dreadwyrm Trance': new Buff('Dreadwyrm Trance', .10, false, egiAbilities.concat(['Attack', 'Radiant Shield'])),
+		'Rouse': new Buff('Rouse', .40, false, [], egiAbilities.concat(['Attack'])),
 		'Magic Vulnerability Up': new Debuff('Contagion', .10, ['Attack', 'Radiant Shield']),
 	}
 }
@@ -554,7 +571,8 @@ var buff_display = {
 		'Ruination': new BuffDisplay('Ruination','#4BA1EC'),
 		'Bio III': new BuffDisplay('Bio III','#56631E'),
 		'Miasma III': new BuffDisplay('Miasma III','#4B494F'),
-		'Magic Vulnerability Up': new BuffDisplay('Magic Vulnerability Up','#932F2F')
+		'Magic Vulnerability Up': new BuffDisplay('Magic Vulnerability Up','#932F2F'),
+		'Rouse': new BuffDisplay('Rouse','#5796C4'),
 	}
 }
 
@@ -577,7 +595,9 @@ var all_timers = {
 	},
 	'RedMage': {},
 	'Samurai': {},
-	'Summoner': {},
+	'Summoner': {
+		'Summon Bahamut': new Timer('Summon Bahamut', 20),
+	},
 }
 
 const roleActions = {

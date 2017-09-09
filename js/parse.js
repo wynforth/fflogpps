@@ -215,7 +215,7 @@ function preScreen(type, events, buffs, timers, activePet) {
 			buffs['Gauss Barrel'].active = false;
 		}
 		buffs['Ammunition'].applybuff();
-	}else if (type == "Ninja") {
+	} else if (type == "Ninja") {
 		var hutonCast = false;
 		for (var e in events) {
 			var event = events[e];
@@ -231,10 +231,25 @@ function preScreen(type, events, buffs, timers, activePet) {
 		if(!hutonCast)
 			timers['Huton'].restart();
 
+	}else if (type == "Summoner") {
+		for (var e in events) {
+			var event = events[e];
+
+			if (egiAbilities.indexOf(event.ability.name) > -1) {
+				activePet[0] = event.sourceID
+			}
+			//the remove only shows up within 20 seconds if it was started prefight
+			if(event.type == 'removebuff' && event.ability.name == "Rouse"){
+				buffs['Rouse'].applybuff();
+			}
+
+			if (event.timestamp > start + 20000)
+				break;
+		}
 	}
 }
 
-function updateTimers(timers, buffs, ellapsed) {
+function updateTimers(timers, buffs, ellapsed, event) {
 	if (timers != undefined) {
 		for (var t in timers) {
 			timers[t].update(ellapsed);
@@ -242,6 +257,7 @@ function updateTimers(timers, buffs, ellapsed) {
 	}
 	for (var b in buffs) {
 		if (typeof buffs[b].update === 'function') {
+			//console.log(buffs[b].targets);
 			buffs[b].update(event);
 		}
 	}
@@ -249,13 +265,13 @@ function updateTimers(timers, buffs, ellapsed) {
 
 }
 
-function updateBuffs(buffs, timers, event, result) {
+function updateBuffs(buffs, timers, event, result, activePet) {
 	//BUFF APPLICATION
 	if (event.type == "applybuff" || event.type == "refreshbuff") {
-		if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
+		if (buffs.hasOwnProperty(event.name) && (event.targetID == result.player.ID || event.targetID == activePet))
 			buffs[event.name].applybuff();
 	} else if (event.type == "applybuffstack") {
-		if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID) {
+		if (buffs.hasOwnProperty(event.name) && (event.targetID == result.player.ID || event.targetID == activePet)) {
 			buffs[event.name].setStacks(event.stack);
 		}
 	} else if (event.type == "applydebuff" || event.type == "refreshdebuff") {
@@ -265,10 +281,10 @@ function updateBuffs(buffs, timers, event, result) {
 	}
 	//BUFF REMOVAL
 	else if (event.type == "removebuff") {
-		if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
+		if (buffs.hasOwnProperty(event.name) &&  (event.targetID == result.player.ID || event.targetID == activePet))
 			buffs[event.name].active = false;
 	} else if (event.type == "removebuffstack") {
-		if (buffs.hasOwnProperty(event.name) && event.targetID == result.player.ID)
+		if (buffs.hasOwnProperty(event.name) &&  (event.targetID == result.player.ID || event.targetID == activePet))
 			buffs[event.name].setStacks(event.stack);
 	} else if (event.type == "removedebuff") {
 		if (buffs.hasOwnProperty(event.name))
@@ -437,7 +453,7 @@ function parseClass(response){
 	
 		//TIMERS AND TIMED BUFFS
 		ellapsed = event.fightTime - prevTime;
-		updateTimers(timers, buffs, ellapsed);
+		updateTimers(timers, buffs, ellapsed, event);
 		
 		if (event.type == "cast") {
 			//id match shouldn't be needed bt being safe
@@ -929,7 +945,6 @@ function parseMachinist(response) {
 		var potency = 0;
 
 		if (event.type == "damage" && event.amount != 0) {
-			if (event.sourceID == result.player.ID) {
 				//player damage
 				if (event.dmgType == 64 || event.dmgType == 1) {
 					if (event.name == "Flamethrower")
@@ -950,16 +965,11 @@ function parseMachinist(response) {
 					event.tooltip = event.name + ": " + potency + "<br/>";
 					potency = applyBuffs(potency, event, buffs);
 
-					if (event.targetID == wildTarget) {
+					if (event.targetID == wildTarget && event.sourceID == result.player.ID) {
 						dot_potencies["Wildfire"] += potency * .25;
 					}
 				}
-			} else {
-				//Pet Damage
-				potency = potencies[event.name];
-				event.tooltip = event.name + ": " + potency + "<br/>";
-				potency = applyBuffs(potency, event, buffs);
-			}
+
 
 			if (potency == undefined)
 				potency = 0;
@@ -967,7 +977,7 @@ function parseMachinist(response) {
 
 		//update timers
 		var ellapsed = event.fightTime - prevTime;
-		updateTimers(timers, buffs, ellapsed);
+		updateTimers(timers, buffs, ellapsed, event);
 
 		if (!timers['Overheated'].isActive()) {
 			buffs['Heat'].addStacks(heatChange);
@@ -1082,291 +1092,165 @@ function parseSummoner(response) {
 	console.log("Parsing SMN");
 
 	var prevTime = 0;
-	var bahamutCount = 0;
-
-	var potencies = {
-		'Attack': 110,
-		'Ruin': 100,
-		'Ruin II': 100,
-		'Ruin III': 150,
-		'Ruin IV': 200,
-		'Energy Drain': 150,
-		'Painflare': 200,
-		'Deathflare': 400,
-		'Miasma': 20,
-		'Miasma III': 50,
-		'Fester': 0,
-		'Tri-bind': 20,
-		'Shadow Flare': 0,
-		'Bio': 0,
-		'Bio II': 0,
-		'Bio III': 0,
-		//special case
-		'Radiant Shield': 50,
+	var prevPet = 0;
+	var activePet = 0;
+	var petLookup = {};
+	for(var p in result.player.pets){
+		petLookup[result.fight.team[result.player.pets[p]]] = result.player.pets[p];		
 	}
 	
-	var dot_potencies = {
-		'Shadow Flare': 50,
-		'Bio': 40,
-		'Bio II': 35,
-		'Bio III': 50,
-		'Miasma': 35,
-		'Miasma III': 50,
-		'Inferno': 20,
-		'Radiant Shield': 50,
+	result.totals[result.player.ID] = {
+		'amount': 0,
+		'potency': 0,													
+		'name': result.fight.team[result.player.ID],
+		'id': result.player.ID,
+		'time': 0 //result.fight.duration,
 	}
-	
-	var dot_base = {
-		'Shadow Flare': 50,
-		'Bio': 40,
-		'Bio II': 35,
-		'Bio III': 50,
-		'Miasma': 35,
-		'Miasma III': 50,
-		'Inferno': 20,
-		'Radiant Shield': 50,
+	for (var p in result.player.pets) {
+		result.totals[result.player.pets[p]] = {
+			'amount': 0,
+			'potency': 0,
+			'name': result.fight.team[result.player.pets[p]],
+			'id': result.player.pets[p],
+			'time': 0 //result.fight.duration,
+		}
 	}
 
-	var petPotencies = {
-		'Attack': 80,
-		//Bahamut
-		'Wyrmwave': 160,
-		'Akh Morn': 680,
-		//emerald
-		'Gust': 90,
-		'Backdraft': 80,
-		'Downburst': 80,
-		//topaz
-		'Gouge': 70,
-		'Shining Topaz': 60,
-		'Storm': 60,
-		//garuda
-		'Wind Blade': 110,
-		'Shockwave': 90,
-		'Aerial Slash': 90,
-		'Aerial Blast': 250,
-		//titan
-		'Rock Buster': 85,
-		'Mountain Buster': 70,
-		'Landslide': 70,
-		'Earthen Fury': 200,
-		//ifrit
-		'Crimson Cyclone': 110,
-		'Burning Strike': 135,
-		'Radiant Shield': 50,
-		'Flaming Crush': 110,
-		'Inferno': 200,
-		'Radiant Shield': 50,
-	}
+	//trackers
+	var heatChange = 0;
 
-	var buffs = {
-		"Bio III": new DebuffDirect("Bio III", 150, [], ["Fester"]),
-		"Miasma III": new DebuffDirect("Miasma III", 150, [], ["Fester"]),
-		"Ruination": new DebuffDirect("Ruination", 20, [], ["Ruin", "Ruin II", "Ruin III", "Ruin IV"]),
-		"Magic & Mend": new Buff("Trait", .30, true, ["Radiant Shield"], Object.keys(potencies)),
-		"Dreadwyrm Trance": new Buff("Dreadwyrm Trance", .10, false,["Attack", "Radiant Shield"]),
-		"Magic Vulnerability Up": new Debuff("Contagion", .10, ["Attack", "Radiant Shield"]),
-	};
+	var removeBarrel = false;
+	var wildTarget = 0;
+	var wildfirePot = 0;
+
+	var type = 'Summoner';
+	//potencies
+	var potencies = all_potencies[type];
+	var combo_potencies = all_combo_potencies[type];
+	var pos_potencies = all_pos_potencies[type];
+	var pos_combo_potencies = all_pos_combo_potencies[type];
+	//dots
+	var dot_potencies = {};
+	var dot_base = all_dot_base[type];
+	//skills
+	var combo = all_combo[type]
+	var comboskills = all_comboskills[type];
+	var weaponskills = all_weaponskills[type];
+	//buffs
+	var buffs = all_buffs[type];
+	//role actions
+	var role_all = role_actions[type];
+	var role_taken = {};
+	for(var i=0; i< role_all.length; i++){
+		role_taken[role_all[i]] = 0;
+	}
+	//timers
+	var timers = all_timers[type];
 	
-	var pet_buffs = {
-		"Magic & Mend": new Buff("Trait", .30, true, ["Attack", "Radiant Shield"]),
-		"Magic Vulnerability Up": new Debuff("Contagion", .10, ["Attack", "Radiant Shield"]),
-	};
-	
-	var colors = {
-		"Dreadwyrm Trance": "#C1294D",
-		"Ruination": "#4BA1EC",
-		"Bio III": "#56631E",
-		"Miasma III": "#4B494F",
-		"Magic Vulnerability Up": "#932F2F"
-	};
-	
+	//prescan
+	//temp making it an array to pass by reference yay javascript
+	activePet = [0];
+	preScreen(type,response.events, buffs, timers, activePet);
+	activePet = activePet[0];
+
 	for (var e in response.events) {
 		var event = response.events[e];
 		
-
-		//only events of self	pets	or targetted on self
-		
-		if (event.sourceID != result.player.ID && event.sourceID != undefined) {
-			
+		if (event.sourceID != result.player.ID && event.sourceID != undefined) {		
 			if ((result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff" && event.type != "death") ) {
-				//console.log(event.ability.name);
-				//console.log(result.player.pets.indexOf(event.targetID));
 				continue;
 			}
 		}
-		
-		//if(event.type == "damage")
-		//	console.log(JSON.stringify(event));
 		
 		getBasicData(event, result.fight);
 		
 		var potency = 0;
 		if (event.type == "damage" && event.amount != 0) {
-			if (event.sourceID == result.player.ID) {
+			
 				if (event.dmgType == 1 || event.dmgType == 64) {
 					//dots
 					potency = dot_potencies[event.name];
 					event.tooltip = "DoT: " + event.name;
 				} else {
 					potency = potencies[event.name];
+					if(event.name == 'Attack'){
+						if (event.sourceID == result.player.ID) 
+							potency = 110;
+						else
+							potency = 80;
+					}
 
 					event.tooltip = event.name + ": " + potency + "<br/>";
 					potency = applyBuffs(potency, event, buffs);
-					
-					switch (event.name) {
-						case 'Bio III':
-						case 'Miasma III':
-						case 'Shadow Flare':
-							event.tooltip += "<br/>Dot Damage: "+dot_base[event.name]+"<br/>";
-							dot_potencies[event.name] = applyBuffs(dot_base[event.name],event,buffs);
-							break;
-						case 'Deathflare':
-//							trance[event.source] = 0;
-							break;
-					}
-
 				
 				}
-			} else {
-				//Pet
-				if (event.dmgType == 1 || event.dmgType == 64) {
-					//dots
-					potency = dot_potencies[event.name];
-					event.tooltip = "DoT: " + event.name;
-				} else {
-					potency = petPotencies[event.name];
 
-					event.tooltip = event.name + ": " + potency + "<br/>";
-					potency = applyBuffs(potency, event, pet_buffs);
-
-					if (event.name == 'Inferno') {
-						event.tooltip += "<br/>Dot Damage: " + dot_base[event.name] + "<br/>";
-						dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, pet_buffs);
-					}
-				}
-			}
-
-			/*
-			//magic debuff from pet
-			if (event.dmgType != 1 && magicDebuff[event.target] > 0) {
-				potency *= 1.1;
-			}
-
-			//dreadwyrm trance
-			potency *= trance[event.source] > 0 ? 1.1 : 1;
-			*/
 			if (potency == undefined)
 				potency = 0;
 		}
-
 		//update timers
 		var ellapsed = event.fightTime - prevTime;
-
-		if (event.type == "applybuff") {
-			if(buffs.hasOwnProperty(event.name))
-				buffs[event.name].applybuff();
-			if(pet_buffs.hasOwnProperty(event.name))
-				pet_buffs[event.name].applybuff();
+		updateTimers(timers, buffs, ellapsed, event);
+		
+		if(!timers['Summon Bahamut'].isActive() && prevPet != 0){
+			activePet = prevPet;
+			prevPet = 0;
 		}
 
-		if (event.type == "removebuff") {
-			if(buffs.hasOwnProperty(event.name))
-				buffs[event.name].active = false;
-			if(pet_buffs.hasOwnProperty(event.name))
-				pet_buffs[event.name].active = false;
-		}
-
-		if (event.type == "applydebuff") {
-			if(buffs.hasOwnProperty(event.name))
-				buffs[event.name].add(event.targetID);
-			if(pet_buffs.hasOwnProperty(event.name))
-				pet_buffs[event.name].add(event.targetID);
-			if(event.name == "Shining Emerald"){
-				buffs["Magic Vulnerability Up"].add(event.targetID);
-				pet_buffs["Magic Vulnerability Up"].add(event.targetID);
+		if (event.type == "cast") {		
+			//id match shouldn't be needed bt being safe
+			if(role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID){ 
+				role_taken[event.name]++;
 			}
-		}
-
-		if (event.type == "removedebuff") {
-			if(buffs.hasOwnProperty(event.name))
-				buffs[event.name].remove(event.targetID);
-			if(pet_buffs.hasOwnProperty(event.name))
-				pet_buffs[event.name].remove(event.targetID);
-			if(event.name == "Shining Emerald"){
-				buffs["Magic Vulnerability Up"].remove(event.targetID);
-				pet_buffs["Magic Vulnerability Up"].remove(event.targetID);
-			}
-		}
-
-		if (event.type == "cast") {			
-			if (event.name == 'Dreadwyrm Trance') {
-				//console.log(event);
-				if (event.source == result.player.ID && event.source == event.target)
-					trance[event.target] = 20;
-			}
-
+		
 			switch (event.name) {
 			case "Tri-disaster":
 				dot_potencies["Bio III"] = applyBuffs(dot_base["Bio III"], event, buffs);
 				dot_potencies["Miasma III"] = applyBuffs(dot_base["Miasma III"], event, buffs);
 				break;
-			case "Shadow Flare":
-			case "Miasma":
-			case "Miasma III":
-			case "Bio I":
-			case "Bio II":
-			case "Bio III":
-				event.tooltip += "<br/>Dot Damage:<br/>";
-				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
+			case "Summon Bahamut":
+				prevPet = activePet;
+				activePet = petLookup["Demi-Bahamut"];
+				timers['Summon Bahamut'].restart();
 				break;
 			}
+			
+			if (dot_base.hasOwnProperty(event.name)){
+				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
+			}
 		}
-		
-		if(event.name == "Summon Bahamut"){
-			bahamutCount ++;
+
+		//BUFF APPLICATION
+		updateBuffs(buffs, timers, event, result, activePet);
+		//class specifics
+		if (event.type == "applybuff") {
+			if (event.name == "Flamethrower")
+				heatChange = 20;
 		}
+
 
 		var extra = [];
+		updateExtras(extra, event, buffs, type);
 		
-		/*
-		extra.push(tranceTD);
-		extra.push(ruinationTD);
-		//extra.push(magicTD);
-		extra.push(bioTD);
-		extra.push(miasmaTD);
-		*/
-		//extra.push(`<span data-toggle="tooltip" title="${event.tooltip}">${potency == 0 ? "" : potency}</span>`);
-		for (var b in colors) {
-			extra.push(buffs[b].active ? `<div class="center status-block" style="background-color: ${colors[b]}"></div>` : ``);
-		}
-		
-
 		event.extra = extra;
 		event.potency = potency;
 		
-		
 		prevTime = event.fightTime;
 		result.events[e] = event;
-		if(result.totals.hasOwnProperty(event.sourceID)){
+
+		if (result.totals.hasOwnProperty(event.sourceID)) {
 			result.totals[event.sourceID].amount += event.amount;
 			result.totals[event.sourceID].potency += potency;
-		} else {
-			result.totals[event.sourceID] = {
-				'amount': event.amount,
-				'potency': potency,
-				'name': result.fight.team[event.sourceID],
-				'id': event.sourceID,
-				'time': result.fight.duration,
-			}
 		}
+		
+		result.totals[result.player.ID].time += ellapsed;
+		if(result.totals.hasOwnProperty(activePet))
+			result.totals[activePet].time += ellapsed;
 	}
-
-	for(var p in result.player.pets){
-		if(result.fight.team[result.player.pets[p]] ==  "Demi-Bahamut")
-			result.totals[result.player.pets[p]].time = bahamutCount * 20;
-		else
-			result.totals[result.player.pets[p]].time -= (bahamutCount * 20);
+	//role actions used
+	for(var r in role_taken){
+		if(role_taken[r] == 0)
+			delete role_taken[r];
 	}
 	
 	return result;

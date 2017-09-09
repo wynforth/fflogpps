@@ -319,8 +319,11 @@ class DebuffTimed extends Debuff {
 	
 	update(event){
 		for(var t in this.targets){
-			if(this.targets[t] <= event.fightTime)
+			//console.log(event);
+			if(this.targets[t] <= event.fightTime){
+				//console.log("deleting " + t);
 				delete this.targets[t];
+			}
 		}
 		this.active = Object.keys(this.targets).length > 0;
 	}
@@ -368,7 +371,7 @@ class BuffDisplay{
 	display(event, buff){
 		if(buff == undefined) return undefined;
 		if(buff.active)
-			if(event.name == this.name)
+			if(event.name == this.name && ["cast","applybuff", "applydebuff"].indexOf(event.type) > -1)
 				return `<div class="center status-block" style="background-color: ${this.color}"><img src="img/${this.image}"/></div>`
 			else
 				return `<div class="center status-block" style="background-color: ${this.color}"></div>`
