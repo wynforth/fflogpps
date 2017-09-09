@@ -560,6 +560,7 @@ function parseClass(response){
 }
 
 function parseBlackmage(response) {
+	var type = result.player.type;
 	console.log("Parsing BLM");
 
 	var enoch = new Timer("Enochian", 30);
@@ -609,9 +610,19 @@ function parseBlackmage(response) {
 		"Thunder IV": 30,
 		"Thunder III": 40,
 	};
+	
 
 	var first = true;
 	var prevTime = 0;
+	
+	//role actions
+	var role_all = role_actions[type];
+	var role_taken = {};
+	for(var i=0; i< role_all.length; i++){
+		role_taken[role_all[i]] = 0;
+	}
+	
+	
 	for (var e in response.events) {
 		var potency = 0;
 		var event = response.events[e];
@@ -774,6 +785,11 @@ function parseBlackmage(response) {
 
 		var img = '';
 		if (event.type == "cast") {
+			//id match shouldn't be needed bt being safe
+			if(role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID){ 
+				role_taken[event.name]++;
+			}
+			
 			switch (event.ability.name) {
 			case "Fire":
 			case "Fire II":
@@ -844,7 +860,10 @@ function parseBlackmage(response) {
 
 		var extra = [];
 		extra.push(enoch.isActive() > 0 ? `<div class="center status-block" style="background-color: #7F5FB0"></div>` : ``);
-		if (img != '')
+
+		extra.push(thunder.isActive() ? `<div class="center status-block" style="background-color: #C0B02F"></div>` : ``);
+		extra.push(thundercloud.isActive() ? `<div class="center status-block" style="background-color: #C0B0F0"></div>` : ``);
+				if (img != '')
 			img = `<img src="img/${img}"/>`;
 
 		if (astral > 0)
@@ -853,8 +872,6 @@ function parseBlackmage(response) {
 			extra.push(`<div class="center status-block" style="background-color: #5FD0F0">${img}</div>`);
 		else
 			extra.push(``);
-		extra.push(thunder.isActive() ? `<div class="center status-block" style="background-color: #C0B02F"></div>` : ``);
-		extra.push(thundercloud.isActive() ? `<div class="center status-block" style="background-color: #C0B0F0"></div>` : ``);
 		img = ''
 
 			event.extra = extra;
@@ -863,11 +880,19 @@ function parseBlackmage(response) {
 		result.events[e] = event;
 
 	}
+	
+	//role actions used
+	for(var r in role_taken){
+		if(role_taken[r] == 0)
+			delete role_taken[r];
+	}
+	result.role_actions = Object.keys(role_taken);
 	//console.log(result);
 	return result;
 }
 
 function parseMachinist(response) {
+	var type = result.player.type;
 	console.log("Parsing MCH");
 
 	var prevTime = 0;
@@ -901,18 +926,12 @@ function parseMachinist(response) {
 	var wildTarget = 0;
 	var wildfirePot = 0;
 
-	var type = 'Machinist';
 	//potencies
 	var potencies = all_potencies[type];
 	var combo_potencies = all_combo_potencies[type];
-	var pos_potencies = all_pos_potencies[type];
-	var pos_combo_potencies = all_pos_combo_potencies[type];
 	//dots
 	var dot_potencies = {};
 	var dot_base = all_dot_base[type];
-	//skills
-	var combo = all_combo[type]
-	var comboskills = all_comboskills[type];
 	var weaponskills = all_weaponskills[type];
 	//buffs
 	var buffs = all_buffs[type];
@@ -1089,6 +1108,7 @@ function parseMachinist(response) {
 }
 
 function parseSummoner(response) {
+	var type = result.player.type;
 	console.log("Parsing SMN");
 
 	var prevTime = 0;
@@ -1122,20 +1142,12 @@ function parseSummoner(response) {
 	var removeBarrel = false;
 	var wildTarget = 0;
 	var wildfirePot = 0;
-
-	var type = 'Summoner';
+	
 	//potencies
 	var potencies = all_potencies[type];
-	var combo_potencies = all_combo_potencies[type];
-	var pos_potencies = all_pos_potencies[type];
-	var pos_combo_potencies = all_pos_combo_potencies[type];
 	//dots
 	var dot_potencies = {};
 	var dot_base = all_dot_base[type];
-	//skills
-	var combo = all_combo[type]
-	var comboskills = all_comboskills[type];
-	var weaponskills = all_weaponskills[type];
 	//buffs
 	var buffs = all_buffs[type];
 	//role actions
@@ -1247,11 +1259,13 @@ function parseSummoner(response) {
 		if(result.totals.hasOwnProperty(activePet))
 			result.totals[activePet].time += ellapsed;
 	}
+	
 	//role actions used
 	for(var r in role_taken){
 		if(role_taken[r] == 0)
 			delete role_taken[r];
 	}
+	result.role_actions = Object.keys(role_taken);
 	
 	return result;
 }

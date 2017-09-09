@@ -515,6 +515,12 @@ var all_buffs = {
 }
 
 var buff_display = {
+	'BlackMage': {
+		'Enochian':  new BuffDisplay('Enochian', '#7F5FB0'),
+		'Thunder': new BuffDisplay('Thunder', '#C0B02F', 'thunder_iii.png'),
+		'Thundercloud': new BuffDisplay('Thundercloud', '#C0B0F0'),
+		'State': new BuffDisplay('Song of Ice and Fire','', 'astral_umbral.png'),
+	},
 	'Bard':{
 		'Straight Shot': new BuffDisplay('Straight Shot','#B01F00'),
 		'Foe Requiem': new BuffDisplay('Foe Requiem','#90D0D0'),
