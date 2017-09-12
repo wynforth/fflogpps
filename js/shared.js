@@ -125,16 +125,16 @@ class Buff {
 	apply(potency, event){
 		if(this.isAllowed(event)){
 			
-			return Math.trunc(potency * (1 + this.getBonus()));
+			return Math.trunc(potency * (1 + this.getBonus(event)));
 		}
 		return potency;
 	}
 	
-	getDisplay(){
-		return (this.getBonus() * 100).toFixed(0) + "%";
+	getDisplay(event){
+		return (this.getBonus(event) * 100).toFixed(0) + "%";
 	}
 	
-	getBonus(){
+	getBonus(event){
 		return this.bonus;
 	}
 	
@@ -150,13 +150,50 @@ class BuffDirect extends Buff{
 	
 	apply(potency, event){
 		if(this.isAllowed(event)){
-			return potency + this.getBonus();
+			return potency + this.getBonus(event);
 		}
 		return potency;
 	}
 	
+	
+	
 	getDisplay(){
 		return this.getBonus();
+	}
+}
+
+class BuffThunder extends BuffDirect {
+	constructor(name, bonus, active, restricted, exclusive) {
+		super(name, bonus, active, restricted, exclusive);
+	}
+
+	apply(potency, event) {
+		this.setBonus(event);
+		return super.apply(potency, event);
+	}
+	isAllowed(event) {
+		this.setBonus(event);
+		return super.isAllowed(event);
+	}
+
+	setBonus(event) {
+		this.bonus = 0;
+		if (event.type == 'damage') {
+			switch (event.name) {
+			case 'Thunder I':
+				this.bonus = 240;
+				break;
+			case 'Thunder II':
+				this.bonus = 120;
+				break;
+			case 'Thunder III':
+				this.bonus = 320;
+				break;
+			case 'Thunder IV':
+				this.bonus = 180;
+				break;
+			}
+		}
 	}
 }
 
@@ -203,6 +240,20 @@ class BuffStack extends Buff{
 		super.applybuff();
 		if(this.stacks <= 0)
 			this.stacks = this.baseStacks;
+	}
+}
+
+
+class BuffStackFire extends BuffStack{
+	constructor(name, initial, stackbonus, maxStacks,  baseStacks, active, restricted, exclusive){
+		super(name, initial, stackbonus, maxStacks,  baseStacks, active, restricted, exclusive);
+	}
+		
+	getBonus(event){
+		//console.log(event);
+		if(['Blizzard I', 'Blizzard II','Blizzard III', 'Blizzard IV', 'Freeze'].indexOf(event.name) > -1)
+			return this.stacks * -.1;
+		return this.bonus + (this.stackBonus * this.stacks);
 	}
 }
 
@@ -362,14 +413,21 @@ class BuffDisplay{
 			this.image = this.name.toLowerCase().replace(/ /g,'_') + '.png';
 		else
 			this.image = image;
+		
 	}
 	
 	asHeader(){
+		if(this.image == '')
+			console.log(this.name);
 		return `<td class=\"status-col\"><img src="img/${this.image}" title="${this.name}"/></td>`
 	}
 	
 	display(event, buff){
 		if(buff == undefined) return undefined;
+		return this.displayString(event, buff);
+	}
+	
+	displayString(event, buff){
 		if(buff.active)
 			if(event.name == this.name && ["cast","applybuff", "applydebuff"].indexOf(event.type) > -1)
 				return `<div class="center status-block" style="background-color: ${this.color}"><img src="img/${this.image}"/></div>`

@@ -1,4 +1,4 @@
-var  egiAbilities = [
+const  egiAbilities = [
 		//Demi-Bahamut
 		'Wyrmwave', 'Akh Morn',
 		//emerald
@@ -13,7 +13,7 @@ var  egiAbilities = [
 		'Crimson Cyclone', 'Burning Strike', 'Radiant Shield', 'Flaming Crush', 'Inferno', 'Radiant Shield',
 	];
 
-var all_potencies = {
+const all_potencies = {
 	'Bard': {
 		'Shot': 100,
 		'Heavy Shot': 150,
@@ -249,7 +249,7 @@ var all_potencies = {
 	}
 }
 
-var all_dot_base = {
+const all_dot_base = {
 	'Bard': {
 		'Storm Bite': 55,
 		'Caustic Bite': 45,
@@ -288,7 +288,7 @@ var all_dot_base = {
 	}
 }
 	
-var all_pos_potencies = {
+const all_pos_potencies = {
 	'Bard': {},
 	'BlackMage': {},
 	'Dragoon': {
@@ -315,7 +315,7 @@ var all_pos_potencies = {
 	'Summoner': {},
 }
 
-var all_combo_potencies = {
+const all_combo_potencies = {
 	'Bard': {},
 	'BlackMage': {},
 	'Dragoon': {
@@ -358,7 +358,7 @@ var all_combo_potencies = {
 	'Summoner': {},
 }
 
-var all_pos_combo_potencies = {
+const all_pos_combo_potencies = {
 	'Bard': {},
 	'BlackMage': {},
 	'Dragoon': {
@@ -377,7 +377,7 @@ var all_pos_combo_potencies = {
 	'Summoner': {},
 }
 
-var all_combo = {
+const all_combo = {
 	'Bard': {},
 	'Dragoon': {
 		'Vorpal Thrust': ['True Thrust'],
@@ -413,7 +413,7 @@ var all_combo = {
 }
 
 	//anything that makes/breaks a combo
-var all_comboskills = {
+const all_comboskills = {
 	'Bard': [],
 	'Dragoon': ['True Thrust', 'Vorpal Thrust', 'Impulse Drive', 'Heavy Thrust', 'Full Thrust', 'Disembowel', 'Chaos Thrust', 'Fang And Claw', 'Wheeling Thrust', 'Doom Spike', 'Sonic Thrust', 'Piercing Talon'],
 	'Machinist': [],
@@ -424,7 +424,7 @@ var all_comboskills = {
 }
 
 	//all 'WeaponSkills'
-var all_weaponskills = {
+const all_weaponskills = {
 	'Bard': ["Heavy Shot","Straight Shot","Empyreal Arrow","Iron Jaws","Refulgent Arrow","Quick Nock","Caustic Bite","Stormbite"],
 	'Dragoon': ['True Thrust', 'Vorpal Thrust', 'Impulse Drive', 'Heavy Thrust', 'Full Thrust', 'Disembowel', 'Chaos Thrust', 'Fang And Claw', 'Wheeling Thrust', 'Doom Spike', 'Sonic Thrust', 'Piercing Talon'],
 	'Machinist': ['Hot Shot', 'Split Shot', 'Slug Shot', 'Spread Shot', 'Clean Shot', 'Cooldown', 'Heated Split Shot', 'Heated Slug Shot', 'Heated Clean Shot'],
@@ -434,7 +434,7 @@ var all_weaponskills = {
 
 //buffs
 
-var all_buffs = {
+const all_buffs = {
 	'Bard': {
 		'Increased Action Damage II': new Buff('Trait II', .20, true, ['Shot']),
 		'Raging Strikes': new Buff('Raging Strikes', .10),
@@ -447,8 +447,17 @@ var all_buffs = {
 		'Caustic Bite': new Debuff('Caustic Bite', 0),
 	},
 	'BlackMage':{
+		'Thundercloud': new BuffThunder('Thundercloud', 1),
 		'Trait': new Buff('Magic & Mend II', .3, true, ['Attack']),
-		'Enochian': new Buff('Enochian', .1, false, ['Attack'])
+		'Enochian': new Buff('Enochian', .1, false, ['Attack']),
+		'Thunder III': new Debuff('Thunder III', 0),
+		'Thunder IV': new Debuff('Thunder IV', 0),
+		'Astral Fire': new BuffStackFire('Astral Fire', .2, .2, 3, 1, false, [], ['Fire', 'Fire II', 'Fire III', 'Fire IV', 'Flare', 'Blizzard', 'Blizzard II', 'Blizzard III', 'Blizzard IV', 'Freeze']),
+		'Umbral Ice': new BuffStack('Umbral Ice', 0, -.1, 3, 1, false, [], ['Fire', 'Fire II', 'Fire III', 'Fire IV', 'Flare']),
+		'Sharpcast': new Buff('Sharpcast', 0),
+		'Triplecast': new Buff('Triplecast', 0),
+		'Swiftcast': new Buff('Swiftcast', 0),
+		'Circle Of Power': new Buff('Ley Lines', 0),
 	},
 	'Dragoon': {
 		'Blood Of The Dragon': new Buff('Blood Of The Dragon', .30, false, [], ['Jump', 'Spineshatter Dive']),
@@ -456,7 +465,7 @@ var all_buffs = {
 		'Blood For Blood': new Buff('Blood For Blood', .15),
 		'Right Eye': new BuffStack('Right Eye', .10, 0, 1, 1),
 		'Battle Litany': new Buff('Battle Litany', (.15 * .45)),
-		'True North': new Buff('True North', 0),
+		'True North': new Buff('True North', 1),
 		//'Piercing Resistance Down': new Debuff('Disemboweled', .05),
 		'Piercing Resistance Down': new DebuffTimed('Disembowel', .05, 30),
 	},
@@ -514,11 +523,15 @@ var all_buffs = {
 	}
 }
 
-var buff_display = {
+const buff_display = {
 	'BlackMage': {
-		'Enochian':  new BuffDisplay('Enochian', '#7F5FB0'),
-		'Thunder': new BuffDisplay('Thunder', '#C0B02F', 'thunder_iii.png'),
+		'Enochian':  new BuffDisplay('Enochian', '#548785'),
+		'Circle Of Power': new BuffDisplay('Circle Of Power', '#A05FF0', 'ley_lines.png'),
+		'Sharpcast': new BuffDisplay('Sharpcast', '#A05F7F'),
+		'Triplecast': new BuffDisplay('Triplecast', '#984C85'),
+		'Swiftcast': new BuffDisplay('Swiftcast', '#E090C0'),
 		'Thundercloud': new BuffDisplay('Thundercloud', '#C0B0F0'),
+		'Thunder': new BuffDisplay('Thunder', '', 'thunder_iii.png'),
 		'State': new BuffDisplay('Song of Ice and Fire','', 'astral_umbral.png'),
 	},
 	'Bard':{
@@ -582,13 +595,17 @@ var buff_display = {
 	}
 }
 
-var all_timers = {
+const all_timers = {
 	'Bard': {
 		"Army's Paeon": new Timer("Army's Paeon", 30),
 		"Mage's Ballad": new Timer("Mage's Ballad", 30),
 		"The Wanderer's Minuet": new Timer("The Wanderer's Minuet", 30),
 	},
-	'BlackMage': {},
+	'BlackMage': {
+		'Enochian': new Timer('Enochian', 30),
+		'Astral Fire': new Timer('Astral Fire', 13),
+		'Umbral Ice': new Timer('Umbral Ice', 13),
+	},
 	'Dragoon': {
 		"Blood Of The Dragon": new Timer("Blood of the Dragon", 20),
 	},
@@ -615,7 +632,7 @@ const roleActions = {
 	'ranged': ["Second Wind","Foot Graze","Leg Graze","Peloton","Invigorate","Tactician","Refresh","Head Graze","Arm Graze","Palisade"]
 };
 
-var role_actions = {
+const role_actions = {
 	'Bard': ["Second Wind","Foot Graze","Leg Graze","Peloton","Invigorate","Tactician","Refresh","Head Graze","Arm Graze","Palisade"],
 	'Machinist': ["Second Wind","Foot Graze","Leg Graze","Peloton","Invigorate","Tactician","Refresh","Head Graze","Arm Graze","Palisade"],
 	
@@ -627,61 +644,52 @@ var role_actions = {
 	'RedMage': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
 	'BlackMage': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
 	'Summoner': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
-
 }
 
-
-var buff_columns = {
-	"Bard": `<td class=\"status-col\"><img src="img/straight_shot.png" title="Straight Shot"/></td>
-		<td class=\"status-col\"><img src="img/foe_requiem.png" title="Foe Requiem"/></td>
-		<td class=\"status-col\"><img src="img/raging_strikes.png" title="Raging Strikes"/></td>
-		<td class=\"status-col\"><img src="img/storm_bite.png" title="Storm Bite"/></td>
-		<td class=\"status-col\"><img src="img/caustic_bite.png" title="Caustic Bite"/></td>
-		<td class=\"status-col\"><img src="img/bard_song.png" title="Bard Song's"/></td>`,
-	"BlackMage":
-		`<td class=\"status-col\"><img src="img/enochian.png" title="Enochian"/></td>
-		<td class=\"status-col\"><img src="img/astral_umbral.png" title="A Song of Ice & Fire"/></td>
-		<td class=\"status-col\"><img src="img/thunder_iii.png" title="Thunder Dot"/></td>
-		<td class=\"status-col\"><img src="img/thundercloud.png" title="Thundercloud"/></td>`,
-	"Dragoon": `<td class=\"status-col\"><img src="img/blood_of_the_dragon.png" title="Blood of the Dragon"/></td>
-		<td class=\"status-col\"><img src="img/heavy_thrust.png" title="Heavy Thrust"/></td>
-		<td class=\"status-col\"><img src="img/blood_for_blood.png" title="Blood For Blood"/></td>
-		<td class=\"status-col\"><img src="img/right_eye.png" title="Dragon Sight"/></td>
-		<td class=\"status-col\"><img src="img/battle_litany.png" title="Battle Litany"/></td>
-		<td class=\"status-col\"><img src="img/piercing_resistance_down.png" title="Disembowel"/></td>
-		<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`,
-	"Machinist": `<td class=\"status-col\"><img src="img/gauss_barrel.png" title="Gauss Barrel"/></td>
-		<td class=\"status-col\"><img src="img/hot_shot.png" title="Hot Shot"/></td>
-		<td class=\"status-col\"><img src="img/hypercharge.png" title="Hypercharge"/></td>
-		<td class=\"status-col\"><img src="img/overheated.png" title="Heat"/></td>
-		<td class=\"status-col\"><img src="img/ammunition_loaded.png" title="Ammo"/></td>`,
-	"Monk": `<td class=\"status-col\"><img src="img/greased_lightning.png" title="Greased Lightning! Go Greased Lightning!"/></td>
-		<td class=\"status-col\"><img src="img/twin_snakes.png" title="Twin Snakes"/></td>
-		<td class=\"status-col\"><img src="img/dragon_kick.png" title="Dragon Kick"/></td>
-		<td class=\"status-col\"><img src="img/internal_release.png" title="Internal Release"/></td>
-		<td class=\"status-col\"><img src="img/riddle_of_fire.png" title="Riddle of Fire"/></td>
-		<td class=\"status-col\"><img src="img/perfect_balance.png" title="Perfect Balance"/></td>
-		<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`,
-	"Ninja": `<td class=\"status-col\"><img src="img/vulnerability_up.png" title="Trick Attack"/></td>
-		<td class=\"status-col\"><img src="img/shadow_fang.png" title="Shadow Fang"/></td>
-		<td class=\"status-col\"><img src="img/ten_chi_jin.png" title="Ten Chi Jin"/></td>
-		<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>
-		<td class=\"status-col\"><img src="img/huton.png" title="Huton"/></td>`,
-	"RedMage": `<td class=\"status-col\"><img src="img/embolden.png" title="Embolden"/></td>
-		<td class=\"status-col\"><img src="img/acceleration.png" title="Acceleration"/></td>`,
-	"Samurai": `<td class=\"status-col\"><img src="img/meikyo_shisui.png" title="Meikyo Shisui"/></td>
-		<td class=\"status-col\"><img src="img/jinpu.png" title="Jinpu"/></td>
-		<td class=\"status-col\"><img src="img/slashing_resistance_down.png" title="Yukikaze"/></td>
-		<td class=\"status-col\"><img src="img/hissatsu_kaiten.png" title="Hissatsu: Kaiten"/></td>
-		<td class=\"status-col\"><img src="img/true_north.png" title="True North"/></td>`,
-	"Summoner": `<td class=\"status-col\"><img src="img/dreadwyrm_trance.png" title="Dreadwyrm Trance"/></td>
-		<td class=\"status-col\"><img src="img/ruination.png" title="Ruination"/></td>
-		<td class=\"status-col\"><img src="img/bio_iii.png" title="Bio III"/></td>
-		<td class=\"status-col\"><img src="img/miasma_iii.png" title="Miasma III"/></td>
-		<td class=\"status-col\"><img src="img/magic_vulnerability_up.png" title="Contagion"/></td>`
+const all_damageSteps = {
+	'Bard': {},
+	'BlackMage': {
+		'Foul': [.9, .8, .7, .6, .5],
+		'Flare': [.85, .7, .55, .4, .3],
+		
+	},
+	'Dragoon': {},
+	'Machinist': {
+		'Ricochet': [.9, .8, .7, .6, .5],
+		'Aether Mortar': [.9, .8, .7, .6, .5],
+		'Charged Aether Mortar': [.9, .8, .7, .6, .5],
+	},
+	'Monk': {},
+	'Ninja': {},
+	'RedMage': {},
+	'Samurai': {
+		'Mangetsu': [.9, .8, .7, .6, .5],
+		'Oka': [.9, .8, .7, .6, .5],
+		'Tenka Goken': [.9, .8, .7, .6, .5],
+		'Hissatsu: Guren': [.75, .5],
+	},
+	'Summoner': {
+		'Deathflare': [.9, .8, .7, .6, .5],
+		'Akh Morn': [.9, .8, .7, .6, .5],
+	},
 }
 
-var template = {
+const all_combo_damageSteps = {
+	'Bard': {},
+	'BlackMage': {},
+	'Dragoon': {},
+	'Machinist': {},
+	'Monk': {},
+	'Ninja': {},
+	'RedMage': {},
+	'Samurai': {
+		'Mangetsu': [.95, .9, .85, .8, .75],
+		'Oka': [.95, .9, .85, .8, .75],
+	},
+	'Summoner': {},
+}
+
+const template = {
 	'Bard': {},
 	'BlackMage': {},
 	'Dragoon': {},
