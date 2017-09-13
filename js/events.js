@@ -12,10 +12,14 @@ var parseFunctions = {
 }
 
 function processReport(report) {
-	console.log("Report:");
-	console.log(report);
+	var proc0 = performance.now();
+	//console.log("Report:");
+	//console.log(report);
+	
 	result = parseReport(report);
-	console.log(result);
+	var par1 = performance.now();
+	console.log("Report parsing took " + (par1-proc0).toFixed(4) + "ms");
+	//console.log(result);
 	
 	var link = `https://www.fflogs.com/reports/${result.report.reportID}#fight=${result.report.fightID}&type=damage-done`;
 	
@@ -46,7 +50,7 @@ function processReport(report) {
 	url += "&end=" + result.fight.end;
 	url += "&actorid=" + result.player.ID;
 	url += "&api_key=" + api_key;
-	console.log(url);
+	//console.log(url);
 	//console.log(result.fight.team);
 	//console.log(result.fight.enemies);
 
@@ -55,6 +59,9 @@ function processReport(report) {
 		callback = processClass;
 
 	fetchUrl(url, callback, result.player.type);
+	
+	var proc1 = performance.now();
+	console.log("processReport took " + (proc1-proc0).toFixed(4) + "ms");
 }
 
 function updateEvent(data, fight) {
@@ -146,7 +153,8 @@ function processGeneric(response) {
 
 function processClass(response, spec) {
 
-	console.log("Processing " + spec);
+	//console.log("Processing " + spec);
+	var t0 = performance.now();
 	if(response.hasOwnProperty("nextPageTimestamp"))
 		console.log("WARNING     more time stamps exist     WARNING");
 	//console.log(response);
@@ -158,15 +166,19 @@ function processClass(response, spec) {
 	$(".ranking-table tbody").html("");
 	$(".ranking-table thead tr").append(`<td style="width: 90px">Potency</td>`);
 
-	/*
-	$(".ranking-table thead tr").append(buff_columns[spec]);
-	*/
 	var buffDisplay = buff_display[spec];
 	for(var b in buffDisplay){
 		if(buffDisplay[b].hasOwnProperty('name'))
 			$(".ranking-table thead tr").append(buffDisplay[b].asHeader());
 	}
+	var t1 = performance.now();
+	console.log("header updates took " + (t1 - t0).toFixed(4) + "ms");
+	
+	t0 = performance.now();
 	result = parseFunctions[spec](response);
+	t1 = performance.now();
+	console.log("Parseing took " + (t1 - t0).toFixed(4) + "ms");
+	
 	
 	var totalPotency = 0;
 	var totalDamage = 0;
@@ -179,7 +191,10 @@ function processClass(response, spec) {
 		type: ''
 	};
 
+	
+	var s0 = performance.now()
 	var rows = [];
+	
 	for (var e in result.events) {
 		var event = result.events[e];
 
@@ -187,7 +202,6 @@ function processClass(response, spec) {
 			continue;
 
 		rows.push(updateEvent(event, result.fight));
-		//$(".ranking-table tbody").append(updateEvent(event, result.fight));
 		
 		if (event.type != 'heal') {
 			totalPotency += event.potency == "" ? 0 : event.potency;
@@ -195,9 +209,10 @@ function processClass(response, spec) {
 		}
 		lastEvent = event;
 	}
-	document.getElementById('rank-body').innerHTML = rows.join('')
-	$('[data-toggle="tooltip"]').tooltip({html: true})
-	
+	document.getElementById('rank-body').insertAdjacentHTML('beforeend', rows.join(''));
+	var s1 = performance.now();
+	console.log("building rows " + (s1 - s0).toFixed(4) + "ms");
+	t0 = performance.now();
 	//update summary
 	var totalTime = 0;
 	if (Object.keys(result.totals).length >= 1) {
@@ -220,6 +235,14 @@ function processClass(response, spec) {
 	if(result.hasOwnProperty('role_actions')){
 		$('.summary').append(`<br/><b>Role Actions Used:</b> ${result['role_actions'].join(", ")}`);
 	}
+	t1 = performance.now();
+	console.log("updating summary took " + (t1-t0).toFixed(4) + "ms");
+	
+	s0 = performance.now();
+	//performance hit to enable fancy tooltips :/
+	//$('[data-toggle="tooltip"]').tooltip({html: true})
+	s1 = performance.now();
+	console.log("enabling tooltips " + (s1 - s0).toFixed(4) + "ms");
 }
 
 function getSummaryRow(name, damage, potency, duration){
@@ -244,7 +267,7 @@ function isSameEvent(current, previous) {
 
 function getReportData() {
 	var url = base_url + "/report/fights/" + result.report.reportID + "?translate=true&api_key=" + api_key;
-	console.log(url);
+	//console.log(url);
 	httpGetAsync(url, processReport);
 }
 

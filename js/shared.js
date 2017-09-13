@@ -1,6 +1,7 @@
-var base_url = "https://www.fflogs.com:443/v1";
+var s0 = performance.now();
+const base_url = "https://www.fflogs.com:443/v1";
 
-var percentColors = [
+const percentColors = [
     { pct: 0.0, color: { r: 0x00, g: 0xCC, b: 0x11 } },
     { pct: 0.5, color: { r: 0xCC, g: 0xCC, b: 0x11 } },
     { pct: 0.99, color: { r: 0xCC, g: 0x00, b: 0x11 } },
@@ -509,8 +510,6 @@ function getBasicData(event, fight) {
 	return data;
 }
 
-
-
 var hitTypes = {
 	0: "Miss",
 	1: "Hit",
@@ -546,4 +545,5 @@ damageTypes = {
 	1024: "magic",
 }
 
-console.log("Shared Loaded");
+var s1 = performance.now();
+console.log("Shared Loaded in " + (s1-s0).toFixed(4) + "ms");

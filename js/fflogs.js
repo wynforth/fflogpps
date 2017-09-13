@@ -227,7 +227,9 @@ function displayReport(response){
 	
 	var results = {}
 	
+	
 	$(".ranking-table thead").html(`<tr><td>Player</td><td>Target</td><td>Zone</td><td>Duration</td><td>Kill</td><td>FFLog Link</td></tr>`)
+	$(".ranking-table tbody").html(``);
 	var tbl_body = '';
 	
 	var fights = {};

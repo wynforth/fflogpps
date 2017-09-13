@@ -16,7 +16,7 @@ var result = {
 }
 
 function parseReport(report) {
-	console.log("Parsing Report for " + report.title);
+	//console.log("Parsing Report for " + report.title);
 	var fightID = result.report.fightID;
 
 	for (var k in report.fights) {
@@ -91,7 +91,7 @@ function parseGeneric(response) {
 
 		getBasicData(event, result.fight);
 		var potency = 0;
-		
+
 		result.events[e] = event;
 	}
 	return result;
@@ -129,12 +129,11 @@ function applyBuffs(value, event, buffs) {
 	return value;
 }
 
-function hasBuff(name, buffs){
-	if(buffs.hasOwnProperty(name))
+function hasBuff(name, buffs) {
+	if (buffs.hasOwnProperty(name))
 		return buffs[name].active;
 	return false;
 }
-
 
 function preScreen(type, events, buffs, timers, activePet) {
 	var start = events[0].timestamp;
@@ -228,10 +227,10 @@ function preScreen(type, events, buffs, timers, activePet) {
 				break;
 
 		}
-		if(!hutonCast)
+		if (!hutonCast)
 			timers['Huton'].restart();
 
-	}else if (type == "Summoner") {
+	} else if (type == "Summoner") {
 		for (var e in events) {
 			var event = events[e];
 
@@ -239,7 +238,7 @@ function preScreen(type, events, buffs, timers, activePet) {
 				activePet[0] = event.sourceID
 			}
 			//the remove only shows up within 20 seconds if it was started prefight
-			if(event.type == 'removebuff' && event.ability.name == "Rouse"){
+			if (event.type == 'removebuff' && event.ability.name == "Rouse") {
 				buffs['Rouse'].applybuff();
 			}
 
@@ -262,7 +261,6 @@ function updateTimers(timers, buffs, ellapsed, event) {
 		}
 	}
 
-
 }
 
 function updateBuffs(buffs, timers, event, result, activePet) {
@@ -281,10 +279,10 @@ function updateBuffs(buffs, timers, event, result, activePet) {
 	}
 	//BUFF REMOVAL
 	else if (event.type == "removebuff") {
-		if (buffs.hasOwnProperty(event.name) &&  (event.targetID == result.player.ID || event.targetID == activePet))
+		if (buffs.hasOwnProperty(event.name) && (event.targetID == result.player.ID || event.targetID == activePet))
 			buffs[event.name].active = false;
 	} else if (event.type == "removebuffstack") {
-		if (buffs.hasOwnProperty(event.name) &&  (event.targetID == result.player.ID || event.targetID == activePet))
+		if (buffs.hasOwnProperty(event.name) && (event.targetID == result.player.ID || event.targetID == activePet))
 			buffs[event.name].setStacks(event.stack);
 	} else if (event.type == "removedebuff") {
 		if (buffs.hasOwnProperty(event.name))
@@ -303,25 +301,28 @@ function updateBuffs(buffs, timers, event, result, activePet) {
 	}
 }
 
-function updateExtras(extra, event, buffs, type){
+function updateExtras(extra, event, buffs, type) {
 	var columns = buff_display[type];
-	
+
 	for (var b in columns) {
 		var displayString = columns[b].display(event, buffs[b]);
-		if(displayString != undefined)
+		if (displayString != undefined)
 			extra.push(displayString);
 	}
 }
 
-function parseClass(response){
+function parseClass(response) {
+
 	var type = result.player.type;
-	console.log("Parsing " + type);
-	
+
+	//console.log("Parsing " + type);
+
+
 	var prevTime = 0;
 	var ellapsed = 0;
-	var lastWS = ""
+	var lastWS = "";
 	var ratio = 0;
-	
+
 	//aoe spells
 	var lastDamage = '';
 	var lastFightTime = '';
@@ -331,10 +332,10 @@ function parseClass(response){
 	//pet support
 	var activePet = 0;
 	var petLookup = {};
-	for(var p in result.player.pets){
-		petLookup[result.fight.team[result.player.pets[p]]] = result.player.pets[p];		
+	for (var p in result.player.pets) {
+		petLookup[result.fight.team[result.player.pets[p]]] = result.player.pets[p];
 	}
-	
+
 	result.totals[result.player.ID] = {
 		'amount': 0,
 		'potency': 0,
@@ -351,7 +352,7 @@ function parseClass(response){
 			'time': 0 //result.fight.duration,
 		}
 	}
-	
+
 	//potencies
 	var potencies = all_potencies[type];
 	var combo_potencies = all_combo_potencies[type];
@@ -361,7 +362,7 @@ function parseClass(response){
 	var dot_potencies = {};
 	var dot_base = all_dot_base[type];
 	//skills
-	var combo = all_combo[type]
+	var combo = all_combo[type];
 	var comboskills = all_comboskills[type];
 	var weaponskills = all_weaponskills[type];
 	//buffs
@@ -369,19 +370,20 @@ function parseClass(response){
 	//role actions
 	var role_all = role_actions[type];
 	var role_taken = {};
-	for(var i=0; i< role_all.length; i++){
+	for (var i = 0; i < role_all.length; i++) {
 		role_taken[role_all[i]] = 0;
 	}
 	//timers
 	var timers = all_timers[type];
-		
+
 	//prescan
-	preScreen(type,response.events, buffs, timers);
-	
+	if (['Dragoon', 'Bard', 'Summoner', 'Machinist', 'Ninja', 'RedMage'].indexOf(type) > -1)
+		preScreen(type, response.events, buffs, timers);
+
 	//Main Parsing
 	for (var e in response.events) {
 		var event = response.events[e];
-		
+
 		//only events of self	pets	or targetted on self
 		if (event.sourceID != result.player.ID) {
 			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
@@ -431,30 +433,29 @@ function parseClass(response){
 				}
 
 				event.tooltip = event.name + ": " + potency + "<br/>";
-				
+
 				//if the spell decreases on aoe test if the time and name are the same
-				if(event.fightTime == lastFightTime && event.name == lastDamage){
+				if (event.fightTime == lastFightTime && event.name == lastDamage) {
 					//test for combo
 					var curSteps = damageSteps;
 					if (combo.hasOwnProperty(event.name))
 						if (combo[event.name].indexOf(lastWS) > -1 || event.name == lastWS || hasBuff('Meikyo Shisui', buffs))
 							curSteps = combo_damageSteps;
-					
-					if(curSteps.hasOwnProperty(event.name)){
+
+					if (curSteps.hasOwnProperty(event.name)) {
 						//decriment the potency
 						//console.log(event.fightTime + " - " + event.name);
-						var step = curSteps[event.name][Math.min(dStep,curSteps[event.name].length-1)];
+						var step = curSteps[event.name][Math.min(dStep, curSteps[event.name].length - 1)];
 						potency = Math.trunc(potency * step);
-						event.tooltip += "Multiple Targets: -" + ((1-step)*100).toFixed(0) + "% [" + potency.toFixed(0) + "]<br/>";
+						event.tooltip += "Multiple Targets: -" + ((1 - step) * 100).toFixed(0) + "% [" + potency.toFixed(0) + "]<br/>";
 						dStep++;
-					}				
+					}
 				} else {
 					lastDamage = event.name;
 					lastFightTime = event.fightTime;
 					dStep = 0;
 				}
-				
-				
+
 				potency = applyBuffs(potency, event, buffs);
 
 				if (dot_base.hasOwnProperty(event.name)) {
@@ -475,28 +476,29 @@ function parseClass(response){
 
 			if (potency == undefined)
 				potency = 0;
-			
-			if(potency == 0 && event.amount != 0){
+
+			if (potency == 0 && event.amount != 0) {
 				console.log("WARNING: Damage dealt with unknown potency");
 				console.log(event);
 			}
-			
+
 		}
-	
+
 		//TIMERS AND TIMED BUFFS
 		ellapsed = event.fightTime - prevTime;
-		updateTimers(timers, buffs, ellapsed, event);
-		
+		if (ellapsed != 0)
+			updateTimers(timers, buffs, ellapsed, event);
+
 		if (event.type == "cast") {
 			//id match shouldn't be needed bt being safe
-			if(role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID){ 
+			if (role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID) {
 				role_taken[event.name]++;
 			}
-			
-			if (dot_base.hasOwnProperty(event.name)){
+
+			if (dot_base.hasOwnProperty(event.name)) {
 				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
-			} 
-			
+			}
+
 			if (timers.hasOwnProperty(event.name)) {
 				//bard unique, other songs need to stop when a new song starts
 				if (type == "Bard") {
@@ -504,24 +506,24 @@ function parseClass(response){
 					var songs = ["The Wanderer's Minuet", "Mage's Ballad", "Army's Paeon"];
 					if (songs.indexOf(event.name) > -1) {
 						for (var i = 0; i < songs.length; i++)
-							timers[songs[i]].stop(); 
+							timers[songs[i]].stop();
 						img = `<img src="/img/${event.name.replace(/'/g,"").replace(/ /g, "_").toLowerCase()}.png"/>`;
 					}
 				}
 				timers[event.name].restart();
-			} 
+			}
 			//ability specific
 			if (event.name == "Armor Crush") {
 				timers["Huton"].update(-30);
 			} else if (event.name == "Iron Jaws") {
 				dot_potencies["Storm Bite"] = applyBuffs(dot_base["Storm Bite"], event, buffs);
 				dot_potencies["Caustic Bite"] = applyBuffs(dot_base["Caustic Bite"], event, buffs);
-			} else if (event.name == "Fang And Claw" || event.name == "Wheeling Thrust" || event.name == "Sonic Thrust"){
-				if(timers["Blood Of The Dragon"].isActive())
+			} else if (event.name == "Fang And Claw" || event.name == "Wheeling Thrust" || event.name == "Sonic Thrust") {
+				if (timers["Blood Of The Dragon"].isActive())
 					timers["Blood Of The Dragon"].extend(10, 30);
 			}
 		}
-		
+
 		//BUFF APPLICATION
 		updateBuffs(buffs, timers, event, result);
 		//class specifics
@@ -533,7 +535,6 @@ function parseClass(response){
 				}
 			}
 		}
-		
 
 		var extra = [];
 		updateExtras(extra, event, buffs, type);
@@ -557,15 +558,15 @@ function parseClass(response){
 		result.events[e] = event;
 		//update ratio currently only used for guessing pitch perfect :/
 		if (event.potency != 0) {
-			var tp = event.potency * (event.isDirect ? 1.25:1) * (event.hitType == 'Crit' ? 1.45:1);
+			var tp = event.potency * (event.isDirect ? 1.25 : 1) * (event.hitType == 'Crit' ? 1.45 : 1);
 			var r = event.amount / tp;
-			
+
 			if (ratio == 0)
 				ratio = r;
 			else
 				ratio = (ratio + r) / 2
 		}
-		
+
 		if (event.amount > 0 && event.type != 'heal') {
 			if (result.totals.hasOwnProperty(event.sourceID)) {
 				result.totals[event.sourceID].amount += event.amount;
@@ -575,19 +576,19 @@ function parseClass(response){
 				console.log(event);
 			}
 		}
-		
+
 		result.totals[result.player.ID].time += ellapsed;
-		if(result.totals.hasOwnProperty(activePet))
+		if (result.totals.hasOwnProperty(activePet))
 			result.totals[activePet].time += ellapsed;
-		
+
 	}
 	//role actions used
-	for(var r in role_taken){
-		if(role_taken[r] == 0)
+	for (var r in role_taken) {
+		if (role_taken[r] == 0)
 			delete role_taken[r];
 	}
 	result.role_actions = Object.keys(role_taken);
-	
+
 	return result;
 }
 
@@ -596,7 +597,6 @@ function parseBlackmage(response) {
 	console.log("Parsing BLM");
 
 	var suffix = ['', '', '_ii', '_iii'];
-
 	//totals
 	result.totals[result.player.ID] = {
 		'amount': 0,
@@ -605,43 +605,44 @@ function parseBlackmage(response) {
 		'id': result.player.ID,
 		'time': 0 //result.fight.duration,
 	}
-	
 
 	//buffs
 	var buffs = all_buffs[type];
 	//role actions
 	var role_all = role_actions[type];
 	var role_taken = {};
-	for(var i=0; i< role_all.length; i++){
+	for (var i = 0; i < role_all.length; i++) {
 		role_taken[role_all[i]] = 0;
 	}
 	//timers
 	var timers = all_timers[type];
 	//potencies
 	var potencies = all_potencies[type];
-	
+
 	//dots
 	var dot_potencies = {};
 	var dot_base = all_dot_base[type];
-	
 
 	var first = true;
 	var prevTime = 0;
-	
-	
+	//aoe spells
+	var lastDamage = '';
+	var lastFightTime = '';
+	var dStep = 0;
+	var damageSteps = all_damageSteps[type];
+	var combo_damageSteps = all_combo_damageSteps[type];
+
 	//role actions
 	var role_all = role_actions[type];
 	var role_taken = {};
-	for(var i=0; i< role_all.length; i++){
+	for (var i = 0; i < role_all.length; i++) {
 		role_taken[role_all[i]] = 0;
 	}
-	
-	//prescan
-	preScreen(type,response.events, buffs, timers);
+
 	for (var e in response.events) {
 		var potency = 0;
 		var event = response.events[e];
-		
+
 		//only events of self	pets	or targetted on self
 		if (event.sourceID != result.player.ID) {
 			if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
@@ -659,24 +660,23 @@ function parseBlackmage(response) {
 			} else {
 				potency = potencies[event.name];
 				event.tooltip = event.name + ": " + potency + "<br/>";
-				
+
 				//if the spell decreases on aoe test if the time and name are the same
-				if(event.fightTime == lastFightTime && event.name == lastDamage){
-					if(damageSteps.hasOwnProperty(event.name)){
+				if (event.fightTime == lastFightTime && event.name == lastDamage) {
+					if (damageSteps.hasOwnProperty(event.name)) {
 						//decriment the potency
 						console.log(event.fightTime + " - " + event.name);
-						var step = damageSteps[event.name][Math.min(dStep,damageSteps[event.name].length-1)];
+						var step = damageSteps[event.name][Math.min(dStep, damageSteps[event.name].length - 1)];
 						potency = Math.trunc(potency * step);
-						event.tooltip += "Multiple Targets: -" + ((1-step)*100).toFixed(0) + "% [" + potency.toFixed(0) + "]<br/>";
+						event.tooltip += "Multiple Targets: -" + ((1 - step) * 100).toFixed(0) + "% [" + potency.toFixed(0) + "]<br/>";
 						dStep++;
-					}				
+					}
 				} else {
 					lastDamage = event.name;
 					lastFightTime = event.fightTime;
 					dStep = 0;
 				}
-				
-				
+
 				potency = applyBuffs(potency, event, buffs);
 
 				if (potency == undefined)
@@ -687,8 +687,6 @@ function parseBlackmage(response) {
 					console.log(event);
 				}
 			}
-			
-			
 
 		}
 
@@ -709,22 +707,22 @@ function parseBlackmage(response) {
 		var img = '';
 		if (event.type == "cast") {
 			//id match shouldn't be needed bt being safe
-			if(role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID){ 
+			if (role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID) {
 				role_taken[event.name]++;
 			}
 			//update dots
-			if (dot_base.hasOwnProperty(event.name)){
+			if (dot_base.hasOwnProperty(event.name)) {
 				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
-			} 
-			
+			}
+
 			if (timers.hasOwnProperty(event.name)) {
 				timers[event.name].restart();
 			}
 		}
-		
+
 		if (event.type == "damage") {
 			switch (event.ability.name) {
-				
+
 			case "Fire":
 			case "Fire II":
 				if (buffs['Umbral Ice'].active) {
@@ -761,13 +759,6 @@ function parseBlackmage(response) {
 				timers['Astral Fire'].stop();
 				img = "umbral_ice_iii.png";
 				break;
-			/*
-			case "Thunder III":
-			case "Thunder IV":
-				if (buffs['Sharpcast'].active)
-					timers['Thundercloud'].restart();
-				break;
-			*/
 			case "Transpose":
 				if (umbral > 0) {
 					timers['Astral Fire'].restart();
@@ -783,46 +774,44 @@ function parseBlackmage(response) {
 				break;
 			}
 		}
-		
+
 		//BUFF APPLICATION
 		updateBuffs(buffs, timers, event, result);
 
 		var extra = [];
 		updateExtras(extra, event, buffs, type);
 
-		
-		var timg='';
+		var timg = '';
 		if (timg != '')
 			timg = `<img src="img/${img}"/>`;
-		if(buffs['Thunder IV'].active) {
-			if(event.name == 'Thunder IV' && ["cast","applybuff", "applydebuff"].indexOf(event.type) > -1)
+		if (buffs['Thunder IV'].active) {
+			if (event.name == 'Thunder IV' && ["cast", "applybuff", "applydebuff"].indexOf(event.type) > -1)
 				timg = `<img src="img/thunder_iv.png">`;
 			extra.push(`<div class="center status-block" style="background-color: #A14AB6">${timg}</div>`);
-		} else if(buffs['Thunder III'].active){
-			if(event.name == 'Thunder III' && ["cast","applybuff", "applydebuff"].indexOf(event.type) > -1)
+		} else if (buffs['Thunder III'].active) {
+			if (event.name == 'Thunder III' && ["cast", "applybuff", "applydebuff"].indexOf(event.type) > -1)
 				timg = `<img src="img/thunder_iii.png">`;
 			extra.push(`<div class="center status-block" style="background-color: #3D6DB6">${timg}</div>`);
 		} else {
 			extra.push('');
 		}
 		timg = '';
-		
+
 		if (img != '')
 			img = `<img src="img/${img}"/>`;
-		if(buffs['Astral Fire'].active){
+		if (buffs['Astral Fire'].active) {
 			extra.push(`<div class="center status-block" style="background-color: #F05F2F">${img}</div>`);
-		} else if(buffs['Umbral Ice'].active) {
+		} else if (buffs['Umbral Ice'].active) {
 			extra.push(`<div class="center status-block" style="background-color: #5FD0F0">${img}</div>`);
 		} else {
 			extra.push('');
 		}
 		img = '';
 
-
 		event.extra = extra;
 		event.potency = potency;
 		prevTime = event.fightTime;
-		
+
 		result.events[e] = event;
 
 		//potency & time tracking
@@ -835,13 +824,13 @@ function parseBlackmage(response) {
 				console.log(event);
 			}
 		}
-		
+
 		result.totals[result.player.ID].time += ellapsed;
 	}
-	
+
 	//role actions used
-	for(var r in role_taken){
-		if(role_taken[r] == 0)
+	for (var r in role_taken) {
+		if (role_taken[r] == 0)
 			delete role_taken[r];
 	}
 	result.role_actions = Object.keys(role_taken);
@@ -856,10 +845,10 @@ function parseMachinist(response) {
 	var prevTime = 0;
 	var activePet = 0;
 	var petLookup = {};
-	for(var p in result.player.pets){
-		petLookup[result.fight.team[result.player.pets[p]]] = result.player.pets[p];		
+	for (var p in result.player.pets) {
+		petLookup[result.fight.team[result.player.pets[p]]] = result.player.pets[p];
 	}
-	
+
 	result.totals[result.player.ID] = {
 		'amount': 0,
 		'potency': 0,
@@ -896,16 +885,16 @@ function parseMachinist(response) {
 	//role actions
 	var role_all = role_actions[type];
 	var role_taken = {};
-	for(var i=0; i< role_all.length; i++){
+	for (var i = 0; i < role_all.length; i++) {
 		role_taken[role_all[i]] = 0;
 	}
 	//timers
 	var timers = all_timers[type];
-	
+
 	//prescan
 	//temp making it an array to pass by reference yay javascript
 	activePet = [0];
-	preScreen('Machinist',response.events, buffs, timers, activePet);
+	preScreen('Machinist', response.events, buffs, timers, activePet);
 	activePet = activePet[0];
 
 	for (var e in response.events) {
@@ -922,31 +911,30 @@ function parseMachinist(response) {
 		var potency = 0;
 
 		if (event.type == "damage" && event.amount != 0) {
-				//player damage
-				if (event.dmgType == 64 || event.dmgType == 1) {
-					if (event.name == "Flamethrower")
-						heatChange = 20;
-					//dots
-					potency = dot_potencies[event.name];
-					event.tooltip = "DoT: " + event.name;
-				} else {
-					potency = potencies[event.name];
-					//action specific
-					if (buffs['Heat'].stacks >= 50 && event.name == "Cooldown")
-						potency = combo_potencies[event.name];
-					else if (hasBuff("Cleaner Shot", buffs) && (event.name == "Clean Shot" || event.name == "Heated Clean Shot"))
-						potency = combo_potencies[event.name];
-					else if (hasBuff("Enhanced Slug Shot", buffs) && (event.name == "Slug Shot" || event.name == "Heated Slug Shot"))
-						potency = combo_potencies[event.name];
+			//player damage
+			if (event.dmgType == 64 || event.dmgType == 1) {
+				if (event.name == "Flamethrower")
+					heatChange = 20;
+				//dots
+				potency = dot_potencies[event.name];
+				event.tooltip = "DoT: " + event.name;
+			} else {
+				potency = potencies[event.name];
+				//action specific
+				if (buffs['Heat'].stacks >= 50 && event.name == "Cooldown")
+					potency = combo_potencies[event.name];
+				else if (hasBuff("Cleaner Shot", buffs) && (event.name == "Clean Shot" || event.name == "Heated Clean Shot"))
+					potency = combo_potencies[event.name];
+				else if (hasBuff("Enhanced Slug Shot", buffs) && (event.name == "Slug Shot" || event.name == "Heated Slug Shot"))
+					potency = combo_potencies[event.name];
 
-					event.tooltip = event.name + ": " + potency + "<br/>";
-					potency = applyBuffs(potency, event, buffs);
+				event.tooltip = event.name + ": " + potency + "<br/>";
+				potency = applyBuffs(potency, event, buffs);
 
-					if (event.targetID == wildTarget && event.sourceID == result.player.ID) {
-						dot_potencies["Wildfire"] += potency * .25;
-					}
+				if (event.targetID == wildTarget && event.sourceID == result.player.ID) {
+					dot_potencies["Wildfire"] += potency * .25;
 				}
-
+			}
 
 			if (potency == undefined)
 				potency = 0;
@@ -971,16 +959,13 @@ function parseMachinist(response) {
 				removeBarrel = true; //mark barrel for removal
 			}
 		}
-		
 
-		
-		
 		if (event.type == "cast") {
 			//id match shouldn't be needed bt being safe
-			if(role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID){ 
+			if (role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID) {
 				role_taken[event.name]++;
 			}
-			
+
 			switch (event.name) {
 			case "Reload":
 				buffs['Ammunition'].setStacks(3);
@@ -1019,15 +1004,15 @@ function parseMachinist(response) {
 				break;
 			}
 
-			if (dot_base.hasOwnProperty(event.name)){
+			if (dot_base.hasOwnProperty(event.name)) {
 				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
 			}
-		
-			if(event.name == "Bishop Autoturret" || event.name == "Rook Autoturret")
+
+			if (event.name == "Bishop Autoturret" || event.name == "Rook Autoturret")
 				activePet = petLookup[event.name];
 
 		}
-		
+
 		//BUFF APPLICATION
 		updateBuffs(buffs, timers, event, result);
 		//class specifics
@@ -1035,7 +1020,6 @@ function parseMachinist(response) {
 			if (event.name == "Flamethrower")
 				heatChange = 20;
 		}
-
 
 		var extra = [];
 		updateExtras(extra, event, buffs, type);
@@ -1045,23 +1029,23 @@ function parseMachinist(response) {
 		prevTime = event.fightTime;
 
 		result.events[e] = event;
-		
+
 		if (result.totals.hasOwnProperty(event.sourceID)) {
 			result.totals[event.sourceID].amount += event.amount;
 			result.totals[event.sourceID].potency += potency;
 		}
-		
+
 		result.totals[result.player.ID].time += ellapsed;
-		if(result.totals.hasOwnProperty(activePet))
+		if (result.totals.hasOwnProperty(activePet))
 			result.totals[activePet].time += ellapsed;
 	}
 	//role actions used
-	for(var r in role_taken){
-		if(role_taken[r] == 0)
+	for (var r in role_taken) {
+		if (role_taken[r] == 0)
 			delete role_taken[r];
 	}
 	result.role_actions = Object.keys(role_taken);
-	
+
 	return result;
 }
 
@@ -1073,13 +1057,13 @@ function parseSummoner(response) {
 	var prevPet = 0;
 	var activePet = 0;
 	var petLookup = {};
-	for(var p in result.player.pets){
-		petLookup[result.fight.team[result.player.pets[p]]] = result.player.pets[p];		
+	for (var p in result.player.pets) {
+		petLookup[result.fight.team[result.player.pets[p]]] = result.player.pets[p];
 	}
-	
+
 	result.totals[result.player.ID] = {
 		'amount': 0,
-		'potency': 0,													
+		'potency': 0,
 		'name': result.fight.team[result.player.ID],
 		'id': result.player.ID,
 		'time': 0 //result.fight.duration,
@@ -1100,7 +1084,7 @@ function parseSummoner(response) {
 	var removeBarrel = false;
 	var wildTarget = 0;
 	var wildfirePot = 0;
-	
+
 	//potencies
 	var potencies = all_potencies[type];
 	//dots
@@ -1111,49 +1095,49 @@ function parseSummoner(response) {
 	//role actions
 	var role_all = role_actions[type];
 	var role_taken = {};
-	for(var i=0; i< role_all.length; i++){
+	for (var i = 0; i < role_all.length; i++) {
 		role_taken[role_all[i]] = 0;
 	}
 	//timers
 	var timers = all_timers[type];
-	
+
 	//prescan
 	//temp making it an array to pass by reference yay javascript
 	activePet = [0];
-	preScreen(type,response.events, buffs, timers, activePet);
+	preScreen(type, response.events, buffs, timers, activePet);
 	activePet = activePet[0];
 
 	for (var e in response.events) {
 		var event = response.events[e];
-		
-		if (event.sourceID != result.player.ID && event.sourceID != undefined) {		
-			if ((result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff" && event.type != "death") ) {
+
+		if (event.sourceID != result.player.ID && event.sourceID != undefined) {
+			if ((result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff" && event.type != "death")) {
 				continue;
 			}
 		}
-		
+
 		getBasicData(event, result.fight);
-		
+
 		var potency = 0;
 		if (event.type == "damage" && event.amount != 0) {
-			
-				if (event.dmgType == 1 || event.dmgType == 64) {
-					//dots
-					potency = dot_potencies[event.name];
-					event.tooltip = "DoT: " + event.name;
-				} else {
-					potency = potencies[event.name];
-					if(event.name == 'Attack'){
-						if (event.sourceID == result.player.ID) 
-							potency = 110;
-						else
-							potency = 80;
-					}
 
-					event.tooltip = event.name + ": " + potency + "<br/>";
-					potency = applyBuffs(potency, event, buffs);
-				
+			if (event.dmgType == 1 || event.dmgType == 64) {
+				//dots
+				potency = dot_potencies[event.name];
+				event.tooltip = "DoT: " + event.name;
+			} else {
+				potency = potencies[event.name];
+				if (event.name == 'Attack') {
+					if (event.sourceID == result.player.ID)
+						potency = 110;
+					else
+						potency = 80;
 				}
+
+				event.tooltip = event.name + ": " + potency + "<br/>";
+				potency = applyBuffs(potency, event, buffs);
+
+			}
 
 			if (potency == undefined)
 				potency = 0;
@@ -1161,18 +1145,18 @@ function parseSummoner(response) {
 		//update timers
 		var ellapsed = event.fightTime - prevTime;
 		updateTimers(timers, buffs, ellapsed, event);
-		
-		if(!timers['Summon Bahamut'].isActive() && prevPet != 0){
+
+		if (!timers['Summon Bahamut'].isActive() && prevPet != 0) {
 			activePet = prevPet;
 			prevPet = 0;
 		}
 
-		if (event.type == "cast") {		
+		if (event.type == "cast") {
 			//id match shouldn't be needed bt being safe
-			if(role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID){ 
+			if (role_all.indexOf(event.name) != -1 && event.sourceID == result.player.ID) {
 				role_taken[event.name]++;
 			}
-		
+
 			switch (event.name) {
 			case "Tri-disaster":
 				dot_potencies["Bio III"] = applyBuffs(dot_base["Bio III"], event, buffs);
@@ -1184,27 +1168,21 @@ function parseSummoner(response) {
 				timers['Summon Bahamut'].restart();
 				break;
 			}
-			
-			if (dot_base.hasOwnProperty(event.name)){
+
+			if (dot_base.hasOwnProperty(event.name)) {
 				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
 			}
 		}
 
 		//BUFF APPLICATION
 		updateBuffs(buffs, timers, event, result, activePet);
-		//class specifics
-		if (event.type == "applybuff") {
-			if (event.name == "Flamethrower")
-				heatChange = 20;
-		}
-
 
 		var extra = [];
 		updateExtras(extra, event, buffs, type);
-		
+
 		event.extra = extra;
 		event.potency = potency;
-		
+
 		prevTime = event.fightTime;
 		result.events[e] = event;
 
@@ -1212,130 +1190,18 @@ function parseSummoner(response) {
 			result.totals[event.sourceID].amount += event.amount;
 			result.totals[event.sourceID].potency += potency;
 		}
-		
+
 		result.totals[result.player.ID].time += ellapsed;
-		if(result.totals.hasOwnProperty(activePet))
+		if (result.totals.hasOwnProperty(activePet))
 			result.totals[activePet].time += ellapsed;
 	}
-	
+
 	//role actions used
-	for(var r in role_taken){
-		if(role_taken[r] == 0)
+	for (var r in role_taken) {
+		if (role_taken[r] == 0)
 			delete role_taken[r];
 	}
 	result.role_actions = Object.keys(role_taken);
-	
+
 	return result;
 }
-
-/*
-
-CLASS PARSING TEMPLATE
-
- */
-/*
-function parseClass(response) {
-console.log("Parsing CLS");
-
-
-var prevTime = 0;
-var totalPotency = 0;
-var totalDamage = 0;
-
-//trackers
-
-
-var potencies = {
-
-}
-
-var combo_potencies = {
-
-}
-
-var combo = {
-
-}
-
-//anything that makes/breaks a combo
-var comboskills = [];
-//all "WeaponSkills"
-var weaponskills = []
-var lastWS = '';
-
-var first = true;
-
-
-
-//prescan first couple attacks to see what buffs fall off
-for (var i = 0; i<5; i++) {
-var event = response.events[i];
-
-}
-
-for (var e in response.events) {
-var event = response.events[e];
-
-//only events of self	pets	or targetted on self
-if (event.sourceID != result.player.ID) {
-if (result.player.pets.indexOf(event.sourceID) == -1 && event.type != "applybuff") {
-continue;
-}
-}
-
-event = getBasicData(event, result.fight);
-var potency = 0;
-
-if (event.type == "damage" && event.amount != 0) {
-if (combo[event.name] == lastWS)
-potency = combo_potencies[event.name];
-else
-potency = potencies[event.name];
-
-
-if (comboskills.indexOf(event.name) > -1)
-lastWS = event.name;
-
-
-if (event.amount == 0)
-potency = 0;
-if (potency == undefined)
-potency = 0;
-}
-
-if(event.type == "applybuff"){
-
-}
-
-if(event.type == "applybuffstack"){
-
-}
-
-if(event.type == "removebuff"){
-
-}
-
-if(event.type == "removebuffstack"){
-
-}
-
-if(event.type == "cast"){
-
-}
-
-var ellapsed = event.fightTime - prevTime;
-
-//update timers
-
-var extra = [];
-extra.push(`${potency == 0 ? "" : potency}`);
-
-event.extra = extra;
-event.potency = potency;
-prevTime = event.fightTime;
-result.events[e] = event;
-}
-
-return result;
-}
-*/
