@@ -20,6 +20,7 @@ body {
 	padding: 2px;
 	background-color: #737373;
 	box-shadow: 4px 4px 15px -2px black;
+	position: relative;
 }
 
 .header {
