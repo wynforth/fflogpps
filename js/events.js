@@ -241,8 +241,10 @@ function processClass(response, spec) {
 	console.log("updating summary took " + (t1-t0).toFixed(4) + "ms");
 	
 	s0 = performance.now();
+	
 	//performance hit to enable fancy tooltips :/
-	//$('[data-toggle="tooltip"]').tooltip({html: true})
+	$('[data-toggle="tooltip"]').tooltip({html: true})
+	
 	s1 = performance.now();
 	console.log("enabling tooltips " + (s1 - s0).toFixed(4) + "ms");
 }
