@@ -1120,7 +1120,6 @@ function parseSummoner(response) {
 
 		var potency = 0;
 		if (event.type == "damage" && event.amount != 0) {
-
 			if (event.dmgType == 1 || event.dmgType == 64) {
 				//dots
 				potency = dot_potencies[event.name];
@@ -1176,6 +1175,11 @@ function parseSummoner(response) {
 
 		//BUFF APPLICATION
 		updateBuffs(buffs, timers, event, result, activePet);
+		if(event.type == 'applybuff'){
+			if (dot_base.hasOwnProperty(event.name) && !dot_potencies.hasOwnProperty(event.name)) {
+				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
+			}
+		}
 
 		var extra = [];
 		updateExtras(extra, event, buffs, type);

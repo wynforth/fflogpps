@@ -245,7 +245,6 @@ const all_potencies = {
 		'Radiant Shield': 50,
 		'Flaming Crush': 110,
 		'Inferno': 200,
-		'Radiant Shield': 50,
 	}
 }
 
@@ -504,6 +503,7 @@ const all_buffs = {
 		'Main & Mend II': new Buff('Trait', .30, true, ['Attack'], []),
 		'Embolden': new BuffStack('Embolden', 0, .02, 5, 5, false, ['Attack', 'Fleche', 'Contre Sixte', 'Corps-a-corps', 'Displacement', 'Moulinet', 'Zwerchhau', 'Riposte', 'Redoublement'], []),
 		'Acceleration': new Buff('Acceleration', 0),
+		'Swiftcast': new Buff('Swiftcast', 0),
 	},
 	'Samurai': {
 		'Meikyo Shisui': new Buff('Meikyo Shisui', 0),
@@ -520,6 +520,8 @@ const all_buffs = {
 		'Dreadwyrm Trance': new Buff('Dreadwyrm Trance', .10, false, egiAbilities.concat(['Attack', 'Radiant Shield'])),
 		'Rouse': new Buff('Rouse', .40, false, [], egiAbilities.concat(['Attack'])),
 		'Magic Vulnerability Up': new Debuff('Contagion', .10, ['Attack', 'Radiant Shield']),
+		'Physical Vulnerability Up': new Debuff('Radiant Shield', .02, [], ['Attack', 'Radiant Shield']),
+		'Swiftcast': new Buff('Swiftcast', 0),
 	}
 }
 
@@ -577,6 +579,7 @@ const buff_display = {
 	'RedMage': {
 		'Embolden': new BuffDisplay('Embolden', '#C19143'),
 		'Acceleration': new BuffDisplay('Acceleration', '#AF2234'),
+		'Swiftcast': new BuffDisplay('Swiftcast', '#E090C0'),
 	},
 	'Samurai': {
 		'Meikyo Shisui': new BuffDisplay('Meikyo Shisui','#E04F4F'),
@@ -590,8 +593,9 @@ const buff_display = {
 		'Ruination': new BuffDisplay('Ruination','#4BA1EC'),
 		'Bio III': new BuffDisplay('Bio III','#56631E'),
 		'Miasma III': new BuffDisplay('Miasma III','#4B494F'),
-		'Magic Vulnerability Up': new BuffDisplay('Magic Vulnerability Up','#932F2F'),
 		'Rouse': new BuffDisplay('Rouse','#5796C4'),
+		'Magic Vulnerability Up': new BuffDisplay('Magic Vulnerability Up','#932F2F'),
+		'Physical Vulnerability Up': new BuffDisplay('Physical Vulnerability Up','#932F2F'),
 	}
 }
 

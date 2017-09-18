@@ -202,10 +202,12 @@ function processClass(response, spec) {
 			continue;
 
 		rows.push(updateEvent(event, result.fight));
-		
+
 		if (event.type != 'heal') {
-			totalPotency += event.potency == "" ? 0 : event.potency;
-			totalDamage += event.amount == undefined ? 0 : event.amount;
+			if(event.potency != ""){
+				totalPotency += event.potency == "" ? 0 : event.potency;
+				totalDamage += event.amount == undefined ? 0 : event.amount;
+			}
 		}
 		lastEvent = event;
 	}
@@ -219,7 +221,7 @@ function processClass(response, spec) {
 		for (var k in result.totals) {
 			var total = result.totals[k];
 			if(total.potency > 0){
-				$(".summary-table tbody").append(getSummaryRow(total.name, total.amount, total.potency, total.time));
+				$(".summary-table tbody").append(getSummaryRowMulti(total.name, total.amount, total.potency, total.time, totalDamage, totalPotency));
 				totalTime = Math.max(totalTime, total.time);
 			}
 				
@@ -245,6 +247,7 @@ function processClass(response, spec) {
 	console.log("enabling tooltips " + (s1 - s0).toFixed(4) + "ms");
 }
 
+
 function getSummaryRow(name, damage, potency, duration){
 	return `<tr>
 		<td><div class="center">${name}</div></td>
@@ -252,6 +255,18 @@ function getSummaryRow(name, damage, potency, duration){
 		<td><div class="center">${duration.toFixed(2)}</div></td>
 		<td><div class="center">${(damage / duration).toFixed(2)}</div></td>
 		<td><div class="center">${potency}</div></td>
+		<td><div class="center">${(potency / duration).toFixed(2)}</div></td>
+		<td><div class="center">1:${(damage/potency).toFixed(2)}</div></td>
+		</tr>`;
+}
+
+function getSummaryRowMulti(name, damage, potency, duration, totalDamage, totalPotency){
+	return `<tr>
+		<td><div class="center">${name}</div></td>
+		<td><div class="center">${damage} <span class="castType">${((damage/totalDamage)*100).toFixed(1)}%</span></div></td>
+		<td><div class="center">${duration.toFixed(2)}</div></td>
+		<td><div class="center">${(damage / duration).toFixed(2)}</div></td>
+		<td><div class="center">${potency} <span class="castType">${((potency/totalPotency)*100).toFixed(1)}%</span></div></td>
 		<td><div class="center">${(potency / duration).toFixed(2)}</div></td>
 		<td><div class="center">1:${(damage/potency).toFixed(2)}</div></td>
 		</tr>`;
