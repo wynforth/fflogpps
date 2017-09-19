@@ -245,6 +245,40 @@ const all_potencies = {
 		'Radiant Shield': 50,
 		'Flaming Crush': 110,
 		'Inferno': 200,
+	},
+	'DarkKnight': {
+		'Attack': 110,
+		'Hard Slash': 150,
+		'Spinning Slash': 100,
+		'Unleash': 50,
+		'Syphon Strike': 100,
+		'Unmend': 150,
+		'Power Slash': 100,
+		'Souleater': 100,
+		'Dark Passenger': 100,
+		'Salted Earth': 75,
+		'Plunge': 200,
+		'Abyssal Drain': 120,
+		'Carve And Spit': 100,
+		'Quietus': 160,
+		'Bloodspiller': 400,
+	},
+	'Paladin': {
+		'Attack': 110,
+		'Fast Blade': 160,
+		'Savage Blade': 100,
+		'Riot Blade': 100,
+		'Shield Lob': 120,
+		'Shield Bash': 110,
+		'Shield Swipe': 150,
+		'Spirits Within': 300,
+		'Total Eclipse': 110,
+		'Circle Of Scorn': 100,
+		'Goring Blade': 100,
+		'Royal Authority': 100,
+		'Sword Oath': 75,
+		'Holy Spirit': 400,
+		'Requiescat': 350,
 	}
 }
 
@@ -284,6 +318,13 @@ const all_dot_base = {
 		'Miasma III': 50,
 		'Inferno': 20,
 		'Radiant Shield': 50,
+	},
+	'DarkKnight': {
+		'Salted Earth': 75,
+	},
+	'Paladin': {
+		'Circle Of Scorn': 30,
+		'Goring Blade': 60,
 	}
 }
 	
@@ -312,6 +353,16 @@ const all_pos_potencies = {
 	'RedMage': {},
 	'Samurai': {},
 	'Summoner': {},
+	//tank
+	'DarkKnight': {
+		'Syphon Strike': 240,
+		'Souleater': 240,
+		'Dark Passenger': 240,
+		'Carve And Spit': 450,
+		'Quietus': 210,
+		'Bloodspiller': 540,
+	},
+	'Paladin': {},
 }
 
 const all_combo_potencies = {
@@ -355,6 +406,19 @@ const all_combo_potencies = {
 		'Oka': 200,
 	},
 	'Summoner': {},
+	'DarkKnight': {
+		'Spinning Slash': 220,
+		'Syphon Strike': 250,
+		'Power Slash': 300,
+		'Souleater': 300,
+	},
+	'Paladin': {
+		'Goring Blade': 250,
+		'Royal Authority': 360,
+		'Savage Blade': 210,
+		'Riot Blade': 240,
+		'Rage Of Halone': 270,
+	},
 }
 
 const all_pos_combo_potencies = {
@@ -374,6 +438,11 @@ const all_pos_combo_potencies = {
 	'RedMage': {},
 	'Samurai': {},
 	'Summoner': {},
+	'DarkKnight': {
+		'Syphon Strike': 390,
+		'Souleater': 440,
+	},
+	'Paladin': {},
 }
 
 const all_combo = {
@@ -408,6 +477,19 @@ const all_combo = {
 		'Yukikaze': ['Hakaze'],
 		'Mangetsu': ['Fuga'],
 		'Oka': ['Fuga'],
+	},
+	'DarkKnight':{
+		'Spinning Slash': ['Hard Slash'],
+		'Syphon Strike': ['Hard Slash'],
+		'Power Slash': ['Spinning Slash'],
+		'Souleater': ['Syphon Strike'],
+	},
+	'Paladin': {
+		'Riot Blade': ['Fast Blade'],
+		'Savage Blade': ['Fast Blade'],
+		'Royal Authority': ['Riot Blade'],
+		'Goring Blade': ['Riot Blade'],
+		'Rage Of Halone': ['Savage Blade'],
 	}
 }
 
@@ -420,6 +502,8 @@ const all_comboskills = {
 	'Ninja': ['Gust Slash', 'Spinning Edge', 'Aeolian Edge', 'Shadow Fang', 'Throwing Dagger', 'Death Blossom'],
 	'RedMage': ['Moulinet', 'Enchanted Moulinet', 'Zwerchhau', 'Riposte', 'Enchanted Riposte', 'Redoublement', 'Enchanted Zwerchhau', 'Enchanted Redoublement'],
 	'Samurai': ['Hakaze', 'Jinpu', 'Gekko', 'Shifu', 'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi'],
+	'DarkKnight': ['Hard Slash', 'Spinning Slash', 'Unleash', 'Syphon Strike', 'Unmend', 'Power Slash', 'Souleater', 'Abyssal Drain', 'Quietus', 'Bloodspiller'],
+	'Paladin': ['Fast Blade', 'Savage Blade', 'Riot Blade', 'Rage Of Halone', 'Goring Blade', 'Royal Authority', 'Holy Spirit', 'Shield Lob', 'Shield Bash', 'Total Eclipse', 'Clemency'],
 }
 
 	//all 'WeaponSkills'
@@ -429,6 +513,8 @@ const all_weaponskills = {
 	'Machinist': ['Hot Shot', 'Split Shot', 'Slug Shot', 'Spread Shot', 'Clean Shot', 'Cooldown', 'Heated Split Shot', 'Heated Slug Shot', 'Heated Clean Shot'],
 	'RedMage': ['Moulinet', 'Zwerchhau', 'Riposte', 'Redoublement', 'Enchanted Moulinet', 'Enchanted Riposte', 'Enchanted Zwerchhau', 'Enchanted Redoublement'],
 	'Samurai': ['Hakaze', 'Jinpu', 'Gekko', 'Shifu', 'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi', 'Higanbana', 'Midare Setsugekka', 'Tenka Goken'],
+	'DarkKnight': ['Hard Slash', 'Spinning Slash', 'Syphon Strike', 'Power Slash', 'Souleater', 'Quietus', 'Bloodspiller'],
+	'Paladin': ['Fast Blade', 'Savage Blade', 'Riot Blade', 'Rage Of Halone', 'Goring Blade', 'Royal Authority', 'Shield Lob', 'Shield Bash', 'Total Eclipse'],
 }	
 
 //buffs
@@ -522,6 +608,21 @@ const all_buffs = {
 		'Magic Vulnerability Up': new Debuff('Contagion', .10, ['Attack', 'Radiant Shield']),
 		'Physical Vulnerability Up': new Debuff('Radiant Shield', .02, [], ['Attack', 'Radiant Shield']),
 		'Swiftcast': new Buff('Swiftcast', 0),
+	},
+	
+	'DarkKnight': {
+		'Dark Arts': new Buff('Dark Arts', 0),
+		'Grit': new Buff('Grit', -.20),
+		'Blood Weapon': new BuffStack('Blood Weapon', 0, 0, 1, 1),
+		'Darkside': new BuffStack('Darkside', .20, 0, 1, 1),
+		
+	},
+	'Paladin': {
+		'Sword Oath': new Buff('Sword Oath', 0),
+		'Shield Oath': new Buff('Shield Oath', -.20),
+		'Requiescat': new Buff('Requiscat', .2, false, [], ['Holy Spirit', 'Clemency']),
+		'Fight Or Flight': new Buff('Fight or Flight', .25, false, ['Holy Spirit', 'Clemency']),
+		'Goring Blade': new Debuff('Goring Blade', 0),
 	}
 }
 
@@ -596,6 +697,19 @@ const buff_display = {
 		'Rouse': new BuffDisplay('Rouse','#5796C4'),
 		'Magic Vulnerability Up': new BuffDisplay('Magic Vulnerability Up','#932F2F'),
 		'Physical Vulnerability Up': new BuffDisplay('Physical Vulnerability Up','#932F2F'),
+	},
+	'DarkKnight': {
+		'Darkside': new BuffDisplay('Darkside', "#943631"),
+		'Dark Arts': new BuffDisplay('Dark Arts', "#AB84C6"),
+		'Blood Weapon': new BuffDisplay('Blood Weapon', "#631118"),
+		'Grit': new BuffDisplay('Grit', '#92B8C9'),
+	},
+	'Paladin': {
+		'Fight Or Flight': new BuffDisplay('Fight Or Flight', '#C04B32'),
+		'Requiescat': new BuffDisplay('Requiescat', '#3A69CB'),
+		'Goring Blade': new BuffDisplay('Goring Blade', '#A45B20'),
+		'Oath': new BuffDisplay('Active Oath', '', 'shield_sword.png'),
+		
 	}
 }
 
@@ -625,6 +739,14 @@ const all_timers = {
 	'Summoner': {
 		'Summon Bahamut': new Timer('Summon Bahamut', 20),
 	},
+	
+	'DarkKnight': {},
+	'Paladin': {},
+	'Warrior': {},
+	
+	'WhiteMage': {},
+	'Astrologian': {},
+	'Scholar': {},
 }
 
 const roleActions = {
@@ -648,6 +770,14 @@ const role_actions = {
 	'RedMage': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
 	'BlackMage': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
 	'Summoner': ["Addle","Break","Drain","Diversion","Lucid Dreaming","Swiftcast","Mana Shift","Apocatastasis","Surecast","Erase"],
+	
+	'DarkKnight': ["Rampart","Low Blow","Provoke","Convalescence","Anticipation","Reprisal","Awareness","Interject","Ultimatum","Shirk"],
+	'Paladin': ["Rampart","Low Blow","Provoke","Convalescence","Anticipation","Reprisal","Awareness","Interject","Ultimatum","Shirk"],
+	'Warrior': ["Rampart","Low Blow","Provoke","Convalescence","Anticipation","Reprisal","Awareness","Interject","Ultimatum","Shirk"],
+	
+	'Astrologian': ["Cleric Stance","Break","Protect","Esuna","Lucid Dreaming","Swiftcast","Eye for an Eye","Largesse","Surecast","Rescue"],
+	'WhiteMage': ["Cleric Stance","Break","Protect","Esuna","Lucid Dreaming","Swiftcast","Eye for an Eye","Largesse","Surecast","Rescue"],
+	'Scholar': ["Cleric Stance","Break","Protect","Esuna","Lucid Dreaming","Swiftcast","Eye for an Eye","Largesse","Surecast","Rescue"],
 }
 
 const all_damageSteps = {
@@ -676,6 +806,14 @@ const all_damageSteps = {
 		'Deathflare': [.9, .8, .7, .6, .5],
 		'Akh Morn': [.9, .8, .7, .6, .5],
 	},
+	
+	'DarkKnight': {},
+	'Paladin': {},
+	'Warrior': {},
+	
+	'WhiteMage': {},
+	'Astrologian': {},
+	'Scholar': {},
 }
 
 const all_combo_damageSteps = {
@@ -691,6 +829,15 @@ const all_combo_damageSteps = {
 		'Oka': [.95, .9, .85, .8, .75],
 	},
 	'Summoner': {},
+	
+	'DarkKnight': {},
+	'Paladin': {},
+	'Warrior': {},
+	
+	'WhiteMage': {},
+	'Astrologian': {},
+	'Scholar': {},
+	
 }
 
 const template = {

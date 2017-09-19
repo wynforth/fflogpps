@@ -245,6 +245,50 @@ function preScreen(type, events, buffs, timers, activePet) {
 			if (event.timestamp > start + 20000)
 				break;
 		}
+	} else if (type == 'DarkKnight'){
+		var grit_cast = false;
+		for (var e in events) {
+			var event = events[e];
+			if (event.timestamp > start + 10000) //10 seconds ahead
+				break;
+
+			//foe shows as an applybuff to self first in the log first, it wasn't precasted
+			if (event.type == "removebuff") {
+				if (event.ability.name == "Grit")
+					buffs["Grit"].applybuff();
+			}
+			if (event.type == "applybuff") {
+				if (event.ability.name == "Grit")
+					grit_cast = true;
+			}
+		}
+		if (grit_cast)
+			buffs["Grit"].active = false;
+	} else if (type == 'Paladin'){
+		var oath_cast = false;
+		var start_sword = false;
+		for (var e in events) {
+			var event = events[e];
+			if (event.timestamp > start + 10000) //10 seconds ahead
+				break;
+
+			//foe shows as an applybuff to self first in the log first, it wasn't precasted
+			if (event.type == "cast") {
+				if (event.ability.name == "Sword Oath" || event.ability.name == "Shield Oath")
+					oath_cast = true;
+			}
+			
+			if (event.type == "damage") {
+				if (event.ability.name == "Sword Oath")
+					start_sword = true;
+			}
+		}
+		if (!oath_cast){ //no oath cast during opening meaning we start with one on
+			if(start_sword)
+				buffs['Sword Oath'].applybuff();
+			else
+				buffs['Shield Oath'].applybuff();
+		}
 	}
 }
 
@@ -377,8 +421,12 @@ function parseClass(response) {
 	var timers = all_timers[type];
 
 	//prescan
-	if (['Dragoon', 'Bard', 'Summoner', 'Machinist', 'Ninja', 'RedMage'].indexOf(type) > -1)
+	if (['Samurai','Monk'].indexOf(type) == -1){
+		var ps0 = performance.now();
 		preScreen(type, response.events, buffs, timers);
+		var ps1 = performance.now();
+		console.log("Prescreen took " + (ps1-ps0).toFixed(4) + "ms");
+	}
 
 	//Main Parsing
 	for (var e in response.events) {
@@ -404,13 +452,13 @@ function parseClass(response) {
 
 				if (combo.hasOwnProperty(event.name)) {
 					if (combo[event.name].indexOf(lastWS) > -1 || event.name == lastWS || hasBuff('Meikyo Shisui', buffs)) { //hack for aoe combos
-						if (hasBuff("True North", buffs) && pos_combo_potencies.hasOwnProperty(event.name))
+						if ((hasBuff("True North", buffs) || hasBuff('Dark Arts', buffs)) && pos_combo_potencies.hasOwnProperty(event.name))
 							potency = pos_combo_potencies[event.name];
 						else
 							potency = combo_potencies[event.name];
 					}
 				} else {
-					if (hasBuff("True North", buffs) && pos_potencies.hasOwnProperty(event.name))
+					if ((hasBuff("True North", buffs) || hasBuff('Dark Arts', buffs)) && pos_potencies.hasOwnProperty(event.name))
 						potency = pos_potencies[event.name];
 				}
 
@@ -430,6 +478,12 @@ function parseClass(response) {
 						potency = 420;
 					else if (val >= 150)
 						potency = 240;
+				} else if(event.name == "Bloodspiller"){
+					if(hasBuff('Grit', buffs))
+						if(hasBuff('Dark Arts', buffs))
+							potency += 90;
+						else
+							potency += 75;
 				}
 
 				event.tooltip = event.name + ": " + potency + "<br/>";
@@ -549,6 +603,21 @@ function parseClass(response) {
 			else
 				extra.push(``);
 			img = '';
+		} else if (type == "Paladin") {
+			img = '';
+			if (["cast", "applybuff", "applydebuff"].indexOf(event.type) > -1)
+				if(event.name == 'Sword Oath')
+					img = `<img src="img/sword_oath.png">`;
+				else if(event.name == 'Shield Oath')
+					img = `<img src="img/shield_oath.png">`;
+
+			if (hasBuff("Sword Oath", buffs))
+				extra.push(`<div class="center status-block" style="background-color: #93CACD">${img}</div>`);
+			else if (buffs["Shield Oath"].active)
+				extra.push(`<div class="center status-block" style="background-color: #E7DE95">${img}</div>`);
+			else
+				extra.push(``);
+			img = '';
 		}
 
 		event.extra = extra;
@@ -557,10 +626,20 @@ function parseClass(response) {
 
 		result.events[e] = event;
 		//update ratio currently only used for guessing pitch perfect :/
-		if (event.potency != 0) {
+		//dont acount for dots, since we cant properly tell crits or directs (do dots direct?)
+		if (event.potency != 0 && (event.dmgType != 1 && event.dmgType != 64))  { 
 			var tp = event.potency * (event.isDirect ? 1.25 : 1) * (event.hitType == 'Crit' ? 1.45 : 1);
 			var r = event.amount / tp;
 
+			var expected = event.potency * ratio;
+			var baseline = event.amount / (event.isDirect ? 1.25:1) / (event.hitType == 'Crit' ? 1.45 : 1);
+			
+			var variance = expected/baseline;
+			if(ratio != 0 && (variance > 1.3 || variance < .7))
+					console.log('WARNING: check buffs at ' + event.fightTime + ": " +event.name + " - " + expected + " vs " + baseline);
+			//warning if something is far off from the ratio?
+			
+			
 			if (ratio == 0)
 				ratio = r;
 			else

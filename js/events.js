@@ -1,13 +1,19 @@
 var parseFunctions = {
-		'Bard': parseClass,//parseBard,
-	'BlackMage': parseBlackmage,
-		'Dragoon': parseClass,//parseDragoon,
-	'Machinist': parseMachinist,
-		'Monk': parseClass, //parseMonk,
-		'Ninja': parseClass,	//parseNinja,
-		'RedMage': parseClass,	//parseRedmage,
-		'Samurai': parseClass,	//parseSamurai,
-	'Summoner': parseSummoner,
+	//DPS
+	'Bard': parseClass,//parseBard,
+	
+	'Dragoon': parseClass,//parseDragoon,
+	
+	'Monk': parseClass, //parseMonk,
+	'Ninja': parseClass,	//parseNinja,
+	'RedMage': parseClass,	//parseRedmage,
+	'Samurai': parseClass,	//parseSamurai,
+	'Machinist': parseMachinist, //overheat and pet
+	'BlackMage': parseBlackmage, //astral/umbral math
+	'Summoner': parseSummoner, //pet
+	//TANKS
+	'DarkKnight': parseClass,
+	'Paladin': parseClass,
 
 }
 
