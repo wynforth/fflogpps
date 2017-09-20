@@ -142,6 +142,10 @@ class Buff {
 	applybuff(){
 		this.active = true;
 	}
+	
+	removeBuff(){
+		this.active = false;
+	}
 }
 
 class BuffDirect extends Buff{
@@ -241,6 +245,11 @@ class BuffStack extends Buff{
 		super.applybuff();
 		if(this.stacks <= 0)
 			this.stacks = this.baseStacks;
+	}
+	
+	removebuff(){
+		this.setStacks(0);
+		super.removeBuff();
 	}
 }
 

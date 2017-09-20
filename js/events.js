@@ -14,6 +14,7 @@ var parseFunctions = {
 	//TANKS
 	'DarkKnight': parseClass,
 	'Paladin': parseClass,
+	'Warrior': parseClass,
 
 }
 
@@ -84,10 +85,11 @@ function updateEvent(data, fight) {
 	}
 	tbl_row += `<td>${data.amount == 0 ? '':data.amount} <span class="castType">${data.isDirect ? "Direct ":''}${data.hitType}</span><span class="damage-block ${damageTypes[data.dmgType]}"></span></td>`;
 	
-	if (data.sourceIsFriendly)
+	if (data.sourceIsFriendly){
 		tbl_row += `<td class="name">${fight.team[data.sourceID]}<span class="castType">-></span></td>`;
-	else
+	} else {
 		tbl_row += `<td class="name">${fight.enemies[data.sourceID]}<span class="castType">-></span></td>`;
+	}
 	
 	
 	tbl_row += '<td class="name">';
@@ -161,13 +163,19 @@ function processClass(response, spec) {
 
 	//console.log("Processing " + spec);
 	var t0 = performance.now();
-	if(response.hasOwnProperty("nextPageTimestamp"))
-		console.log("WARNING     more time stamps exist     WARNING");
+	
 	//console.log(response);
 	if(['Dragoon','Ninja','Monk'].indexOf(spec) > -1)
 		$('.summary').append(`<br/><b>Positionals:</b> Unless under True North positional potency is a weighted average assuming 9 in 10 hits are from the correct position.`)
 	else if(spec == "Bard")
 		$('.summary').append(`<br/><b>Pitch Perfect:</b> As DoT crits are not able to be tracked accurately the base potency for Pitch Perfect is only a guess.`)
+	else if(spec == "Paladin")
+		$('.summary').append(`<br/>Potency values for Spirits Within or Requiescat don't scale with health or mana respectively.`)
+	else if(spec == "Warrior")
+		$('.summary').append(`<br/><b>Berserk:</b> Bonus for Berserk is a guess based on observation, actual increase would depend on your current AP.`)
+	
+	if(response.hasOwnProperty("nextPageTimestamp"))
+		console.log("WARNING     more time stamps exist     WARNING");
 	
 	$(".ranking-table tbody").html("");
 	$(".ranking-table thead tr").append(`<td style="width: 90px">Potency</td>`);

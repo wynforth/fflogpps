@@ -289,6 +289,34 @@ function preScreen(type, events, buffs, timers, activePet) {
 			else
 				buffs['Shield Oath'].applybuff();
 		}
+	} else if (type == 'Warrior'){
+		var deliverance_start = false;
+		for (var e in events) {
+			var event = events[e];
+			if (event.timestamp > start + 20000) //20 seconds ahead
+				break;
+
+			//foe shows as an applybuff to self first in the log first, it wasn't precasted
+			if (event.type == "cast") {
+				//console.log(event.ability.name);
+				if(['Inner Release', 'Fell Cleave', 'Decimate', 'Defiance'].indexOf(event.ability.name) > -1){ 
+					//delivrance ability was used
+					//console.log(event.ability.name);
+					deliverance_start = true;
+					break;
+				} else if(event.ability.name == 'Deliverance'){
+					break;
+				}
+				
+					
+			}
+			
+		}
+		//if defiance is cast we assume we start with the other one, otherwise we are in defiance
+		if(deliverance_start)
+			buffs['Deliverance'].applybuff();
+		else
+			buffs['Defiance'].applybuff();
 	}
 }
 
@@ -429,6 +457,7 @@ function parseClass(response) {
 	}
 
 	//Main Parsing
+	var newCast = false;
 	for (var e in response.events) {
 		var event = response.events[e];
 
@@ -451,7 +480,7 @@ function parseClass(response) {
 				potency = potencies[event.name];
 
 				if (combo.hasOwnProperty(event.name)) {
-					if (combo[event.name].indexOf(lastWS) > -1 || event.name == lastWS || hasBuff('Meikyo Shisui', buffs)) { //hack for aoe combos
+					if (combo[event.name].indexOf(lastWS) > -1 || (event.name == lastWS && !newCast) || hasBuff('Meikyo Shisui', buffs)) { //hack for aoe combos
 						if ((hasBuff("True North", buffs) || hasBuff('Dark Arts', buffs)) && pos_combo_potencies.hasOwnProperty(event.name))
 							potency = pos_combo_potencies[event.name];
 						else
@@ -492,9 +521,10 @@ function parseClass(response) {
 				if (event.fightTime == lastFightTime && event.name == lastDamage) {
 					//test for combo
 					var curSteps = damageSteps;
-					if (combo.hasOwnProperty(event.name))
+					if (combo.hasOwnProperty(event.name)){
 						if (combo[event.name].indexOf(lastWS) > -1 || event.name == lastWS || hasBuff('Meikyo Shisui', buffs))
 							curSteps = combo_damageSteps;
+					}
 
 					if (curSteps.hasOwnProperty(event.name)) {
 						//decriment the potency
@@ -510,6 +540,19 @@ function parseClass(response) {
 					dStep = 0;
 				}
 
+				if (event.name == 'Upheaval'){
+					//max health
+					var maxhealth = event.sourceResources.maxHitPoints;
+					if(hasBuff('Defiance', buffs))
+						maxhealth = maxhealth / 1.25;
+					if(hasBuff('Thrill Of Battle', buffs))
+						maxhealth = maxhealth / 1.2;
+					var bonus = Math.max(event.sourceResources.hitPoints/maxhealth, 1/3);
+					//health bonus
+					potency = Math.trunc(potency * (bonus));
+					event.tooltip += "Health Modifier: " + ((bonus-1) * 100).toFixed(0) + "% [" + potency.toFixed(0) + "]<br/>";
+				}
+				
 				potency = applyBuffs(potency, event, buffs);
 
 				if (dot_base.hasOwnProperty(event.name)) {
@@ -535,6 +578,7 @@ function parseClass(response) {
 				console.log("WARNING: Damage dealt with unknown potency");
 				console.log(event);
 			}
+			newCast = false;
 
 		}
 
@@ -576,9 +620,11 @@ function parseClass(response) {
 				if (timers["Blood Of The Dragon"].isActive())
 					timers["Blood Of The Dragon"].extend(10, 30);
 			}
+			newCast = true;
 		}
 
 		//BUFF APPLICATION
+		//console.log(event);
 		updateBuffs(buffs, timers, event, result);
 		//class specifics
 		if (type == "Monk") {
@@ -586,6 +632,14 @@ function parseClass(response) {
 				if (event.name == "Fists Of Wind" || event.name == "Fists Of Earth") {
 					buffs["Fists Of Fire"].active = false;
 					buffs["Riddle Of Fire"].active = false;
+				}
+			}
+		} else if (type == "Paladin") {
+			if (event.type == "applybuff" || event.type == "refreshbuff" || event.type == 'applybuffstack') {
+				if (event.name == "Shield Oath") {
+					buffs["Sword Oath"].removebuff();
+				} else if (event.name == "Sword Oath") {
+					buffs["Shield Oath"].removebuff();
 				}
 			}
 		}
@@ -605,7 +659,7 @@ function parseClass(response) {
 			img = '';
 		} else if (type == "Paladin") {
 			img = '';
-			if (["cast", "applybuff", "applydebuff"].indexOf(event.type) > -1)
+			if (["applybuff", "applydebuff"].indexOf(event.type) > -1)
 				if(event.name == 'Sword Oath')
 					img = `<img src="img/sword_oath.png">`;
 				else if(event.name == 'Shield Oath')
@@ -618,7 +672,37 @@ function parseClass(response) {
 			else
 				extra.push(``);
 			img = '';
+		} else if (type == "Warrior") {
+			//unchained and inner release
+			if (["applybuff", "refreshbuff", "applydebuff"].indexOf(event.type) > -1)
+				if(event.name == 'Unchained' || event.name == 'Inner Release')
+					img = `<img src="img/${event.name.toLowerCase().replace(/ /g,'_')}.png">`;
+				
+
+			if (hasBuff("Unchained", buffs))
+				extra.push(`<div class="center status-block" style="background-color: #CE7CD1">${img}</div>`);
+			else if (hasBuff("Inner Release", buffs))
+				extra.push(`<div class="center status-block" style="background-color: #9B553E">${img}</div>`);
+			else
+				extra.push(``);
+			img = '';
+			
+			//defiance vs deliverance
+			img = '';
+			if (["applybuff", "refreshbuff", "applydebuff"].indexOf(event.type) > -1)
+				if(event.name == 'Defiance' || event.name == 'Deliverance')
+					img = `<img src="img/${event.name.toLowerCase()}.png">`;
+				
+
+			if (hasBuff("Defiance", buffs))
+				extra.push(`<div class="center status-block" style="background-color: #6E8C16">${img}</div>`);
+			else if (hasBuff("Deliverance", buffs))
+				extra.push(`<div class="center status-block" style="background-color: #495685">${img}</div>`);
+			else
+				extra.push(``);
+			img = '';
 		}
+		
 
 		event.extra = extra;
 		event.potency = potency;
@@ -632,11 +716,13 @@ function parseClass(response) {
 			var r = event.amount / tp;
 
 			var expected = event.potency * ratio;
-			var baseline = event.amount / (event.isDirect ? 1.25:1) / (event.hitType == 'Crit' ? 1.45 : 1);
+			expected = Math.trunc(expected * (event.isDirect ? 1.25:1));
+			expected = Math.trunc(expected * (event.hitType == 'Crit' ? 1.45 : 1));
+			var baseline = event.amount;
 			
-			var variance = expected/baseline;
+			var variance = expected/event.amount;
 			if(ratio != 0 && (variance > 1.3 || variance < .7))
-					console.log('WARNING: check buffs at ' + event.fightTime + ": " +event.name + " - " + expected + " vs " + baseline);
+					console.log('WARNING @ ' + event.fightTime + ': ' +event.name + ' - ' + expected.toFixed(0) + ' vs ' + event.amount);
 			//warning if something is far off from the ratio?
 			
 			

@@ -279,6 +279,23 @@ const all_potencies = {
 		'Sword Oath': 75,
 		'Holy Spirit': 400,
 		'Requiescat': 350,
+	},
+	'Warrior': {
+		'Attack': 110,
+		'Heavy Swing': 150,
+		'Skull Sunder': 100,
+		'Overpower': 120,
+		'Tomahawk': 130,
+		'Maim': 100,
+		"Butcher's Block": 100,
+		"Storm's Path": 100,
+		'Steel Cyclone': 200,
+		"Storm's Eye": 100,
+		'Fell Cleave': 500,
+		'Decimate': 280,
+		'Onslaught': 100,
+		'Upheaval': 300,
+		'Inner Beast': 350,
 	}
 }
 
@@ -325,7 +342,10 @@ const all_dot_base = {
 	'Paladin': {
 		'Circle Of Scorn': 30,
 		'Goring Blade': 60,
-	}
+	}, 
+	'Warrior': {
+		'Vengeance': 50,
+	},
 }
 	
 const all_pos_potencies = {
@@ -363,6 +383,7 @@ const all_pos_potencies = {
 		'Bloodspiller': 540,
 	},
 	'Paladin': {},
+	'Warrior': {},
 }
 
 const all_combo_potencies = {
@@ -419,6 +440,13 @@ const all_combo_potencies = {
 		'Riot Blade': 240,
 		'Rage Of Halone': 270,
 	},
+	'Warrior': {
+		'Skull Sunder': 200,
+		'Maim': 190,
+		"Butcher's Block": 280,
+		"Storm's Path": 270,
+		"Storm's Eye": 270,
+	},
 }
 
 const all_pos_combo_potencies = {
@@ -443,6 +471,7 @@ const all_pos_combo_potencies = {
 		'Souleater': 440,
 	},
 	'Paladin': {},
+	'Warrior': {},
 }
 
 const all_combo = {
@@ -490,7 +519,14 @@ const all_combo = {
 		'Royal Authority': ['Riot Blade'],
 		'Goring Blade': ['Riot Blade'],
 		'Rage Of Halone': ['Savage Blade'],
-	}
+	},
+	'Warrior': {
+		'Skull Sunder': ['Heavy Swing'],
+		'Maim': ['Heavy Swing'],
+		"Butcher's Block": ['Skull Sunder'],
+		"Storm's Path": ['Maim'],
+		"Storm's Eye": ['Maim'],
+	},
 }
 
 	//anything that makes/breaks a combo
@@ -504,6 +540,7 @@ const all_comboskills = {
 	'Samurai': ['Hakaze', 'Jinpu', 'Gekko', 'Shifu', 'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi'],
 	'DarkKnight': ['Hard Slash', 'Spinning Slash', 'Unleash', 'Syphon Strike', 'Unmend', 'Power Slash', 'Souleater', 'Abyssal Drain', 'Quietus', 'Bloodspiller'],
 	'Paladin': ['Fast Blade', 'Savage Blade', 'Riot Blade', 'Rage Of Halone', 'Goring Blade', 'Royal Authority', 'Holy Spirit', 'Shield Lob', 'Shield Bash', 'Total Eclipse', 'Clemency'],
+	'Warrior': ['Heavy Swing', 'Skull Sunder', 'Maim', "Butcher's Block", "Storm's Eye", "Storm's Path", 'Overpower', 'Tomahawk'],
 }
 
 	//all 'WeaponSkills'
@@ -515,6 +552,7 @@ const all_weaponskills = {
 	'Samurai': ['Hakaze', 'Jinpu', 'Gekko', 'Shifu', 'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi', 'Higanbana', 'Midare Setsugekka', 'Tenka Goken'],
 	'DarkKnight': ['Hard Slash', 'Spinning Slash', 'Syphon Strike', 'Power Slash', 'Souleater', 'Quietus', 'Bloodspiller'],
 	'Paladin': ['Fast Blade', 'Savage Blade', 'Riot Blade', 'Rage Of Halone', 'Goring Blade', 'Royal Authority', 'Shield Lob', 'Shield Bash', 'Total Eclipse'],
+	'Warrior': ['Heavy Swing', 'Skull Sunder', 'Maim', "Butcher's Block", "Storm's Eye", "Storm's Path", 'Overpower', 'Tomahawk','Inner Beast', 'Steel Cyclone', 'Fell Cleave', 'Decimate'],
 }	
 
 //buffs
@@ -618,12 +656,24 @@ const all_buffs = {
 		
 	},
 	'Paladin': {
-		'Sword Oath': new Buff('Sword Oath', 0),
-		'Shield Oath': new Buff('Shield Oath', -.20),
+		'Sword Oath': new BuffStack('Sword Oath', 0, 0, 100, 100),
+		'Shield Oath': new BuffStack('Shield Oath', -.20, 0, 100, 100),
 		'Requiescat': new Buff('Requiscat', .2, false, [], ['Holy Spirit', 'Clemency']),
 		'Fight Or Flight': new Buff('Fight or Flight', .25, false, ['Holy Spirit', 'Clemency']),
 		'Goring Blade': new Debuff('Goring Blade', 0),
-	}
+	},
+	'Warrior': {
+		'Defiance': new Buff('Defiance', -.20, false, ['Inner Beast', 'Steel Cyclone', 'Upheaval']),
+		'Unchained': new Buff('Unchained', .25, false, ['Inner Beast', 'Steel Cyclone']),
+		'Thrill Of Battle': new Buff('Thrill of Battle', 0),
+		'Berserk': new Buff('Berserk', .45),
+		"Storm's Eye": new Buff("Storm's Eye", .20),
+		
+		'Inner Release': new BuffStack('Inner Release', 0),
+		'Slashing Resistance Down': new DebuffTimed('Maim', .10, 24),
+		
+		'Deliverance': new Buff('Deliverance', .05),
+	},
 }
 
 const buff_display = {
@@ -710,7 +760,18 @@ const buff_display = {
 		'Goring Blade': new BuffDisplay('Goring Blade', '#A45B20'),
 		'Oath': new BuffDisplay('Active Oath', '', 'shield_sword.png'),
 		
-	}
+	},
+	'Warrior': {
+		'Berserk': new BuffDisplay('Berserk', '#BD633C'),
+		"Storm's Eye": new BuffDisplay("Storm's Eye",'#DB9489'),
+		'Slashing Resistance Down': new BuffDisplay('Slashing Resistance Down','#932F2F'),
+		//'Thrill Of Battle': new BuffDisplay('Thrill of Battle', '#fff'),
+		//'Unchained': new BuffDisplay('Unchained', '#CE7CD1'),
+		//'Inner Release': new BuffDisplay('Inner Release', '#9B553E'),
+		'Unchained Release': new BuffDisplay('Unchained Release', '', 'unchained_release.png'),
+		'Defiverance': new BuffDisplay('Stance', '', 'warrior_stance.png'),
+		
+	},
 }
 
 const all_timers = {
