@@ -247,6 +247,8 @@ function preScreen(type, events, buffs, timers, activePet) {
 		}
 	} else if (type == 'DarkKnight'){
 		var grit_cast = false;
+		var dark_cast = false;
+		var dark_rem = false;
 		for (var e in events) {
 			var event = events[e];
 			if (event.timestamp > start + 10000) //10 seconds ahead
@@ -254,16 +256,26 @@ function preScreen(type, events, buffs, timers, activePet) {
 
 			//foe shows as an applybuff to self first in the log first, it wasn't precasted
 			if (event.type == "removebuff") {
+				if(!dark_cast && event.ability.name == 'Dark Arts')
+					dark_rem = true;
 				if (event.ability.name == "Grit")
 					buffs["Grit"].applybuff();
 			}
+			
 			if (event.type == "applybuff") {
 				if (event.ability.name == "Grit")
 					grit_cast = true;
 			}
+			
+			if(event.type == "cast"){
+				if(!dark_rem && event.ability.name == 'Dark Arts')
+					dark_cast = true;
+			}
 		}
 		if (grit_cast)
-			buffs["Grit"].active = false;
+			buffs["Grit"].applybuff();
+		if(dark_rem && !dark_cast)
+			buffs['Dark Arts'].applybuff();
 	} else if (type == 'Paladin'){
 		var oath_cast = false;
 		var start_sword = false;
@@ -336,6 +348,7 @@ function updateTimers(timers, buffs, ellapsed, event) {
 }
 
 function updateBuffs(buffs, timers, event, result, activePet) {
+	//console.log(event);
 	//BUFF APPLICATION
 	if (event.type == "applybuff" || event.type == "refreshbuff") {
 		if (buffs.hasOwnProperty(event.name) && (event.targetID == result.player.ID || event.targetID == activePet))
@@ -345,14 +358,14 @@ function updateBuffs(buffs, timers, event, result, activePet) {
 			buffs[event.name].setStacks(event.stack);
 		}
 	} else if (event.type == "applydebuff" || event.type == "refreshdebuff") {
-		if (buffs.hasOwnProperty(event.name)) {
+		if (buffs.hasOwnProperty(event.name) && event.targetID != null) {
 			buffs[event.name].add(event);
 		}
 	}
 	//BUFF REMOVAL
 	else if (event.type == "removebuff") {
 		if (buffs.hasOwnProperty(event.name) && (event.targetID == result.player.ID || event.targetID == activePet))
-			buffs[event.name].active = false;
+			buffs[event.name].stopBuff(event);
 	} else if (event.type == "removebuffstack") {
 		if (buffs.hasOwnProperty(event.name) && (event.targetID == result.player.ID || event.targetID == activePet))
 			buffs[event.name].setStacks(event.stack);
@@ -368,8 +381,15 @@ function updateBuffs(buffs, timers, event, result, activePet) {
 				if (timers[t].isActive() && buffs[t].active == false)
 					buffs[t].applybuff();
 				else if (!timers[t].isActive())
-					buffs[t].active = false;
+					buffs[t].stopBuff(event);
 		}
+	}
+}
+
+function removeBuffs(buffs, event){
+	for(var b in buffs){
+		if(buffs[b].stopTime != 0 && buffs[b].stopTime < event.fightTime)
+			buffs[b].removeBuff();
 	}
 }
 
@@ -381,6 +401,10 @@ function updateExtras(extra, event, buffs, type) {
 		if (displayString != undefined)
 			extra.push(displayString);
 	}
+}
+
+function reorderEvents(events){
+	console.log(events);
 }
 
 function parseClass(response) {
@@ -447,6 +471,22 @@ function parseClass(response) {
 	}
 	//timers
 	var timers = all_timers[type];
+	
+	
+	/*
+	reorder events to always be the same order for each timestamp
+	begincast
+	applybuff
+	applydebuff
+	refreshbuff
+	cast
+	damage
+	heal
+	removebuff
+	removedebuff
+	*/
+	//reorderEvents(response.events);
+	
 
 	//prescan
 	if (['Samurai','Monk'].indexOf(type) == -1){
@@ -471,6 +511,8 @@ function parseClass(response) {
 		getBasicData(event, result.fight);
 		var potency = 0;
 
+		removeBuffs(buffs, event);
+		
 		if (event.type == "damage" && event.amount != 0) {
 			if (event.dmgType == 1 || event.dmgType == 64) {
 				//dots
@@ -513,6 +555,11 @@ function parseClass(response) {
 							potency += 90;
 						else
 							potency += 75;
+				} else if (event.name == 'Sidewinder'){
+					if(hasBuff('Storm Bite', buffs) && hasBuff('Caustic Bite', buffs))
+						potency = 260;
+					else if(hasBuff('Storm Bite', buffs) || hasBuff('Caustic Bite', buffs))
+						potency = 170;
 				}
 
 				event.tooltip = event.name + ": " + potency + "<br/>";
@@ -575,7 +622,7 @@ function parseClass(response) {
 				potency = 0;
 
 			if (potency == 0 && event.amount != 0) {
-				console.log("WARNING: Damage dealt with unknown potency");
+				console.log("WARNING @ " + event.fightTime + ": Damage dealt with unknown potency");
 				console.log(event);
 			}
 			newCast = false;
@@ -595,6 +642,8 @@ function parseClass(response) {
 
 			if (dot_base.hasOwnProperty(event.name)) {
 				dot_potencies[event.name] = applyBuffs(dot_base[event.name], event, buffs);
+			} else if(event.name == "Stormbite"){
+				dot_potencies['Storm Bite'] = applyBuffs(dot_base['Storm Bite'], event, buffs);
 			}
 
 			if (timers.hasOwnProperty(event.name)) {
@@ -619,6 +668,20 @@ function parseClass(response) {
 			} else if (event.name == "Fang And Claw" || event.name == "Wheeling Thrust" || event.name == "Sonic Thrust") {
 				if (timers["Blood Of The Dragon"].isActive())
 					timers["Blood Of The Dragon"].extend(10, 30);
+			} else if(event.name == 'The Balance'){
+				if(event.targetID == null)
+					buffs[event.name].bonus = .05;
+				else
+					buffs[event.name].bonus = .10;
+			} else if(event.name == 'The Spear'){
+				if(event.targetID == null)
+					buffs[event.name].bonus = .05 * 1.45;
+				else
+					buffs[event.name].bonus = .10 * 1.45;
+			} else if(event.name == 'Earthly Star'){
+				activePet = petLookup[event.name];
+			} else if (event.name == 'Stellar Burst' || event.name == 'Stellar Explosion'){
+				activePet = 0;
 			}
 			newCast = true;
 		}
@@ -711,25 +774,29 @@ function parseClass(response) {
 		result.events[e] = event;
 		//update ratio currently only used for guessing pitch perfect :/
 		//dont acount for dots, since we cant properly tell crits or directs (do dots direct?)
-		if (event.potency != 0 && (event.dmgType != 1 && event.dmgType != 64))  { 
-			var tp = event.potency * (event.isDirect ? 1.25 : 1) * (event.hitType == 'Crit' ? 1.45 : 1);
-			var r = event.amount / tp;
+		//ignore auto attacks from the non melee classes
+		if (!(['RedMage', 'BlackMage', 'Summoner', 'WhiteMage', 'Astrologian', 'Scholar'].indexOf(type) > -1 && event.name == "Attack")) {
+			if (event.potency != 0 && (event.dmgType != 1 && event.dmgType != 64)) {
 
-			var expected = event.potency * ratio;
-			expected = Math.trunc(expected * (event.isDirect ? 1.25:1));
-			expected = Math.trunc(expected * (event.hitType == 'Crit' ? 1.45 : 1));
-			var baseline = event.amount;
-			
-			var variance = expected/event.amount;
-			if(ratio != 0 && (variance > 1.3 || variance < .7))
-					console.log('WARNING @ ' + event.fightTime + ': ' +event.name + ' - ' + expected.toFixed(0) + ' vs ' + event.amount);
-			//warning if something is far off from the ratio?
-			
-			
-			if (ratio == 0)
-				ratio = r;
-			else
-				ratio = (ratio + r) / 2
+				var tp = event.potency * (event.isDirect ? 1.25 : 1) * (event.hitType == 'Crit' ? 1.45 : 1);
+				var r = event.amount / tp;
+
+				var expected = event.potency * ratio;
+				expected = Math.trunc(expected * (event.isDirect ? 1.25 : 1));
+				expected = Math.trunc(expected * (event.hitType == 'Crit' ? 1.45 : 1));
+				var baseline = event.amount;
+
+				var variance = expected / event.amount;
+				if (ratio != 0 && (variance > 1.3 || variance < .7))
+					console.log('WARNING @ ' + event.fightTime + ': ' + event.name + ' - ' + expected.toFixed(0) + ' vs ' + event.amount);
+				//warning if something is far off from the ratio?
+
+
+				if (ratio == 0)
+					ratio = r;
+				else
+					ratio = (ratio + r) / 2
+			}
 		}
 
 		if (event.amount > 0 && event.type != 'heal') {

@@ -296,6 +296,39 @@ const all_potencies = {
 		'Onslaught': 100,
 		'Upheaval': 300,
 		'Inner Beast': 350,
+	},
+	//Healers
+	'Astrologian': {
+		'Attack': 110,
+		'Malefic': 150,
+		'Malefic II': 180,
+		'Malefic III': 220,
+		'Stellar Burst': 150,
+		'Stellar Explosion': 200,
+		'Lord Of Crowns': 300,
+		'Gravity': 200,
+	},
+	'WhiteMage': {
+		'Attack': 110,
+		'Stone': 140,
+		'Stone II': 200,
+		'Stone III': 210,
+		'Stone IV': 250,
+		'Aero': 50,
+		'Aero II': 50,
+		'Aero III': 50,
+		'Assize': 300,
+		'Holy': 200,
+	},
+	'Scholar': {
+		'Attack': 110,
+		'Ruin': 100,
+		'Ruin II': 100,
+		'Energy Drain': 150,
+		'Miasma': 20,
+		'Miasma II': 100,
+		'Broil': 190,
+		'Broil II': 230,
 	}
 }
 
@@ -346,6 +379,22 @@ const all_dot_base = {
 	'Warrior': {
 		'Vengeance': 50,
 	},
+	'Astrologian': {
+		'Combust': 40,
+		'Combust II': 50,
+	},
+	'WhiteMage': {
+		'Aero': 30,
+		'Aero II': 50,
+		'Aero III': 40,
+	},
+	'Scholar': {
+		'Bio': 40,
+		'Bio II': 35,
+		'Miasma': 35,
+		'Miasma II': 25,
+		'Shadow Flare': 50,
+	}
 }
 	
 const all_pos_potencies = {
@@ -384,6 +433,10 @@ const all_pos_potencies = {
 	},
 	'Paladin': {},
 	'Warrior': {},
+	//heals
+	'WhiteMage': {},
+	'Astrologian': {},
+	'Scholar': {},
 }
 
 const all_combo_potencies = {
@@ -447,6 +500,10 @@ const all_combo_potencies = {
 		"Storm's Path": 270,
 		"Storm's Eye": 270,
 	},
+	//heals
+	'WhiteMage': {},
+	'Astrologian': {},
+	'Scholar': {},
 }
 
 const all_pos_combo_potencies = {
@@ -472,6 +529,10 @@ const all_pos_combo_potencies = {
 	},
 	'Paladin': {},
 	'Warrior': {},
+	//heals
+	'WhiteMage': {},
+	'Astrologian': {},
+	'Scholar': {},
 }
 
 const all_combo = {
@@ -491,6 +552,7 @@ const all_combo = {
 		'Gust Slash': ['Spinning Edge'],
 		'Aeolian Edge': ['Gust Slash'],
 		'Shadow Fang': ['Gust Slash'],
+		'Armor Crush': ['Gust Slash'],
 	},
 	'RedMage': {
 		'Zwerchhau': ['Riposte', 'Enchanted Riposte'],
@@ -527,6 +589,10 @@ const all_combo = {
 		"Storm's Path": ['Maim'],
 		"Storm's Eye": ['Maim'],
 	},
+	//heals
+	'WhiteMage': {},
+	'Astrologian': {},
+	'Scholar': {},
 }
 
 	//anything that makes/breaks a combo
@@ -538,9 +604,13 @@ const all_comboskills = {
 	'Ninja': ['Gust Slash', 'Spinning Edge', 'Aeolian Edge', 'Shadow Fang', 'Throwing Dagger', 'Death Blossom'],
 	'RedMage': ['Moulinet', 'Enchanted Moulinet', 'Zwerchhau', 'Riposte', 'Enchanted Riposte', 'Redoublement', 'Enchanted Zwerchhau', 'Enchanted Redoublement'],
 	'Samurai': ['Hakaze', 'Jinpu', 'Gekko', 'Shifu', 'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi'],
-	'DarkKnight': ['Hard Slash', 'Spinning Slash', 'Unleash', 'Syphon Strike', 'Unmend', 'Power Slash', 'Souleater', 'Abyssal Drain', 'Quietus', 'Bloodspiller'],
+	'DarkKnight': ['Hard Slash', 'Spinning Slash', 'Unleash', 'Syphon Strike', 'Unmend', 'Power Slash', 'Souleater', 'Abyssal Drain', 'Quietus'/*, 'Bloodspiller'*/],
 	'Paladin': ['Fast Blade', 'Savage Blade', 'Riot Blade', 'Rage Of Halone', 'Goring Blade', 'Royal Authority', 'Holy Spirit', 'Shield Lob', 'Shield Bash', 'Total Eclipse', 'Clemency'],
 	'Warrior': ['Heavy Swing', 'Skull Sunder', 'Maim', "Butcher's Block", "Storm's Eye", "Storm's Path", 'Overpower', 'Tomahawk'],
+	//heals
+	'Astrologian': [],
+	'WhiteMage': [],
+	'Scholar': [],
 }
 
 	//all 'WeaponSkills'
@@ -553,6 +623,10 @@ const all_weaponskills = {
 	'DarkKnight': ['Hard Slash', 'Spinning Slash', 'Syphon Strike', 'Power Slash', 'Souleater', 'Quietus', 'Bloodspiller'],
 	'Paladin': ['Fast Blade', 'Savage Blade', 'Riot Blade', 'Rage Of Halone', 'Goring Blade', 'Royal Authority', 'Shield Lob', 'Shield Bash', 'Total Eclipse'],
 	'Warrior': ['Heavy Swing', 'Skull Sunder', 'Maim', "Butcher's Block", "Storm's Eye", "Storm's Path", 'Overpower', 'Tomahawk','Inner Beast', 'Steel Cyclone', 'Fell Cleave', 'Decimate'],
+	//heals
+	'Astrologian': [],
+	'WhiteMage': [],
+	'Scholar': [],
 }	
 
 //buffs
@@ -588,7 +662,7 @@ const all_buffs = {
 		'Blood For Blood': new Buff('Blood For Blood', .15),
 		'Right Eye': new BuffStack('Right Eye', .10, 0, 1, 1),
 		'Battle Litany': new Buff('Battle Litany', (.15 * .45)),
-		'True North': new Buff('True North', 1),
+		'True North': new Buff('True North', 0),
 		//'Piercing Resistance Down': new Debuff('Disemboweled', .05),
 		'Piercing Resistance Down': new DebuffTimed('Disembowel', .05, 30),
 	},
@@ -673,6 +747,23 @@ const all_buffs = {
 		'Slashing Resistance Down': new DebuffTimed('Maim', .10, 24),
 		
 		'Deliverance': new Buff('Deliverance', .05),
+	},
+	//Healers
+	'Astrologian': {
+		'Trait': new Buff('Magic & Mend II', .3, true, ['Attack']),
+		'The Balance': new Buff('The Balance', .1),
+		'The Arrow': new Buff('The Arrow', 0),
+		'The Spear': new Buff('The Spear', (.10 * .45)),
+		'Cleric Stance': new Buff('Cleric Stance', .05, false, ['Attack']),
+		'Lightspeed': new BuffStack('Lightspeed', -.25, 0, 1, 1, false, [], ['Malefic', 'Malefic II', 'Malefic III', 'Combust', 'Combust II', 'Lord Of Crowns']),
+	},
+	'WhiteMage': {
+		'Trait': new Buff('Magic & Mend II', .3, true, ['Attack']),
+		'Cleric Stance': new Buff('Cleric Stance', .05, false, ['Attack']),
+	},
+	'Scholar': {
+		'Trait': new Buff('Magic & Mend II', .3, true, ['Attack']),
+		'Cleric Stance': new Buff('Cleric Stance', .05, false, ['Attack']),
 	},
 }
 
@@ -771,6 +862,21 @@ const buff_display = {
 		'Unchained Release': new BuffDisplay('Unchained Release', '', 'unchained_release.png'),
 		'Defiverance': new BuffDisplay('Stance', '', 'warrior_stance.png'),
 		
+	},
+	//Healers
+	'Astrologian': {
+		//'Trait': new Buff('Magic & Mend II', .3, true, ['Attack']),
+		'The Balance': new BuffDisplay('The Balance', '#E08C51'),
+		'The Arrow': new BuffDisplay('The Arrow', '#4A7CAF'),
+		'The Spear': new BuffDisplay('The Spear', '#4152AF'),
+		'Lightspeed': new BuffDisplay('Lightspeed', '#AD9B5C'),
+		'Cleric Stance': new BuffDisplay('Cleric Stance', '#B24437'),
+	},
+	'WhiteMage': {
+		'Cleric Stance': new BuffDisplay('Cleric Stance', '#B24437'),
+	},
+	'Scholar': {
+		'Cleric Stance': new BuffDisplay('Cleric Stance', '#B24437'),
 	},
 }
 
@@ -872,9 +978,19 @@ const all_damageSteps = {
 	'Paladin': {},
 	'Warrior': {},
 	
-	'WhiteMage': {},
-	'Astrologian': {},
-	'Scholar': {},
+	'WhiteMage': {
+		'Holy': [.9, .8, .7, .6, .5],
+	},
+	'Astrologian': {
+		'Gravity': [.9, .8, .7, .6, .5],
+	},
+	'Scholar': {
+		'Bio': [.8, .6, .4, .2],
+		'Bio II': [.8, .6, .4, .2],
+		'Miasma': [.8, .6, .4, .2],
+		'Miasma II': [.8, .6, .4, .2],
+		'Shadow Flare': [.8, .6, .4, .2],
+	},
 }
 
 const all_combo_damageSteps = {
@@ -911,5 +1027,13 @@ const template = {
 	'RedMage': {},
 	'Samurai': {},
 	'Summoner': {},
+	//tanks
+	'DarkKnight': {},
+	'Paladin': {},
+	'Warrior': {},
+	//heals
+	'WhiteMage': {},
+	'Astrologian': {},
+	'Scholar': {},
 }
 

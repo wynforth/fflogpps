@@ -15,7 +15,10 @@ var parseFunctions = {
 	'DarkKnight': parseClass,
 	'Paladin': parseClass,
 	'Warrior': parseClass,
-
+	//HEALS
+	'Astrologian': parseClass,
+	'WhiteMage': parseClass,
+	'Scholar': parseClass
 }
 
 function processReport(report) {
@@ -173,6 +176,8 @@ function processClass(response, spec) {
 		$('.summary').append(`<br/>Potency values for Spirits Within or Requiescat don't scale with health or mana respectively.`)
 	else if(spec == "Warrior")
 		$('.summary').append(`<br/><b>Berserk:</b> Bonus for Berserk is a guess based on observation, actual increase would depend on your current AP.`)
+	else if(spec == 'Scholar' || spec == 'Summoner')
+		$('.summary').append(`<br/><b>Bane:</b> Damage reduction from bane is not handled at all :P`)
 	
 	if(response.hasOwnProperty("nextPageTimestamp"))
 		console.log("WARNING     more time stamps exist     WARNING");

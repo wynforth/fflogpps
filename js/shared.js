@@ -104,6 +104,7 @@ class Buff {
 		this.active = active == undefined ? false:active;
 		this.restricted = restricted == undefined ? []:restricted;
 		this.exclusive = exclusive == undefined ? []:exclusive;
+		this.stopTime = 0;
 		//console.log(this.name);
 		//console.log(this.restricted);
 	}
@@ -143,8 +144,14 @@ class Buff {
 		this.active = true;
 	}
 	
+	
+	stopBuff(event){
+		this.stopTime = event.fightTime;
+	}
+	
 	removeBuff(){
 		this.active = false;
+		this.stopTime = 0;
 	}
 }
 
@@ -493,6 +500,8 @@ function fetchUrl(theUrl, callback, args)
 
 function getBasicData(event, fight) {
 	
+	//console.log(event);
+	
 	event.name = event.type == 'death' ? 'Death' : event.ability.name;
 	event.fightTime = (event.timestamp - fight.start) / 1000,
 	event.hitType = event.hitType == undefined ? '' : hitTypes[event.hitType],
@@ -547,7 +556,7 @@ damageTypes = {
 	//4: "fire",
 	8: "heal",
 	//16: "water",
-	//32: "unaspected",
+	32: "pet",
 	64: "dot_magic",
 	128: "phys",
 	//512: "air",
