@@ -497,6 +497,14 @@ function fetchUrl(theUrl, callback, args)
     xmlHttp.send(null);
 }
 
+function httpGet(theUrl)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", theUrl, false); // true for asynchronous 
+    xmlHttp.send(null);
+	return JSON.parse(xmlHttp.responseText);
+}
+
 
 function getBasicData(event, fight) {
 	

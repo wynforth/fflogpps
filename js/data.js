@@ -45,7 +45,7 @@ const all_potencies = {
 		'Fire III': 240,
 		'Fire IV': 260,
 		'Flare': 260,
-		'Blizzard I': 180,
+		'Blizzard': 180,
 		'Blizzard II': 50,
 		'Blizzard III': 240,
 		'Blizzard IV': 260,

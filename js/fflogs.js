@@ -128,7 +128,34 @@ function buildRankingsURL() {
 	//url += "&filter=date.1505843288000.9999999999999"; //event data test format change - September 19, 2017
 	url += "&api_key=" + api_key
 
-	console.log(url);
+	//console.log(url);
+	return url;
+}
+
+function buildCompareURL() {
+	var url = "compare.html";
+
+	url += '?encounter=' + $("#encounter_select").val() + "&metric=dps";
+
+	var bracket = $("#bracket_select").val();
+	if (bracket != 0)
+		url += "&bracket=" + bracket;
+
+	var spec = $("#class_select").val();
+	if (spec != 0)
+		url += "&spec=" + spec;
+
+	var region = $("#region_select").val();
+	if (region != "")
+		url += "&region=" + region;
+
+	
+	url += "&page=" + $("#page_number").val();
+	url += "&filter=date.1502168400000.9999999999999"; //type format change - August 8, 2017
+	//url += "&filter=date.1505843288000.9999999999999"; //event data test format change - September 19, 2017
+	url += "&api_key=" + api_key
+
+	//console.log(url);
 	return url;
 }
 
@@ -156,12 +183,17 @@ function getRankings(){
 
 function displayRankings(response){
 	var ranks = response['rankings']
+	console.log(response);
 	
+	var compareurl = buildCompareURL();
+	console.log(compareurl);
 	
 	$(".ranking-table thead").html(`<tr><td>Player</td><td>DPS</td><td>Duration</td><td>Region</td><td>Server</td><td>FFLog Link</td></tr>`);
 	
 	
 	var tbl_body = '';
+	
+	tbl_body += `<tr><td><a href="${compareurl}">Compare All</a></td><td></td><td></td><td></td><td></td><td></td></tr>`;
 	for(var key in ranks){
 		var rank = ranks[key];
 		//console.log(JSON.stringify(rank));

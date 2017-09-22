@@ -1,36 +1,32 @@
-var parseFunctions = {
-	//DPS
-	'Bard': parseClass,//parseBard,
-	
-	'Dragoon': parseClass,//parseDragoon,
-	
-	'Monk': parseClass, //parseMonk,
-	'Ninja': parseClass,	//parseNinja,
-	'RedMage': parseClass,	//parseRedmage,
-	'Samurai': parseClass,	//parseSamurai,
-	'Machinist': parseMachinist, //overheat and pet
-	'BlackMage': parseBlackmage, //astral/umbral math
-	'Summoner': parseSummoner, //pet
-	//TANKS
-	'DarkKnight': parseClass,
-	'Paladin': parseClass,
-	'Warrior': parseClass,
-	//HEALS
-	'Astrologian': parseClass,
-	'WhiteMage': parseClass,
-	'Scholar': parseClass
-}
+
 
 function processReport(report) {
 	var proc0 = performance.now();
 	//console.log("Report:");
-	//console.log(report);
+	console.log(report);
 	
-	result = parseReport(report);
+	var result = {
+		report: {
+			reportID: getUrlParameter("report"),
+			fightID: getUrlParameter("fight"),
+		},
+		fight: {
+			team: {},
+			enemies: {}
+		},
+		player: {
+			name: getUrlParameter("name"),
+			pets: []
+		},
+		events: {},
+		totals: {},
+	}
+
+	result = parseReport(report, result);
 	var par1 = performance.now();
+	
 	console.log("Report parsing took " + (par1-proc0).toFixed(4) + "ms");
 	//console.log(result);
-	
 	var link = `https://www.fflogs.com/reports/${result.report.reportID}#fight=${result.report.fightID}&type=damage-done`;
 	
 	//$(".summary").append(`<b>${result.fight.team[result.player.ID]}</b> as a <span class="${result.player.type}">${result.player.type}</span> (<a href="${link}">FFLogs</a>)`);
@@ -68,7 +64,7 @@ function processReport(report) {
 	if (Object.keys(parseFunctions).indexOf(result.player.type) > -1)
 		callback = processClass;
 
-	fetchUrl(url, callback, result.player.type);
+	fetchUrl(url, callback, result);
 	
 	var proc1 = performance.now();
 	console.log("processReport took " + (proc1-proc0).toFixed(4) + "ms");
@@ -162,9 +158,10 @@ function processGeneric(response) {
 	$(".summary").append(`<b>DPS:</b> ${(totalDamage / result.fight.duration).toFixed(2)}</br>`);
 }
 
-function processClass(response, spec) {
+function processClass(response, result) {
 
 	//console.log("Processing " + spec);
+	var spec = result.player.type;
 	var t0 = performance.now();
 	
 	//console.log(response);
@@ -194,7 +191,7 @@ function processClass(response, spec) {
 	console.log("header updates took " + (t1 - t0).toFixed(4) + "ms");
 	
 	t0 = performance.now();
-	result = parseFunctions[spec](response);
+	result = parseFunctions[spec](response, result);
 	t1 = performance.now();
 	console.log("Parseing took " + (t1 - t0).toFixed(4) + "ms");
 	
@@ -236,6 +233,7 @@ function processClass(response, spec) {
 	t0 = performance.now();
 	//update summary
 	var totalTime = 0;
+	console.log(result);
 	if (Object.keys(result.totals).length >= 1) {
 		for (var k in result.totals) {
 			var total = result.totals[k];
@@ -302,7 +300,7 @@ function isSameEvent(current, previous) {
 }
 
 function getReportData() {
-	var url = base_url + "/report/fights/" + result.report.reportID + "?translate=true&api_key=" + api_key;
+	var url = base_url + "/report/fights/" + getUrlParameter("report") + "?translate=true&api_key=" + api_key;
 	//console.log(url);
 	httpGetAsync(url, processReport);
 }

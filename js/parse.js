@@ -1,23 +1,30 @@
-var result = {
-	report: {
-		reportID: getUrlParameter("report"),
-		fightID: getUrlParameter("fight"),
-	},
-	fight: {
-		team: {},
-		enemies: {}
-	},
-	player: {
-		name: getUrlParameter("name"),
-		pets: []
-	},
-	events: {},
-	totals: {},
+const parseFunctions = {
+	//DPS
+	'Bard': parseClass,//parseBard,
+	'Dragoon': parseClass,//parseDragoon,
+	'Monk': parseClass, //parseMonk,
+	'Ninja': parseClass,	//parseNinja,
+	'RedMage': parseClass,	//parseRedmage,
+	'Samurai': parseClass,	//parseSamurai,
+	'Machinist': parseMachinist, //overheat and pet
+	'BlackMage': parseBlackmage, //astral/umbral math
+	'Summoner': parseSummoner, //pet
+	//TANKS
+	'DarkKnight': parseClass,
+	'Paladin': parseClass,
+	'Warrior': parseClass,
+	//HEALS
+	'Astrologian': parseClass,
+	'WhiteMage': parseClass,
+	'Scholar': parseClass
 }
 
-function parseReport(report) {
+
+
+function parseReport(report, result) {
 	//console.log("Parsing Report for " + report.title);
 	var fightID = result.report.fightID;
+	//console.log(fightID);
 
 	for (var k in report.fights) {
 		var fight = report.fights[k];
@@ -407,7 +414,13 @@ function reorderEvents(events){
 	console.log(events);
 }
 
-function parseClass(response) {
+function getPotencies(spec){
+	var potencies = all_potencies[spec];
+	potencies['Death Bolt'] = 0;
+	return potencies;
+}
+
+function parseClass(response, result) {
 
 	var type = result.player.type;
 
@@ -450,7 +463,8 @@ function parseClass(response) {
 	}
 
 	//potencies
-	var potencies = all_potencies[type];
+	var potencies = getPotencies(type);
+		
 	var combo_potencies = all_combo_potencies[type];
 	var pos_potencies = all_pos_potencies[type];
 	var pos_combo_potencies = all_pos_combo_potencies[type];
@@ -824,9 +838,9 @@ function parseClass(response) {
 	return result;
 }
 
-function parseBlackmage(response) {
+function parseBlackmage(response, result) {
 	var type = result.player.type;
-	console.log("Parsing BLM");
+	//console.log("Parsing BLM");
 
 	var suffix = ['', '', '_ii', '_iii'];
 	//totals
@@ -849,7 +863,7 @@ function parseBlackmage(response) {
 	//timers
 	var timers = all_timers[type];
 	//potencies
-	var potencies = all_potencies[type];
+	var potencies = getPotencies(type);
 
 	//dots
 	var dot_potencies = {};
@@ -1070,9 +1084,9 @@ function parseBlackmage(response) {
 	return result;
 }
 
-function parseMachinist(response) {
+function parseMachinist(response, result) {
 	var type = result.player.type;
-	console.log("Parsing MCH");
+	//console.log("Parsing MCH");
 
 	var prevTime = 0;
 	var activePet = 0;
@@ -1106,7 +1120,7 @@ function parseMachinist(response) {
 	var wildfirePot = 0;
 
 	//potencies
-	var potencies = all_potencies[type];
+	var potencies = getPotencies(type);
 	var combo_potencies = all_combo_potencies[type];
 	//dots
 	var dot_potencies = {};
@@ -1281,9 +1295,9 @@ function parseMachinist(response) {
 	return result;
 }
 
-function parseSummoner(response) {
+function parseSummoner(response, result) {
 	var type = result.player.type;
-	console.log("Parsing SMN");
+	//console.log("Parsing SMN");
 
 	var prevTime = 0;
 	var prevPet = 0;
@@ -1318,7 +1332,7 @@ function parseSummoner(response) {
 	var wildfirePot = 0;
 
 	//potencies
-	var potencies = all_potencies[type];
+	var potencies = getPotencies(type);
 	//dots
 	var dot_potencies = {};
 	var dot_base = all_dot_base[type];
