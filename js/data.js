@@ -105,12 +105,12 @@ const all_potencies = {
 	},
 	'Monk': {
 		'Attack': 110,
-		'Bootshine': (140 + (140 * 1.45) * 9) / 10, //weighted average 90% hitting positional
-		'True Strike': (140 + 180 * 9) / 10,
-		'Demolish': (30 + 70 * 9) / 10,
-		'Dragon Kick': (100 + 140 * 9) / 10,
-		'Twin Snakes': (100 + 130 * 9) / 10,
-		'Snap Punch': (130 + 170 * 9) / 10,
+		'Bootshine': 140, 
+		'True Strike': (140 + (180 * 9)) / 10, //weighted average 90% hitting positional
+		'Demolish': (30 + (70 * 9)) / 10,
+		'Dragon Kick': (100 + (140 * 9)) / 10,
+		'Twin Snakes': (100 + (130 * 9)) / 10,
+		'Snap Punch': (130 + (170 * 9)) / 10,
 		'Arm of the Destroyer': 50,
 		'One Ilm Punch': 120,
 		'Rockbreaker': 130,
@@ -408,7 +408,6 @@ const all_pos_potencies = {
 	},
 	'Machinist': {},
 	'Monk': {
-		'Bootshine': 140 * 1.45,
 		'True Strike': 180,
 		'Demolish': 70,
 		'Dragon Kick': 140,
@@ -704,11 +703,13 @@ const all_buffs = {
 		'Swiftcast': new Buff('Swiftcast', 0),
 	},
 	'Samurai': {
+		'Enhanced Enpi': new BuffDirect('Enhanced Enpi', 200, false, [], ['Enpi']),
 		'Meikyo Shisui': new Buff('Meikyo Shisui', 0),
 		'True North': new Buff('True North', 0),
 		'Jinpu': new Buff('Jinpu', .10),
 		'Kaiten': new Buff('Hissatsu: Kaiten', .50, false, [], ['Hakaze', 'Jinpu', 'Gekko', 'Shifu', 'Kasha', 'Yukikaze', 'Mangetsu', 'Fuga', 'Oka', 'Enpi', 'Higanbana', 'Midare Setsugekka', 'Tenka Goken']),
 		'Slashing Resistance Down': new DebuffTimed('Yukikaze', .10, 30),
+		
 	},
 	'Summoner': {
 		'Bio III': new DebuffDirect('Bio III', 150, [], ['Fester']),

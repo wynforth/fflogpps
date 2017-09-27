@@ -636,8 +636,7 @@ function parseClass(response, result) {
 				potency = 0;
 
 			if (potency == 0 && event.amount != 0) {
-				console.log("WARNING @ " + event.fightTime + ": Damage dealt with unknown potency");
-				console.log(event);
+				console.log("WARNING @ " + event.fightTime + ": Damage dealt with unknown potency [Report: " + result.report.reportID + " Player: " + result.player.name + "]");
 			}
 			newCast = false;
 
@@ -789,6 +788,7 @@ function parseClass(response, result) {
 		//update ratio currently only used for guessing pitch perfect :/
 		//dont acount for dots, since we cant properly tell crits or directs (do dots direct?)
 		//ignore auto attacks from the non melee classes
+		if(event.fightTime > 10){
 		if (!(['RedMage', 'BlackMage', 'Summoner', 'WhiteMage', 'Astrologian', 'Scholar'].indexOf(type) > -1 && event.name == "Attack")) {
 			if (event.potency != 0 && (event.dmgType != 1 && event.dmgType != 64)) {
 
@@ -802,7 +802,7 @@ function parseClass(response, result) {
 
 				var variance = expected / event.amount;
 				if (ratio != 0 && (variance > 1.3 || variance < .7))
-					console.log('WARNING @ ' + event.fightTime + ': ' + event.name + ' - ' + expected.toFixed(0) + ' vs ' + event.amount);
+					console.log('WARNING @ ' + event.fightTime + ': ' + event.name + ' - ' + expected.toFixed(0) + ' vs ' + event.amount  + " [Report: " + result.report.reportID + " Player: " + result.player.name + "]");
 				//warning if something is far off from the ratio?
 
 
@@ -811,6 +811,7 @@ function parseClass(response, result) {
 				else
 					ratio = (ratio + r) / 2
 			}
+		}
 		}
 
 		if (event.amount > 0 && event.type != 'heal') {

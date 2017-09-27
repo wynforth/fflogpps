@@ -1,4 +1,4 @@
-function processRankings(response) {
+async function processRankings(response) {
 	var proc0 = performance.now();
 	//console.log("Report:");
 	//console.log(report);
@@ -6,13 +6,27 @@ function processRankings(response) {
 	var rankings = response.rankings;
 	//console.log(rankings);
 	//rankings.length
+	var r0 = performance.now();
+	var count = 0;
 	for (var i=0; i < rankings.length; i++){
+		var r1 = performance.now();
 		console.log(rankings[i]);
 		var fightID = rankings[i].fightID;
 		var reportURL = base_url + "/report/fights/" + rankings[i].reportID + "?translate=true&api_key=" + api_key;
 		//console.log(reportURL);
 		fetchUrl(reportURL, processReport, rankings[i]);
-		sleep(1000);
+		count +=2;
+		
+		if(count > 100 && ((r1 - r0) > 1000)){
+			console.log(count + " parses in " + (r1 - r0).toFixed(4) + "ms sleeping...");
+			//console.log("sleeping...");
+			var s0 = performance.now();
+			await sleep(1000);
+			var s1 = performance.now();
+			console.log("Slept for " + (s1 - s0).toFixed(4) + "ms");
+			r0 = performance.now();
+			count = 0;
+		}
 			
 		//return;
 	}
@@ -68,7 +82,7 @@ function processClass(response, result) {
 	t0 = performance.now();
 	result = parseFunctions[spec](response, result);
 	t1 = performance.now();
-	console.log("Parseing took " + (t1 - t0).toFixed(4) + "ms");
+	//console.log("Parseing took " + (t1 - t0).toFixed(4) + "ms");
 	
 	//console.log(result);
 	var tbl_row = '<tr>';
